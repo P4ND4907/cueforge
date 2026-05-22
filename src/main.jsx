@@ -100,8 +100,8 @@ const socialBrand = {
 };
 
 const publicRelease = {
-  download: 'https://github.com/P4ND4907/cueforge/releases/download/v0.1.0-alpha.1/CueForge-0.1.0-x64.exe',
-  notes: 'https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.1',
+  download: 'https://github.com/P4ND4907/cueforge/releases/download/v0.1.0-alpha.2/CueForge-0.1.0-x64.exe',
+  notes: 'https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.2',
   feedback: 'https://github.com/P4ND4907/cueforge/issues/1'
 };
 
@@ -433,9 +433,23 @@ function App() {
               </div>
             </Panel>
             <Panel title="Recommended Profile" icon={Sparkles}>
-              <h2>IEM + HyperX Baseline</h2>
-              <p>Starts from local IEM filters, lifts 2-4.7kHz cues, trims low-end bloom, and keeps HyperX mic boom under control.</p>
+              <h2>Setup-aware starting point</h2>
+              <p>Import or auto-detect the chain first, then tune from what is actually connected instead of guessing from a random preset.</p>
               <button className="ghost" onClick={() => setActive('eq')}>Tune EQ <ChevronRight size={16} /></button>
+            </Panel>
+            <Panel title="Why Test CueForge" icon={ShieldCheck}>
+              <h2>Built by players, tested in real matches</h2>
+              <p>CueForge is not trying to out-corporate big audio suites. It is for players who want to see what is actually happening in their setup, then help shape the fix.</p>
+              <ul className="clean-list">
+                <li>Local-first: no hidden upload, no silent driver change, no mystery cloud tuning.</li>
+                <li>Chain-aware: separates game audio, Discord, Windows routing, mic gain, and EQ instead of blaming one knob.</li>
+                <li>Replayable: reports and Panda Notes make bugs reproducible instead of vague.</li>
+                <li>Fast loop: tester issues feed the repair queue so real sessions turn into real updates.</li>
+              </ul>
+              <div className="live-actions">
+                <a className="primary button-link" href={publicRelease.download} target="_blank" rel="noreferrer"><Download size={18} /> Download alpha</a>
+                <a className="ghost button-link" href={publicRelease.feedback} target="_blank" rel="noreferrer"><Bug size={18} /> Send feedback</a>
+              </div>
             </Panel>
             <Panel title="Product Invention" icon={Radio}>
               <h2>Audio DNA</h2>

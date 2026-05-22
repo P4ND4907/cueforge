@@ -157,7 +157,7 @@ Panda | CueForge
 About:
 
 ```text
-Panda behind CueForge. Building a free FPS audio lab for mic checks, IEM/headset EQ, Discord, Equalizer APO, and real match feedback. Honest tests > hype.
+Panda behind CueForge. Building a free player-first FPS audio lab for real setups, real matches, and honest feedback. Better, worse, or weird all helps.
 ```
 
 Social links:
@@ -165,7 +165,7 @@ Social links:
 ```text
 App: https://p4nd4907.github.io/cueforge/
 GitHub: https://github.com/P4ND4907/cueforge
-Windows alpha: https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.1
+Windows alpha: https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.2
 Discord: https://discord.gg/vyQwyJ49v
 ```
 
@@ -182,7 +182,7 @@ I built CueForge because I got tired of guessing whether a new EQ, mic setting, 
 
 The goal is simple: test the setup, play a real match, then write down what changed.
 
-CueForge is free to test. Bring your own setup, import or auto-detect what you can, then run one real match and tell me what actually changed.
+CueForge is free to test. It is not trying to out-corporate big audio apps. It is a player-built lab for messy real setups: import or auto-detect what you can, run one real match, and tell me what actually changed.
 
 It can:
 
@@ -211,7 +211,7 @@ GitHub:
 https://github.com/P4ND4907/cueforge
 
 Windows alpha:
-https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.1
+https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.2
 
 Discord:
 https://discord.gg/vyQwyJ49v

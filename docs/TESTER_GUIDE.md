@@ -2,6 +2,8 @@
 
 Thanks for testing CueForge. The goal is simple: find out whether the app helps real players get clearer cues, cleaner comms, and better mic confidence without leaking local machine data.
 
+CueForge is not a preset pack from a big company. It is a player-built audio lab. Import or auto-detect your setup, run one real match, and send the truth back. Better, worse, or weird all helps.
+
 ## Who Should Test
 
 - FPS players using IEMs, gaming headsets, or USB DACs.

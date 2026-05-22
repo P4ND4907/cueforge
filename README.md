@@ -6,11 +6,22 @@ CueForge is a Windows-first gaming audio control center for players who want the
 
 It does not silently install drivers or rewrite Windows audio routing. It makes the hidden parts visible, generates configs, and keeps the final system-level apply step explicit.
 
+## Why CueForge
+
+Big audio companies have polished apps, device partnerships, and finished presets. CueForge is different on purpose: it is a local-first test lab for players who want to know what is actually happening in their setup.
+
+- It starts from the real chain: game, Windows, Discord, mic gain, headset/IEM, EQ, and optional desktop bridge data.
+- It turns one real match into useful evidence through Player Trial, Beta Check-in, Report Lab, and Panda Notes.
+- It keeps native changes explicit instead of silently touching drivers or routing.
+- It gives testers a direct repair loop: clear reports become reproducible issues, tests, fixes, and release notes.
+
+The promise is simple: import or auto-detect your setup, run one real match, and tell us what got better or worse.
+
 ## Tester Call
 
 CueForge needs honest ears on real setups. If you play FPS games on Windows and have ever wondered whether your footsteps, comms, mic, or IEM EQ are helping or hurting you, you are exactly the kind of tester this needs.
 
-The best testers are players using IEMs, gaming headsets, USB mics, Equalizer APO, Peace, SteelSeries Sonar, Discord, or similar audio chains.
+The best testers are players with real, messy setups: headsets, IEMs, USB mics, Discord, Equalizer APO, Peace, Sonar, Windows routing, or anything else that makes audio harder than it should be.
 
 Good feedback includes:
 
@@ -30,7 +41,7 @@ Use GitHub issues for feedback:
 ## Public Alpha
 
 - Web app: https://p4nd4907.github.io/cueforge/
-- Windows alpha download: https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.1
+- Windows alpha download: https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.2
 - Feedback thread: https://github.com/P4ND4907/cueforge/issues/1
 
 The Windows build is unsigned while CueForge is in alpha, so Windows may show a SmartScreen warning. Use the web app first if you want the lightest test.
