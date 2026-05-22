@@ -300,6 +300,7 @@ Set private dev rooms to owner/dev role only.
 Pin formats in match-checkins, bug-replays, signal-setups, clip-evidence, and mic-checks.
 Register slash commands after bot changes.
 Post /serverguide, /rewardrules, and /questboard.
+Post /roles in role-picker after the bot has Manage Roles.
 ```
 
 ## Native Apply Helper

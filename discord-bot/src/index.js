@@ -43,6 +43,31 @@ const rewardPoints = {
   'helped-tester': 8
 };
 
+const selfAssignRoles = [
+  { name: 'Panda Pilot', label: 'Panda Pilot', style: ButtonStyle.Primary },
+  { name: 'IEM Listener', label: 'IEM Listener', style: ButtonStyle.Secondary },
+  { name: 'Headset Grinder', label: 'Headset Grinder', style: ButtonStyle.Secondary },
+  { name: 'Mic Checker', label: 'Mic Checker', style: ButtonStyle.Secondary },
+  { name: 'EQ Forger', label: 'EQ Forger', style: ButtonStyle.Secondary },
+  { name: 'Clip Hunter', label: 'Clip Hunter', style: ButtonStyle.Secondary },
+  { name: 'Bug Tracker', label: 'Bug Tracker', style: ButtonStyle.Secondary },
+  { name: 'Build Tester', label: 'Build Tester', style: ButtonStyle.Secondary },
+  { name: 'Casual Tester', label: 'Casual Tester', style: ButtonStyle.Secondary },
+  { name: 'Sweat Stack', label: 'Sweat Stack', style: ButtonStyle.Secondary },
+  { name: 'Tarkov Ears', label: 'Tarkov', style: ButtonStyle.Secondary },
+  { name: 'Siege Sound', label: 'Siege', style: ButtonStyle.Secondary },
+  { name: 'COD / Warzone', label: 'COD / Warzone', style: ButtonStyle.Secondary },
+  { name: 'Apex Audio', label: 'Apex', style: ButtonStyle.Secondary },
+  { name: 'CS2 / Valorant', label: 'CS2 / Valorant', style: ButtonStyle.Secondary }
+];
+
+const welcomeMessages = [
+  (member) => `Welcome ${member}. Grab a role, run CueForge once, and tell us what your game audio is doing right or wrong.`,
+  (member) => `Fresh ears in the lab: ${member}. Post your game, gear, mic, and the one sound problem you want fixed first.`,
+  (member) => `${member} just joined the Panda Lab. Bring clips, weird setups, and honest before/after notes.`,
+  (member) => `Welcome ${member}. If CueForge helps, post it. If it makes things worse, post that too. Both are useful.`
+];
+
 const commands = [
   new SlashCommandBuilder()
     .setName('start')
@@ -136,6 +161,13 @@ const commands = [
     .setName('serverguide')
     .setDescription('Post the polished new-member guide for Discord Server Guide or start-here.'),
   new SlashCommandBuilder()
+    .setName('roles')
+    .setDescription('Post click-to-pick tester and game roles.'),
+  new SlashCommandBuilder()
+    .setName('modroles')
+    .setDescription('Show the private staff role map.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+  new SlashCommandBuilder()
     .setName('claim')
     .setDescription('Claim Panda Lab points for real participation.')
     .addStringOption((option) =>
@@ -228,13 +260,14 @@ client.on(Events.GuildMemberAdd, async (member) => {
   if (!channel) return;
 
   await channel.send({
-    content: `Welcome ${member}. Grab your bamboo, post your setup, and tell us what game audio keeps lying to you.`,
+    content: pickWelcomeMessage(member),
     embeds: [buildWelcomeEmbed()],
     components: [buildLinkRow()]
   }).catch(() => {});
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
+  if (interaction.isButton()) return replyRoleButton(interaction);
   if (!interaction.isChatInputCommand()) return;
 
   if (interaction.commandName === 'claim') return replyClaim(interaction);
@@ -354,6 +387,15 @@ Final verdict:`)
       embeds: [buildServerGuideEmbed()],
       components: [buildLinkRow()],
       ephemeral: false
+    },
+    roles: {
+      embeds: [buildRolePickerEmbed()],
+      components: buildRoleRows(),
+      ephemeral: false
+    },
+    modroles: {
+      embeds: [buildModRoleEmbed()],
+      ephemeral: true
     }
   }[interaction.commandName];
 
@@ -466,6 +508,11 @@ function pickPrompt() {
   return prompts[Math.floor(Math.random() * prompts.length)];
 }
 
+function pickWelcomeMessage(member) {
+  const welcome = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+  return welcome(member);
+}
+
 function buildRewardRulesEmbed() {
   return new EmbedBuilder()
     .setTitle('Panda Lab Rewards')
@@ -516,6 +563,83 @@ function buildServerGuideEmbed() {
       { name: 'How to help', value: 'Say whether the problem feels like tuning, game audio, server timing, Discord, mic gain, or Windows routing.' },
       { name: 'Privacy', value: 'Do not post passwords, phone numbers, DOB, recovery codes, raw device IDs, or private screenshots.' }
     );
+}
+
+function buildRolePickerEmbed() {
+  return new EmbedBuilder()
+    .setTitle('Pick Your Panda Lab Roles')
+    .setDescription('Click what fits your setup. Click again to remove a role. Staff roles are not self-assignable.')
+    .setColor(0x12c99a)
+    .addFields(
+      { name: 'Tester tags', value: 'IEMs, headsets, mics, EQ, clips, bugs, build testing, casual/sweat testing.' },
+      { name: 'Game tags', value: 'Tarkov, Siege, COD / Warzone, Apex, CS2 / Valorant.' },
+      { name: 'Staff', value: '`Chiefyy Forge Queen` and `Bamboo Mod` are assigned manually by Panda.' }
+    );
+}
+
+function buildRoleRows() {
+  const rows = [];
+  for (let index = 0; index < selfAssignRoles.length; index += 5) {
+    const row = new ActionRowBuilder();
+    selfAssignRoles.slice(index, index + 5).forEach((role) => {
+      row.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`cf-role:${role.name}`)
+          .setLabel(role.label)
+          .setStyle(role.style)
+      );
+    });
+    rows.push(row);
+  }
+  return rows;
+}
+
+function buildModRoleEmbed() {
+  return new EmbedBuilder()
+    .setTitle('Private Staff Roles')
+    .setDescription('Do not put these behind public buttons.')
+    .setColor(0xf6b13d)
+    .addFields(
+      { name: 'Chiefyy Forge Queen', value: 'Full access / co-owner role. Assigned manually to Chiefyy.' },
+      { name: 'Bamboo Mod', value: 'Normal moderator role: audit log, nicknames, kick/approve/reject, timeout, message/thread cleanup, voice moderation, event management.' },
+      { name: 'Build Tester', value: 'Safe self-assign tag for trusted testers. No server-management permissions.' }
+    );
+}
+
+async function replyRoleButton(interaction) {
+  if (!interaction.customId?.startsWith('cf-role:')) return;
+  if (!interaction.inGuild()) {
+    return interaction.reply({ ephemeral: true, content: 'Roles only work inside the CueForge server.' });
+  }
+
+  const roleName = interaction.customId.slice('cf-role:'.length);
+  const allowed = selfAssignRoles.find((role) => role.name === roleName);
+  if (!allowed) {
+    return interaction.reply({ ephemeral: true, content: 'That role is not self-assignable.' });
+  }
+
+  const role = interaction.guild.roles.cache.find((candidate) => candidate.name === roleName);
+  if (!role) {
+    return interaction.reply({ ephemeral: true, content: `I cannot find the ${roleName} role yet.` });
+  }
+
+  const member = await interaction.guild.members.fetch(interaction.user.id);
+  const hasRole = member.roles.cache.has(role.id);
+
+  try {
+    if (hasRole) {
+      await member.roles.remove(role, 'CueForge self-assign role button');
+      return interaction.reply({ ephemeral: true, content: `Removed ${roleName}.` });
+    }
+
+    await member.roles.add(role, 'CueForge self-assign role button');
+    return interaction.reply({ ephemeral: true, content: `Added ${roleName}.` });
+  } catch {
+    return interaction.reply({
+      ephemeral: true,
+      content: `I found ${roleName}, but Discord blocked the role change. Move the bot role above tester roles and give it Manage Roles.`
+    });
+  }
 }
 
 async function replyClaim(interaction) {

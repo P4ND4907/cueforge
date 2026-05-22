@@ -18,6 +18,8 @@ Small Discord bot for the CueForge Beta server. It welcomes new testers, keeps t
 /watchparty
 /questboard
 /serverguide
+/roles
+/modroles
 /claim
 /score
 /leaderboard
@@ -51,6 +53,12 @@ Posts five small quests that make the server feel active without spam.
 /serverguide
 Posts the polished new-member guide for Discord Server Guide, start-here, or a pinned welcome.
 
+/roles
+Posts click-to-pick tester and game role buttons. Staff roles are intentionally excluded.
+
+/modroles
+Mod-only map of the private staff roles and what they are for.
+
 /claim
 Lets a tester claim capped points for a real watch party, match test, clip, bug replay, setup post, or helping another tester.
 
@@ -64,7 +72,9 @@ Shows the top testers.
 Mod-only verified reward for extra work.
 ```
 
-The bot does not scrape Discord, X, or Reddit, auto-watch content, fake activity, or farm rewards. It gives clean prompts and a proof-based reward loop so you can collect feedback without turning the server into spam.
+The bot does not scrape Discord, X, or Reddit, auto-watch content, fake activity, or farm rewards. It gives clean prompts, welcome messages, click-to-pick tester roles, and a proof-based reward loop so you can collect feedback without turning the server into spam.
+
+Role buttons require the bot to have `Manage Roles` and for the bot's highest role to sit above the self-assignable tester roles.
 
 ## Setup
 

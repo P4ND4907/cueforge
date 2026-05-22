@@ -80,6 +80,8 @@ Do not add multiple overlapping moderation bots at the start. One helper bot is 
 /watchparty - posts a real watch-party/test-lab prompt
 /questboard - posts five small useful quests
 /serverguide - posts the polished new-member guide
+/roles - posts click-to-pick tester and game role buttons
+/modroles - shows the private staff role map
 /claim - lets testers claim capped points for real participation
 /score - shows a tester's points and tier
 /leaderboard - shows the top testers
@@ -179,6 +181,30 @@ Point tiers:
 ```
 
 Self-claims are capped at 3 per person per day. Mods can use `/award` when someone does extra verified work.
+
+## Role Colors
+
+```text
+Chiefyy Forge Queen - gold
+Bamboo Mod - teal
+Build Tester - blue
+Panda Pilot - green
+IEM Listener - teal
+Headset Grinder - slate
+Mic Checker - pink
+EQ Forger - purple
+Clip Hunter - orange
+Bug Tracker - red
+Tarkov Ears - dark teal
+Siege Sound - gold
+COD / Warzone - deep red
+Apex Audio - orange
+CS2 / Valorant - blue
+Casual Tester - gray
+Sweat Stack - red
+```
+
+Public click roles should be tester/game roles only. Do not make `Chiefyy Forge Queen` or `Bamboo Mod` public self-assign buttons.
 
 ## Welcome Message
 
