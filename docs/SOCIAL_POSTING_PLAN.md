@@ -105,9 +105,9 @@ https://github.com/P4ND4907/cueforge/issues/1
 ## Discord Daily Update Template
 
 ```text
-🐼 Daily Panda Lab update
+Daily Panda Lab update
 
-Today’s focus:
+Today's focus:
 {focus}
 
 What changed:
