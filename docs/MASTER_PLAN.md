@@ -10,10 +10,11 @@ CueForge is building toward one clear promise: make FPS audio testing repeatable
 mindmap
   root((CueForge))
     Player Testing
-      Setup Gate
+      Setup Journey
         Permissions
         Bridge Report
-        Readiness Score
+        Gear Profile
+        Calibration Direction
         Self Test
       Player Trial
         Before Match
@@ -89,26 +90,28 @@ mindmap
 
 Goal: make a tester's first 10 minutes useful.
 
-### Setup Gate
+### Setup Journey
 
-Purpose: catch obvious blockers before someone plays a match.
+Purpose: make the tester's first run useful, memorable, and repeatable before someone plays a match.
 
 Breakdown:
 
 ```text
+Immersive bamboo soundwalk
+Gear profile
 Mic permission state
 Browser audio support
 Audio device visibility
 Optional Windows bridge report
 Equalizer APO / Peace / Sonar / Voicemeeter / VB-CABLE status
-Readiness score
+First calibration direction
 Next recommended action
 ```
 
 Ready standard:
 
 ```text
-Tester can run the gate without help.
+Tester can complete the journey without help.
 Blocked permission states explain exactly what to do.
 The app never asks for raw private data.
 The redacted setup summary is copy/paste ready.
@@ -411,7 +414,7 @@ Date target: May 22-26, 2026.
 Ship:
 
 ```text
-Setup Gate
+Setup Journey
 Self Test
 Auto Detect setup summary
 Mic Lab
@@ -528,7 +531,7 @@ CueForge update 001:
 The Panda Lab roadmap is live. This is where app development news, build progress, and future CueForge ideas will live.
 
 What is ready to test:
-- Setup Gate and Self Test
+- Setup Journey and Self Test
 - live mic feedback
 - Auto Detect setup summaries
 - IEM/headset EQ export

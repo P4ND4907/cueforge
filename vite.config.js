@@ -3,5 +3,15 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/cueforge/' : '/',
-  plugins: [react()]
+  plugins: [react()],
+  build: {
+    chunkSizeWarningLimit: 850,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          three: ['three']
+        }
+      }
+    }
+  }
 }));

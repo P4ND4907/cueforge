@@ -108,7 +108,7 @@ This is the Panda Lab for FPS audio: IEMs, headsets, mics, Discord chains, Equal
 
 Fast path:
 1. Open CueForge: https://p4nd4907.github.io/cueforge/
-2. Run Setup Gate and Self Test.
+2. Run Setup Journey and Self Test.
 3. Post your gear in #signal-setups.
 4. Play one real match.
 5. Post what changed in #match-checkins or what broke in #bug-replays.

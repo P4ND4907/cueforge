@@ -6,7 +6,7 @@ Read and verified for the current local release build.
 
 - `package.json` - Vite/React project metadata and scripts.
 - `index.html` - browser entry document.
-- `src/main.jsx` - full CueForge application: setup gate, player trial, report lab, mic analyzer, EQ studio, game profiles, hearing model, system info, and Equalizer APO export logic.
+- `src/main.jsx` - full CueForge application: immersive setup journey, player trial, report lab, mic analyzer, EQ studio, game profiles, hearing model, system info, and Equalizer APO export logic.
 - `src/audioData.js` - local IEM, Valorant, competitive FPS, balanced, and HyperX target data pulled from accessible workspace profiles.
 - `src/audioData.test.js` - unit coverage for Equalizer APO export text and Valorant process metadata.
 - `src/autoTune.js` - calibration curve generator for IEM/headset/game/mic preferences.
@@ -43,6 +43,8 @@ Read and verified for the current local release build.
 - `docs/DRIVER_LAYER.md` - trusted companion driver/audio-layer strategy and rules.
 - `docs/HIGH_END_ANALYZER_PLAN.md` - analyzer architecture, open-source audio stack options, and next build targets.
 - `docs/MASTER_PLAN.md` - public roadmap, master map, workstreams, release timeline, and update 001 posting plan.
+- `docs/SETUP_JOURNEY_DIRECTOR_SCRIPT.md` - cinematic direction, text-to-video prompt, negative prompt, and app integration notes for the panda bamboo soundwalk.
+- `docs/PROMPT_BACKLOG_AUDIT.md` - checkpoint of covered, partially covered, and open requests from the build session.
 - `docs/updates/2026-05-22-update-001.md` - first public update copy for Discord, X, and Reddit-safe profile posting.
 - `docs/updates/2026-05-22-update-002.md` - Panda Notes update copy for the right-click UI debugger.
 - `docs/DISCORD_FINAL_BUILDOUT.md` - live Discord status, roles, onboarding, bot strategy, and channel setup.
@@ -69,7 +71,7 @@ Read and verified for the current local release build.
 - `npm.cmd run build` completed.
 - `npm.cmd audit --audit-level=moderate` completed with 0 vulnerabilities.
 - Local server responded at `http://127.0.0.1:5177`.
-- Browser workflow tested: setup gate, dashboard, mic analysis with IEM/HyperX sample text, EQ studio, local source profile tabs, game profiles, hearing model hardware targets, and system info page.
+- Browser workflow tested: setup journey, dashboard, mic analysis with IEM/HyperX sample text, EQ studio, local source profile tabs, game profiles, hearing model hardware targets, and system info page.
 - Responsive overflow sweep tested Community Hub, Mic Lab, Beta Check-in, Report Lab, EQ Studio, and Auto Detect at mobile, tablet, and desktop widths with no horizontal overflow offenders.
 - Auto Self Test tested: browser audio APIs, device enumeration, bridge report, autotune generation, export payload generation, hearing model, storage, tone engine, and mic permission reporting.
 - Personal Hearing Model tested: reset, heard/missed tone marking, progress update, compensation overlay, export control present.
@@ -78,7 +80,8 @@ Read and verified for the current local release build.
 - Blind Match tested: A/B choice flow, learned curve generation, save/export/apply controls.
 - Tactical Masking Lab tested: scenario scoring, anti-masking EQ generation, export/apply controls.
 - Report Lab tested: redacted report creation, preview, download path, import validation, and replay into EQ Studio.
-- Player Setup Gate tested: readiness score, setup checklist, setup report creation, Report Lab handoff, and Self Test navigation.
+- Setup Journey tested: first-run gear profile, device scan path, calibration direction, handoff into the app, and rerun setup control from System Info.
+- Setup Journey 3D QA tested: desktop canvas nonblank and animated, click-to-start soundwalk status, final reflection stage, app handoff, no setup nav leak, mobile canvas nonblank, and no mobile horizontal overflow.
 - Player Trial tested: five-step match script, step completion, feedback scoring, next-fix output, and tester packet export.
 - Privacy hardening tested: report exports redact raw device IDs, group IDs, config paths, Windows paths, computer names, full user-agent strings, emails, and phone numbers.
 - Optional Windows scanner ran and found Equalizer APO, SteelSeries GG/Sonar, and USB audio devices.

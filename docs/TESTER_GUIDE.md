@@ -12,7 +12,7 @@ Thanks for testing CueForge. The goal is simple: find out whether the app helps 
 ## Test Session
 
 1. Run CueForge locally.
-2. Open `Setup Gate` and follow the readiness checklist.
+2. Complete the first-run `Setup Journey` so CueForge saves your gear profile and calibration direction.
 3. Open `Community Hub` and copy the roll call if you are coordinating feedback in Discord.
 4. Run `Self Test`.
 5. Open `Mic Lab` and confirm live mic feedback works.

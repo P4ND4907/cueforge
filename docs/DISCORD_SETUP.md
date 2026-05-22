@@ -57,7 +57,7 @@ This server is open for honest players, weird setups, strong opinions, and real 
 
 Quick path:
 1. Open CueForge: https://p4nd4907.github.io/cueforge/
-2. Run Setup Gate and Self Test.
+2. Run Setup Journey and Self Test.
 3. Pick your tester path in onboarding.
 4. Post your gear chain in #signal-setups.
 5. Play one real match.
@@ -165,5 +165,5 @@ Feedback:
 https://github.com/P4ND4907/cueforge/issues/1
 
 Best first test:
-Run Setup Gate, run Self Test, create one EQ/profile, play one match, then post what improved and what got worse.
+Run Setup Journey, run Self Test, create one EQ/profile, play one match, then post what improved and what got worse.
 ```

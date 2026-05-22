@@ -2,7 +2,7 @@
 
 **Make your game audio less of a guessing game.**
 
-CueForge is a Windows-first gaming audio control center for IEMs, headsets, and mics. It gives players a repeatable way to test a setup, clean up a boom mic, tune IEMs for competitive games, build hearing-aware EQ, and export Equalizer APO configs.
+CueForge is a Windows-first gaming audio control center for players who want their game sound, comms, mic, and EQ setup to make sense. It gives players a repeatable way to set up their chain, test a match, clean up a mic, tune for competitive games, build hearing-aware EQ, and export Equalizer APO configs.
 
 It does not silently install drivers or rewrite Windows audio routing. It makes the hidden parts visible, generates configs, and keeps the final system-level apply step explicit.
 
@@ -49,7 +49,7 @@ The current web build is the right foundation for safe testing, tuning, feedback
 
 ## What It Does
 
-- Player Setup Gate that scores readiness, requests mic permission, checks browser audio, confirms bridge/APO status, creates setup reports, and routes testers through the right flow.
+- Immersive Setup Journey, a standalone first-run bamboo soundwalk with a 3D Three.js scene, click-to-start Web Audio bed, gear profile, device scan, calibration direction, and clean handoff into the main app.
 - Community Hub for Discord-first roll calls, this-or-that tester input, X/Reddit post drafts, and local signal summaries.
 - Player Trial with a repeatable match script, post-match ratings, next-fix recommendations, and an exportable tester packet.
 - Beta Check-in with anonymous local tester IDs, proof codes, active-day counts, and exportable packets for real beta feedback without hidden telemetry.
@@ -115,11 +115,11 @@ The generated bridge report is local machine data. It is ignored by Git and excl
 
 ## Best Setup Path
 
-1. Open `Setup Gate`, refresh the check, grant mic permission, and create the first setup report.
+1. Start with the first-run Setup Journey, enter the gear profile, scan devices, and set the first calibration direction.
 2. Open `Self Test` and run the full auto test.
 3. Open `Auto Detect`, allow microphone permission if prompted, and load the generated bridge report.
-4. Open `Mic Lab`, start live mic feedback, speak into the HyperX mic, and watch level/noise/clip risk.
-5. Use `Left`, `Right`, `Center`, and `Sweep` to check IEM channel balance and harsh peaks.
+4. Open `Mic Lab`, start live mic feedback, speak into the mic, and watch level/noise/clip risk.
+5. Use `Left`, `Right`, `Center`, and `Sweep` to check channel balance and harsh peaks.
 6. Open `Hearing Model`, keep volume low, test left/right ears, and export the hearing profile.
 7. Open `Calibration`, generate autotune, and apply it to EQ Studio.
 8. Open `Blind Match`, run the A/B rounds, and apply the learned curve.
@@ -129,6 +129,8 @@ The generated bridge report is local machine data. It is ignored by Git and excl
 12. Open `Audio DNA`, save the fingerprint after you like the result.
 13. Open `EQ Studio`, export the Equalizer APO config, and paste it into Equalizer APO or Peace.
 14. Use `Export Pack` when you want the full setup bundle instead of a single config.
+
+To run setup again later, open `System Info` and click `Rerun setup`.
 
 ## Player Test Reports
 

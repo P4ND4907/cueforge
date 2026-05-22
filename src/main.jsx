@@ -159,7 +159,8 @@ function analyzeSample(input) {
 }
 
 function App() {
-  const [active, setActive] = useState('setup');
+  const [setupComplete, setSetupComplete] = useState(() => localStorage.getItem('cueforge-setup-complete') === 'yes');
+  const [active, setActive] = useState('dashboard');
   const [eq, setEq] = useState(baseEq);
   const [sample, setSample] = useState('HyperX Cloud Alpha, Discord, Valorant, teammates say mic is a little boomy');
   const [analysis, setAnalysis] = useState(() => analyzeSample(sample));
@@ -253,7 +254,7 @@ function App() {
     setUiNoteDraft({
       tag: 'confusing',
       note: '',
-      page: sectionTitle(active),
+      page: setupComplete ? sectionTitle(active) : 'Setup Journey',
       target: describeFeedbackTarget(target),
       viewport: {
         width: window.innerWidth,
@@ -291,6 +292,50 @@ function App() {
     setUiNoteNotice(false);
   };
 
+  const feedbackLayer = (
+    <>
+      {uiNoteNotice && (
+        <div className="tester-note-banner">
+          <Bug size={18} />
+          <span>Personal UI debugger is on: right-click any CueForge area to tag a note. Notes stay local and only ride with the redacted report or export pack you choose to send.</span>
+          <button className="ghost" onClick={dismissUiNoteNotice}>Got it</button>
+        </div>
+      )}
+      {uiNoteStatus && <p className="ui-note-status">{uiNoteStatus}</p>}
+      {uiNoteDraft && (
+        <UiNotePopover
+          draft={uiNoteDraft}
+          onChange={setUiNoteDraft}
+          onCancel={() => setUiNoteDraft(null)}
+          onSave={saveUiNote}
+        />
+      )}
+    </>
+  );
+
+  const completeSetup = (profile) => {
+    localStorage.setItem('cueforge-setup-complete', 'yes');
+    safeSetJson('cueforge-setup-profile', profile);
+    setSelectedGame(profile.gameFocus || selectedGame);
+    setSetupComplete(true);
+    setActive('dashboard');
+  };
+
+  const rerunSetup = () => {
+    localStorage.removeItem('cueforge-setup-complete');
+    setSetupComplete(false);
+    setActive('dashboard');
+  };
+
+  if (!setupComplete) {
+    return (
+      <div className="setup-journey-shell" onContextMenu={handleUiContextMenu}>
+        <SetupJourney onComplete={completeSetup} onSkip={() => completeSetup({ skipped: true, completedAt: new Date().toISOString() })} />
+        {feedbackLayer}
+      </div>
+    );
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -303,7 +348,6 @@ function App() {
         </div>
         <nav>
           {[
-            ['setup', ShieldCheck, 'Setup Gate'],
             ['hub', Radio, 'Community Hub'],
             ['dashboard', Gauge, 'Control'],
             ['selftest', TestTube2, 'Self Test'],
@@ -346,30 +390,7 @@ function App() {
             <button className="primary" onClick={downloadConfig}><Download size={18} /> Export APO</button>
           </div>
         </header>
-        {uiNoteNotice && (
-          <div className="tester-note-banner">
-            <Bug size={18} />
-            <span>Personal UI debugger is on: right-click any CueForge area to tag a note. Notes stay local and only ride with the redacted report or export pack you choose to send.</span>
-            <button className="ghost" onClick={dismissUiNoteNotice}>Got it</button>
-          </div>
-        )}
-        {uiNoteStatus && <p className="ui-note-status">{uiNoteStatus}</p>}
-        {uiNoteDraft && (
-          <UiNotePopover
-            draft={uiNoteDraft}
-            onChange={setUiNoteDraft}
-            onCancel={() => setUiNoteDraft(null)}
-            onSave={saveUiNote}
-          />
-        )}
-
-        {active === 'setup' && (
-          <PlayerSetupGate
-            eq={eq}
-            apoConfig={apoConfig}
-            onGo={setActive}
-          />
-        )}
+        {feedbackLayer}
 
         {active === 'hub' && <CommunityHubPage />}
 
@@ -561,7 +582,7 @@ function App() {
           </section>
         )}
 
-        {active === 'inventory' && <Inventory onOpen={setActive} uiNotes={uiNotes} onClearUiNotes={() => {
+        {active === 'inventory' && <Inventory onOpen={setActive} onRerunSetup={rerunSetup} uiNotes={uiNotes} onClearUiNotes={() => {
           setUiNotes([]);
           safeSetJson(UI_FEEDBACK_KEY, []);
           setUiNoteStatus('Developer UI notes cleared from this browser.');
@@ -624,6 +645,718 @@ function UiNotePopover({ draft, onChange, onCancel, onSave }) {
       </div>
     </div>
   );
+}
+
+function createBrowserAudioContext() {
+  const BrowserAudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!BrowserAudioContext) throw new Error('Web Audio is unavailable');
+  return new BrowserAudioContext();
+}
+
+function SetupJourney({ onComplete, onSkip }) {
+  const [step, setStep] = useState(0);
+  const [micStatus, setMicStatus] = useState('not checked');
+  const [scanStatus, setScanStatus] = useState('not scanned');
+  const [deviceCount, setDeviceCount] = useState(0);
+  const [bridgeFound, setBridgeFound] = useState(false);
+  const [toneStatus, setToneStatus] = useState('ready');
+  const [soundActive, setSoundActive] = useState(false);
+  const soundRef = useRef(null);
+  const [profile, setProfile] = useState(() => ({
+    handle: '',
+    gameFocus: gameProfiles[0].game,
+    outputType: 'IEM / headphones',
+    micType: 'USB or headset mic',
+    tools: {
+      equalizerApo: false,
+      sonar: false,
+      discord: true
+    },
+    footstepFocus: 7,
+    commsFocus: 7,
+    bassControl: 5,
+    fatigueControl: 6
+  }));
+
+  const setupSteps = [
+    ['Trail Gear', 'Name the chain before the forest starts listening.'],
+    ['Bamboo Scan', 'Scan browser devices and optional local bridge data.'],
+    ['Pond Tune', 'Choose the first match-ready tuning direction.'],
+    ['Reflection', 'Save the profile and meet the tuned version.']
+  ];
+  const setupStage = setupSteps[step];
+  const profileStrength = Math.round((Number(profile.footstepFocus) + Number(profile.commsFocus) + Number(profile.bassControl) + Number(profile.fatigueControl)) / 4 * 10);
+
+  const updateProfile = (key, value) => setProfile((current) => ({ ...current, [key]: value }));
+  const updateTool = (key, value) => setProfile((current) => ({
+    ...current,
+    tools: { ...current.tools, [key]: value }
+  }));
+
+  useEffect(() => {
+    if (soundRef.current) pulseSetupStep(step);
+  }, [step]);
+
+  useEffect(() => () => stopSetupSoundscape({ immediate: true }), []);
+
+  const requestMic = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      });
+      stream.getTracks().forEach((track) => track.stop());
+      setMicStatus('granted');
+    } catch {
+      setMicStatus('blocked or skipped');
+    }
+  };
+
+  const scanSetup = async () => {
+    const devices = await getBrowserAudioDevices();
+    const bridge = await getGeneratedBridgeReport();
+    setDeviceCount(devices.length);
+    setBridgeFound(Boolean(bridge));
+    setScanStatus(`${devices.length} browser audio devices${bridge ? ' plus Windows bridge' : ''}`);
+  };
+
+  const playSetupPulse = async () => {
+    try {
+      const context = createBrowserAudioContext();
+      const master = context.createGain();
+      master.gain.setValueAtTime(0.0001, context.currentTime);
+      master.gain.exponentialRampToValueAtTime(0.16, context.currentTime + 0.04);
+      master.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 1.2);
+      master.connect(context.destination);
+
+      [220, 440, 880, 1760].forEach((frequency, index) => {
+        const oscillator = context.createOscillator();
+        oscillator.type = index % 2 ? 'triangle' : 'sine';
+        oscillator.frequency.setValueAtTime(frequency, context.currentTime + index * 0.18);
+        oscillator.connect(master);
+        oscillator.start(context.currentTime + index * 0.18);
+        oscillator.stop(context.currentTime + 0.28 + index * 0.18);
+      });
+
+      setToneStatus('calibration pulse played');
+      setTimeout(() => context.close?.(), 1500);
+    } catch {
+      setToneStatus('tone engine blocked');
+    }
+  };
+
+  const startSetupSoundscape = async () => {
+    if (soundRef.current) {
+      stopSetupSoundscape();
+      return;
+    }
+
+    try {
+      const context = createBrowserAudioContext();
+      await context.resume();
+      const master = context.createGain();
+      const filter = context.createBiquadFilter();
+      const drift = context.createStereoPanner();
+      master.gain.setValueAtTime(0.0001, context.currentTime);
+      master.gain.exponentialRampToValueAtTime(0.045, context.currentTime + 0.7);
+      filter.type = 'lowpass';
+      filter.frequency.value = 1200;
+      filter.Q.value = 0.8;
+      drift.pan.value = 0;
+      filter.connect(drift).connect(master).connect(context.destination);
+
+      const drones = [55, 82.5, 110].map((frequency, index) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = index === 1 ? 'triangle' : 'sine';
+        oscillator.frequency.value = frequency;
+        gain.gain.value = index === 0 ? 0.42 : 0.22;
+        oscillator.connect(gain).connect(filter);
+        oscillator.start();
+        return { oscillator, gain };
+      });
+
+      const noiseBuffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let index = 0; index < data.length; index += 1) {
+        data[index] = (Math.random() * 2 - 1) * 0.18;
+      }
+      const noise = context.createBufferSource();
+      const noiseFilter = context.createBiquadFilter();
+      const noiseGain = context.createGain();
+      noise.buffer = noiseBuffer;
+      noise.loop = true;
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.value = 520;
+      noiseFilter.Q.value = 0.7;
+      noiseGain.gain.value = 0.038;
+      noise.connect(noiseFilter).connect(noiseGain).connect(filter);
+      noise.start();
+
+      const lfo = context.createOscillator();
+      const lfoGain = context.createGain();
+      lfo.type = 'sine';
+      lfo.frequency.value = 0.045;
+      lfoGain.gain.value = 0.42;
+      lfo.connect(lfoGain).connect(drift.pan);
+      lfo.start();
+
+      soundRef.current = { context, master, filter, drift, drones, noise, lfo };
+      setSoundActive(true);
+      setToneStatus('bamboo soundwalk on - local, low, and motion-matched');
+      pulseSetupStep(step);
+    } catch {
+      setToneStatus('audio tunnel could not start in this browser');
+    }
+  };
+
+  const stopSetupSoundscape = ({ immediate = false } = {}) => {
+    const sound = soundRef.current;
+    if (!sound) return;
+    const stopAt = immediate ? sound.context.currentTime : sound.context.currentTime + 0.22;
+    try {
+      sound.master.gain.cancelScheduledValues(sound.context.currentTime);
+      sound.master.gain.setValueAtTime(sound.master.gain.value, sound.context.currentTime);
+      sound.master.gain.exponentialRampToValueAtTime(0.0001, stopAt);
+      window.setTimeout(() => {
+        sound.drones.forEach(({ oscillator }) => oscillator.stop?.());
+        sound.noise.stop?.();
+        sound.lfo.stop?.();
+        sound.context.close?.();
+      }, immediate ? 0 : 260);
+    } catch {
+      sound.context.close?.();
+    }
+    soundRef.current = null;
+    setSoundActive(false);
+    setToneStatus('bamboo soundwalk off');
+  };
+
+  const pulseSetupStep = (activeStep) => {
+    const sound = soundRef.current;
+    if (!sound) return;
+    const context = sound.context;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const pan = context.createStereoPanner();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 180 + activeStep * 90;
+    pan.pan.value = (activeStep - 1.5) * 0.22;
+    gain.gain.setValueAtTime(0.0001, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.038, context.currentTime + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.42);
+    oscillator.connect(gain).connect(pan).connect(sound.filter);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.48);
+    sound.filter.frequency.setTargetAtTime(900 + activeStep * 180, context.currentTime, 0.08);
+  };
+
+  const finish = () => {
+    onComplete({
+      ...profile,
+      micStatus,
+      scanStatus,
+      deviceCount,
+      bridgeFound,
+      toneStatus,
+      completedAt: new Date().toISOString()
+    });
+  };
+
+  return (
+    <section className="setup-journey">
+      <SetupThreeScene step={step} />
+      <div className="setup-journey-content">
+        <div className="setup-copy">
+          <div className="brand setup-brand">
+            <div className="brand-mark"><Waves size={22} /></div>
+            <div>
+              <strong>CueForge</strong>
+              <span>First-run setup</span>
+            </div>
+          </div>
+          <div className="setup-kicker">
+            <span>Bamboo soundwalk</span>
+            <strong>{String(step + 1).padStart(2, '0')} / {String(setupSteps.length).padStart(2, '0')}</strong>
+          </div>
+          <h1>Walk the bamboo path before you tune.</h1>
+          <p>The first run is a guided soundwalk: gear in, devices checked, calibration shaped, then the pond reflection reveals the tuned player CueForge is building around.</p>
+          <div className="setup-audio-controls">
+            <button className="primary" onClick={startSetupSoundscape}><Volume2 size={18} /> {soundActive ? 'Stop soundwalk' : 'Start soundwalk'}</button>
+            <span>{toneStatus}</span>
+          </div>
+          <div className="setup-meta-grid" aria-label="Setup safety and status">
+            <div><span>Profile</span><strong>{profileStrength}%</strong></div>
+            <div><span>Mic</span><strong>{micStatus}</strong></div>
+            <div><span>Devices</span><strong>{deviceCount}</strong></div>
+            <div><span>Native</span><strong>{bridgeFound ? 'bridge' : 'manual'}</strong></div>
+          </div>
+          <div className="setup-steps">
+            {setupSteps.map(([label, detail], index) => (
+              <button className={step === index ? 'selected' : index < step ? 'done' : ''} key={label} onClick={() => setStep(index)}>
+                <strong>{index + 1}. {label}</strong>
+                <span>{detail}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="setup-panel">
+          <div className="setup-panel-stage">
+            <span>Stage {String(step + 1).padStart(2, '0')}</span>
+            <strong>{setupStage[0]}</strong>
+          </div>
+          {step === 0 && (
+            <>
+              <div className="panel-title"><Headphones size={18} /><span>Gear Profile</span></div>
+              <div className="calibration-grid">
+                <label className="field">
+                  <span>Tester name</span>
+                  <input value={profile.handle} onChange={(event) => updateProfile('handle', event.target.value)} placeholder="optional" />
+                </label>
+                <label className="field">
+                  <span>Main game focus</span>
+                  <select value={profile.gameFocus} onChange={(event) => updateProfile('gameFocus', event.target.value)}>
+                    {gameProfiles.map((item) => <option key={item.game}>{item.game}</option>)}
+                  </select>
+                </label>
+                <label className="field">
+                  <span>Output chain</span>
+                  <select value={profile.outputType} onChange={(event) => updateProfile('outputType', event.target.value)}>
+                    <option>IEM / headphones</option>
+                    <option>Gaming headset</option>
+                    <option>DAC / amp output</option>
+                    <option>Speakers for testing</option>
+                  </select>
+                </label>
+                <label className="field">
+                  <span>Mic chain</span>
+                  <input value={profile.micType} onChange={(event) => updateProfile('micType', event.target.value)} />
+                </label>
+              </div>
+              <div className="setup-toggle-row">
+                {Object.entries({ equalizerApo: 'Equalizer APO', sonar: 'Sonar/mixer', discord: 'Discord comms' }).map(([key, label]) => (
+                  <label key={key}>
+                    <input type="checkbox" checked={profile.tools[key]} onChange={(event) => updateTool(key, event.target.checked)} />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+
+          {step === 1 && (
+            <>
+              <div className="panel-title"><Search size={18} /><span>Device Detection</span></div>
+              <p>Mic permission unlocks real device names in the browser. The Windows bridge stays optional and explicit.</p>
+              <div className="metric-row selftest-summary">
+                <Metric label="Mic" value={micStatus} tone={micStatus === 'granted' ? 'teal' : 'amber'} />
+                <Metric label="Devices" value={String(deviceCount)} tone={deviceCount ? 'teal' : 'amber'} />
+                <Metric label="Bridge" value={bridgeFound ? 'loaded' : 'optional'} tone={bridgeFound ? 'teal' : 'amber'} />
+              </div>
+              <div className="live-actions">
+                <button className="primary" onClick={requestMic}><Mic size={18} /> Grant mic access</button>
+                <button className="ghost" onClick={scanSetup}><Search size={18} /> Scan devices</button>
+              </div>
+              <p className="callout">{scanStatus}</p>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <div className="panel-title"><SlidersHorizontal size={18} /><span>Calibration Direction</span></div>
+              <p>Set the first target. CueForge can refine this later with Mic Lab, Hearing Model, Blind Match, and real match notes.</p>
+              <div className="calibration-grid">
+                <Slider label="Footstep focus" value={profile.footstepFocus} onChange={(value) => updateProfile('footstepFocus', value)} />
+                <Slider label="Comms priority" value={profile.commsFocus} onChange={(value) => updateProfile('commsFocus', value)} />
+                <Slider label="Bass control" value={profile.bassControl} onChange={(value) => updateProfile('bassControl', value)} />
+                <Slider label="Fatigue control" value={profile.fatigueControl} onChange={(value) => updateProfile('fatigueControl', value)} />
+              </div>
+              <div className="live-actions">
+                <button className="primary" onClick={playSetupPulse}><Play size={18} /> Play calibration pulse</button>
+              </div>
+              <p className="callout">{toneStatus}</p>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <div className="panel-title"><ShieldCheck size={18} /><span>Ready To Launch CueForge</span></div>
+              <div className="setup-review">
+                <div><strong>{profile.gameFocus}</strong><span>{profile.outputType}</span></div>
+                <div><strong>{profile.micType}</strong><span>Mic: {micStatus}</span></div>
+                <div><strong>{deviceCount} devices</strong><span>{bridgeFound ? 'Windows bridge loaded' : 'Browser scan only'}</span></div>
+              </div>
+              <p className="callout">After this, CueForge opens the main app without a setup tab in the sidebar. Rerun the bamboo soundwalk later from System Info.</p>
+            </>
+          )}
+
+          <div className="setup-nav-actions">
+            <button className="ghost" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>Back</button>
+            {step < setupSteps.length - 1 ? (
+              <button className="primary" onClick={() => setStep(step + 1)}>Continue</button>
+            ) : (
+              <button className="primary" onClick={finish}><CheckCircle2 size={18} /> Enter app</button>
+            )}
+            <button className="ghost" onClick={onSkip}>Skip for now</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SetupThreeScene({ step }) {
+  const canvasRef = useRef(null);
+  const stepRef = useRef(step);
+
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
+
+  useEffect(() => {
+    let renderer;
+    let scene;
+    let camera;
+    let world;
+    let panda;
+    let reflection;
+    let pond;
+    let rippleGroup;
+    let bambooGroup;
+    let ferroGroup;
+    let fireflies;
+    let animationFrame = 0;
+    let resizeObserver;
+    let disposed = false;
+    const pointer = { x: 0, y: 0 };
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const onPointerMove = (event) => {
+      pointer.x = (event.clientX / Math.max(1, window.innerWidth) - 0.5) * 2;
+      pointer.y = (event.clientY / Math.max(1, window.innerHeight) - 0.5) * 2;
+    };
+
+    const start = async () => {
+      const THREE = await import('three');
+      if (disposed || !canvasRef.current) return;
+
+      const matteGreen = new THREE.MeshStandardMaterial({ color: 0x214b2f, roughness: 0.82 });
+      const bambooMaterial = new THREE.MeshStandardMaterial({ color: 0x2f9c5b, roughness: 0.62, metalness: 0.02 });
+      const bambooRingMaterial = new THREE.MeshStandardMaterial({ color: 0x16391f, roughness: 0.7 });
+      const leafMaterial = new THREE.MeshStandardMaterial({ color: 0x5fbd66, roughness: 0.74, side: THREE.DoubleSide });
+      const pathMaterial = new THREE.MeshStandardMaterial({ color: 0x1a261d, roughness: 0.88 });
+      const whiteFur = new THREE.MeshStandardMaterial({ color: 0xf1eee3, roughness: 0.68 });
+      const blackFur = new THREE.MeshStandardMaterial({ color: 0x070807, roughness: 0.48, metalness: 0.08 });
+      const ferroMaterial = new THREE.MeshStandardMaterial({
+        color: 0x050606,
+        emissive: 0x06221d,
+        metalness: 0.72,
+        roughness: 0.2
+      });
+      const waterMaterial = new THREE.MeshStandardMaterial({
+        color: 0x0c5e65,
+        emissive: 0x021918,
+        metalness: 0.14,
+        roughness: 0.18,
+        transparent: true,
+        opacity: 0.62
+      });
+      const rippleMaterial = new THREE.MeshBasicMaterial({ color: 0x8df7dd, transparent: true, opacity: 0.32 });
+      const reflectionWhite = new THREE.MeshStandardMaterial({
+        color: 0xbef8e4,
+        emissive: 0x063a35,
+        roughness: 0.28,
+        transparent: true,
+        opacity: 0.3
+      });
+      const reflectionBlack = new THREE.MeshStandardMaterial({
+        color: 0x03100f,
+        emissive: 0x021918,
+        roughness: 0.22,
+        transparent: true,
+        opacity: 0.36
+      });
+
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvasRef.current,
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer: true
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setClearColor(0x000000, 0);
+
+      scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x06120d, 0.044);
+      camera = new THREE.PerspectiveCamera(52, 1, 0.1, 120);
+      camera.position.set(0, 1.2, 8.4);
+
+      scene.add(new THREE.HemisphereLight(0xbaf3e4, 0x102416, 1.15));
+      const moon = new THREE.DirectionalLight(0xd8fff0, 1.8);
+      moon.position.set(-2.4, 5.8, 5.2);
+      scene.add(moon);
+      const pondGlow = new THREE.PointLight(0x20c9a9, 2.2, 12);
+      pondGlow.position.set(0, -0.3, -4.2);
+      scene.add(pondGlow);
+
+      world = new THREE.Group();
+      scene.add(world);
+
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 26), matteGreen);
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.set(0, -1.34, -3.5);
+      world.add(ground);
+
+      const path = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 12), pathMaterial);
+      path.rotation.x = -Math.PI / 2;
+      path.position.set(0, -1.325, 0.3);
+      path.scale.x = 0.72;
+      world.add(path);
+
+      pond = new THREE.Mesh(new THREE.CircleGeometry(2.35, 96), waterMaterial);
+      pond.rotation.x = -Math.PI / 2;
+      pond.position.set(0, -1.27, -4.2);
+      world.add(pond);
+
+      rippleGroup = new THREE.Group();
+      [0.7, 1.15, 1.65, 2.05].forEach((radius, index) => {
+        const ripple = new THREE.Mesh(new THREE.TorusGeometry(radius, 0.01, 8, 128), rippleMaterial.clone());
+        ripple.rotation.x = Math.PI / 2;
+        ripple.position.set(0, -1.245, -4.2);
+        ripple.userData = { baseRadius: radius, offset: index * 0.7 };
+        rippleGroup.add(ripple);
+      });
+      world.add(rippleGroup);
+
+      bambooGroup = new THREE.Group();
+      for (let index = 0; index < 42; index += 1) {
+        const side = index % 2 === 0 ? -1 : 1;
+        const row = Math.floor(index / 2);
+        const x = side * (2.0 + (row % 5) * 0.64 + Math.sin(row * 1.37) * 0.22);
+        const z = 3.1 - row * 0.48 + Math.cos(row * 0.73) * 0.24;
+        const height = 4.9 + (row % 6) * 0.32;
+        const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.075, height, 12), bambooMaterial);
+        stalk.position.set(x, -1.3 + height / 2, z);
+        stalk.rotation.z = side * (0.035 + Math.sin(row) * 0.018);
+        stalk.userData = { seed: row * 0.37, side };
+        bambooGroup.add(stalk);
+
+        for (let node = 0; node < 5; node += 1) {
+          const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.082, 0.082, 0.026, 12), bambooRingMaterial);
+          ring.position.set(x, -0.55 + node * (height / 6), z);
+          ring.rotation.z = stalk.rotation.z;
+          bambooGroup.add(ring);
+        }
+
+        for (let leafIndex = 0; leafIndex < 3; leafIndex += 1) {
+          const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.68, 4), leafMaterial);
+          leaf.position.set(
+            x + side * (0.22 + leafIndex * 0.18),
+            -1.3 + height * (0.72 + leafIndex * 0.06),
+            z + Math.sin(leafIndex + row) * 0.22
+          );
+          leaf.rotation.set(0.8 + leafIndex * 0.18, 0, side * (1.2 + leafIndex * 0.35));
+          leaf.userData = { seed: row + leafIndex * 0.8, side };
+          bambooGroup.add(leaf);
+        }
+      }
+      world.add(bambooGroup);
+
+      const createPanda = ({ reflected = false } = {}) => {
+        const group = new THREE.Group();
+        const white = reflected ? reflectionWhite : whiteFur;
+        const black = reflected ? reflectionBlack : blackFur;
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 28, 20), white);
+        body.scale.set(0.85, 1.05, 0.72);
+        body.position.y = -0.56;
+        group.add(body);
+
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 28, 20), white);
+        head.position.y = -0.05;
+        group.add(head);
+
+        [['leftEar', -0.24], ['rightEar', 0.24]].forEach(([name, x]) => {
+          const ear = new THREE.Mesh(new THREE.SphereGeometry(0.12, 18, 12), black);
+          ear.position.set(x, 0.22, -0.02);
+          ear.userData = { name };
+          group.add(ear);
+        });
+
+        [['leftEye', -0.12], ['rightEye', 0.12]].forEach(([name, x]) => {
+          const patch = new THREE.Mesh(new THREE.SphereGeometry(0.09, 18, 12), black);
+          patch.scale.set(1.05, 0.68, 0.34);
+          patch.position.set(x, -0.03, 0.27);
+          patch.userData = { name };
+          group.add(patch);
+        });
+
+        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.052, 14, 10), black);
+        nose.scale.set(1.15, 0.7, 0.52);
+        nose.position.set(0, -0.11, 0.31);
+        group.add(nose);
+
+        [['leftArm', -0.36], ['rightArm', 0.36]].forEach(([name, x]) => {
+          const limb = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), black);
+          limb.scale.set(0.58, 1.3, 0.55);
+          limb.position.set(x, -0.5, 0.03);
+          limb.userData = { name };
+          group.add(limb);
+        });
+
+        if (reflected) {
+          [['leftBatEar', -0.25], ['rightBatEar', 0.25]].forEach(([name, x]) => {
+            const batEar = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.55, 3), black);
+            batEar.position.set(x, 0.48, 0.02);
+            batEar.rotation.z = x < 0 ? 0.28 : -0.28;
+            batEar.userData = { name };
+            group.add(batEar);
+          });
+        }
+
+        return group;
+      };
+
+      panda = createPanda();
+      panda.position.set(0, -0.24, 1.05);
+      panda.rotation.y = Math.PI;
+      world.add(panda);
+
+      reflection = createPanda({ reflected: true });
+      reflection.position.set(0, -1.13, -4.12);
+      reflection.scale.set(0.88, 0.12, 0.88);
+      reflection.rotation.x = Math.PI;
+      reflection.userData = { materials: [reflectionWhite, reflectionBlack] };
+      world.add(reflection);
+
+      ferroGroup = new THREE.Group();
+      for (let index = 0; index < 74; index += 1) {
+        const drop = new THREE.Mesh(
+          new THREE.SphereGeometry(0.035 + (index % 5) * 0.009, 14, 10),
+          ferroMaterial
+        );
+        drop.userData = {
+          angle: index * 0.54,
+          radius: 0.45 + (index % 9) * 0.055,
+          lane: index % 3
+        };
+        ferroGroup.add(drop);
+      }
+      world.add(ferroGroup);
+
+      const fireflyGeometry = new THREE.BufferGeometry();
+      const fireflyPositions = new Float32Array(360 * 3);
+      for (let index = 0; index < 360; index += 1) {
+        const lane = index % 2 === 0 ? -1 : 1;
+        fireflyPositions[index * 3] = lane * (1.4 + (index % 19) * 0.24);
+        fireflyPositions[index * 3 + 1] = -0.1 + (index % 23) * 0.15;
+        fireflyPositions[index * 3 + 2] = 3.6 - (index % 41) * 0.22;
+      }
+      fireflyGeometry.setAttribute('position', new THREE.BufferAttribute(fireflyPositions, 3));
+      fireflies = new THREE.Points(
+        fireflyGeometry,
+        new THREE.PointsMaterial({ color: 0xf6d46c, size: 0.032, transparent: true, opacity: 0.72 })
+      );
+      world.add(fireflies);
+
+      const resize = () => {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const width = Math.max(1, Math.floor(rect.width));
+        const height = Math.max(1, Math.floor(rect.height));
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      };
+
+      resizeObserver = new ResizeObserver(resize);
+      resizeObserver.observe(canvasRef.current);
+      resize();
+      window.addEventListener('pointermove', onPointerMove, { passive: true });
+
+      const animate = () => {
+        const activeStep = stepRef.current;
+        const now = performance.now() * 0.001;
+        const progress = activeStep / 3;
+        const cameraTargetZ = 8.2 - progress * 2.15;
+        const cameraTargetY = 1.28 + progress * 0.28;
+        const lookTarget = new THREE.Vector3(0, -0.45 + progress * 0.18, -1.0 - progress * 2.25);
+        camera.position.x += ((reducedMotion ? 0 : pointer.x * 0.36) - camera.position.x) * 0.035;
+        camera.position.y += ((reducedMotion ? cameraTargetY : cameraTargetY + pointer.y * -0.18) - camera.position.y) * 0.035;
+        camera.position.z += (cameraTargetZ - camera.position.z) * 0.035;
+        camera.lookAt(lookTarget);
+
+        panda.position.z += ((1.05 - progress * 3.55) - panda.position.z) * 0.04;
+        panda.position.y = -0.24 + Math.sin(now * 4.6) * (reducedMotion ? 0.006 : 0.028);
+        panda.rotation.y = Math.PI + Math.sin(now * 1.3) * 0.06;
+
+        reflection.userData.materials.forEach((material) => {
+          material.opacity += ((activeStep >= 2 ? 0.48 : 0.16) - material.opacity) * 0.04;
+        });
+        reflection.position.y = -1.13 + Math.sin(now * 1.4) * 0.012;
+        reflection.rotation.z = Math.sin(now * 0.9) * 0.025;
+
+        pond.rotation.z += reducedMotion ? 0.0002 : 0.0011;
+        rippleGroup.children.forEach((ripple, index) => {
+          const scale = 1 + Math.sin(now * 1.2 + ripple.userData.offset) * 0.055 + activeStep * 0.02;
+          ripple.scale.setScalar(scale);
+          ripple.material.opacity = 0.18 + Math.sin(now * 1.6 + index) * 0.08 + activeStep * 0.03;
+        });
+
+        bambooGroup.children.forEach((item) => {
+          const seed = item.userData.seed || 0;
+          const side = item.userData.side || 1;
+          item.rotation.z += Math.sin(now * 0.85 + seed) * side * (reducedMotion ? 0.000005 : 0.000035);
+        });
+
+        ferroGroup.children.forEach((drop, index) => {
+          const data = drop.userData;
+          const audioPulse = 1 + Math.sin(now * 3.2 + index) * (reducedMotion ? 0.04 : 0.18);
+          const orbit = data.angle + now * (0.8 + activeStep * 0.18);
+          const laneZ = activeStep < 2 ? 0.5 - data.lane * 0.75 - progress * 2.1 : -4.05;
+          const orbitRadius = data.radius + activeStep * 0.08;
+          drop.position.set(
+            Math.cos(orbit) * orbitRadius,
+            -0.86 + Math.sin(orbit * 1.7) * 0.34,
+            laneZ + Math.sin(orbit) * (activeStep < 2 ? 0.34 : 0.24)
+          );
+          drop.scale.setScalar(audioPulse);
+        });
+        ferroGroup.rotation.y += reducedMotion ? 0.0005 : 0.002 + activeStep * 0.0004;
+
+        const positions = fireflies.geometry.attributes.position.array;
+        for (let index = 0; index < positions.length; index += 3) {
+          positions[index + 1] += Math.sin(now + index) * 0.0008;
+          positions[index + 2] += reducedMotion ? 0.0006 : 0.0022;
+          if (positions[index + 2] > 4.2) positions[index + 2] = -5.6;
+        }
+        fireflies.geometry.attributes.position.needsUpdate = true;
+        fireflies.rotation.y = Math.sin(now * 0.28) * 0.05;
+
+        renderer.render(scene, camera);
+        animationFrame = requestAnimationFrame(animate);
+      };
+
+      animate();
+    };
+
+    start();
+
+    return () => {
+      disposed = true;
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      resizeObserver?.disconnect();
+      window.removeEventListener('pointermove', onPointerMove);
+      world?.traverse((item) => {
+        item?.geometry?.dispose?.();
+        if (Array.isArray(item?.material)) {
+          item.material.forEach((material) => material.dispose?.());
+        } else {
+          item?.material?.dispose?.();
+        }
+      });
+      renderer?.dispose?.();
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="setup-3d-canvas" aria-label="CueForge bamboo setup scene" />;
 }
 
 function PersonalHearingModel() {
@@ -782,137 +1515,6 @@ function Metric({ label, value, tone }) {
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
-  );
-}
-
-function PlayerSetupGate({ eq, apoConfig, onGo }) {
-  const [snapshot, setSnapshot] = useState({
-    audioApi: false,
-    micPermission: 'unknown',
-    deviceCount: 0,
-    bridgeLoaded: false,
-    apoFound: false,
-    selfTests: [],
-    reportReady: false,
-    hearingAnswered: 0
-  });
-  const [status, setStatus] = useState('Checking local setup...');
-
-  const refresh = async () => {
-    const audioApi = Boolean(window.AudioContext && navigator.mediaDevices?.enumerateDevices);
-    const devices = await getBrowserAudioDevices();
-    const bridge = await getGeneratedBridgeReport();
-    const selfTests = getSavedJson('cueforge-self-test-results') || [];
-    const hearing = getSavedJson('cueforge-hearing-results');
-    const hearingAnswered = hearing ? hearingScore(hearing).answered : 0;
-    const micPermission = await getMicPermissionState();
-
-    setSnapshot({
-      audioApi,
-      micPermission,
-      deviceCount: devices.length,
-      bridgeLoaded: Boolean(bridge),
-      apoFound: Boolean(bridge?.tools?.equalizerApo?.installed),
-      selfTests,
-      reportReady: Boolean(getSavedJson('cueforge-last-issue-report')),
-      hearingAnswered
-    });
-    setStatus('Setup check updated.');
-  };
-
-  useEffect(() => {
-    refresh();
-  }, []);
-
-  const requestMic = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((track) => track.stop());
-      setStatus('Mic permission granted. Refreshing setup check...');
-    } catch {
-      setStatus('Mic permission was not granted. Use the browser address bar permission control, then refresh.');
-    }
-    refresh();
-  };
-
-  const createQuickReport = async () => {
-    const devices = await getBrowserAudioDevices();
-    const bridge = await getGeneratedBridgeReport();
-    const report = buildIssueReport({
-      eq,
-      apoConfig,
-      selectedGame: 'Setup Gate',
-      selectedSourceProfile: 'iemFps',
-      currentPage: 'setup',
-      sample: 'Setup readiness report',
-      analysis: analyzeSample('Setup readiness report'),
-      hearing: getSavedJson('cueforge-hearing-results'),
-      dna: getSavedJson('cueforge-dna-history')?.[0] || null,
-      bridgeReport: bridge,
-      browserDevices: devices,
-      selfTestResults: getSavedJson('cueforge-self-test-results') || [],
-      uiFeedbackNotes: getSavedJson(UI_FEEDBACK_KEY) || [],
-      notes: 'Quick setup recovery report.'
-    });
-    safeSetJson('cueforge-last-issue-report', report);
-    downloadTextFile('cueforge-setup-ready-report.json', JSON.stringify(report, null, 2));
-    setStatus('Redacted setup report created and saved for replay.');
-    refresh();
-  };
-
-  const readiness = computeSetupReadiness(snapshot);
-  const readyLabel = readiness.status === 'player-test-ready'
-    ? 'Ready for controlled player test'
-    : readiness.status === 'nearly-ready'
-      ? 'Nearly ready'
-      : 'Needs setup';
-
-  return (
-    <section className="grid two setup-grid">
-      <Panel className="wide" title="Player Test Readiness" icon={ShieldCheck}>
-        <div className={`readiness-hero ${readiness.status}`}>
-          <div>
-            <strong>{readiness.score}%</strong>
-            <span>{readyLabel}</span>
-          </div>
-          <p>{status}</p>
-        </div>
-        <div className="setup-checks">
-          {readiness.checks.map((check) => (
-            <div className={`setup-check ${check.ready ? 'ready' : 'open'}`} key={check.id}>
-              <CheckCircle2 size={18} />
-              <div>
-                <strong>{check.label}</strong>
-                <span>{check.ready ? 'Verified' : check.fix}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Panel>
-      <Panel title="Fix The Gaps" icon={Sparkles}>
-        <ul className="clean-list">
-          {readiness.nextActions.length === 0
-            ? <li>Ready for a controlled player session. Run one match, export the report, then compare feedback.</li>
-            : readiness.nextActions.map((action) => <li key={action}>{action}</li>)}
-        </ul>
-        <div className="live-actions">
-          <button className="primary" onClick={requestMic}><Mic size={18} /> Grant mic permission</button>
-          <button className="ghost" onClick={refresh}><RotateCcw size={18} /> Refresh check</button>
-          <button className="ghost" onClick={() => onGo('selftest')}><TestTube2 size={18} /> Run self test</button>
-          <button className="ghost" onClick={() => onGo('detect')}><Search size={18} /> Load bridge</button>
-        </div>
-      </Panel>
-      <Panel title="Player Test Launch" icon={Gamepad2}>
-        <p>Use this path for every tester so reports come back consistent and replayable.</p>
-        <div className="live-actions">
-          <button className="primary" onClick={() => onGo('calibration')}><Sparkles size={18} /> Start tuning</button>
-          <button className="ghost" onClick={() => onGo('trial')}><Gamepad2 size={18} /> Start player trial</button>
-          <button className="ghost" onClick={() => onGo('mic')}><Mic size={18} /> Check mic</button>
-          <button className="ghost" onClick={createQuickReport}><Bug size={18} /> Create setup report</button>
-          <button className="ghost" onClick={() => onGo('reports')}><RotateCcw size={18} /> Replay reports</button>
-        </div>
-      </Panel>
-    </section>
   );
 }
 
@@ -1583,7 +2185,6 @@ async function getMicPermissionState() {
 
 function sectionTitle(id) {
   return {
-    setup: 'Player Setup Gate',
     hub: 'Community Hub',
     mic: 'Mic Lab',
     selftest: 'Auto Self Test',
@@ -2869,7 +3470,7 @@ function autoNameDevice(device, index, bridgeReport) {
   return `Audio device ${index + 1} - permission needed for real name`;
 }
 
-function Inventory({ onOpen, uiNotes = [], onClearUiNotes }) {
+function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
   const selfTests = getSavedJson('cueforge-self-test-results') || [];
   const evidence = getSavedJson('cueforge-audio-evidence') || [];
   const checkIns = getSavedJson('cueforge-beta-checkins') || [];
@@ -2893,7 +3494,7 @@ function Inventory({ onOpen, uiNotes = [], onClearUiNotes }) {
   );
   const healthLabel = healthScore > 80 ? 'tester ready' : healthScore > 62 ? 'needs one more pass' : 'setup in progress';
   const modules = [
-    ['Setup Gate', 'permission, bridge, APO, and readiness checks', totalTests ? 'checked' : 'run self test'],
+    ['Setup Journey', 'gear profile, permission, bridge, calibration direction, and first-run handoff', 'rerunnable'],
     ['Signal Analyzer', 'spectral bands, FPS clarity, comms readiness, and likely-source diagnosis', 'live'],
     ['Evidence Loop', 'local mic proof, beta check-ins, report replay, and export packs', evidence.length || checkIns.length ? 'active' : 'empty'],
     ['Apply Boundary', 'exports configs and keeps native audio changes explicit', 'safe']
@@ -2982,6 +3583,7 @@ function Inventory({ onOpen, uiNotes = [], onClearUiNotes }) {
           <button className="ghost" onClick={() => onOpen('mic')}><Mic size={18} /> Open analyzer</button>
           <button className="ghost" onClick={() => onOpen('beta')}><Activity size={18} /> Record check-in</button>
           <button className="ghost" onClick={() => onOpen('reports')}><Bug size={18} /> Create report</button>
+          <button className="ghost" onClick={onRerunSetup}><RotateCcw size={18} /> Rerun setup</button>
         </div>
         <p className="callout">{lastReport ? 'A replayable report exists locally. Import/export can prove the current state.' : 'Create one report after the next real test so failures can be replayed.'}</p>
       </Panel>

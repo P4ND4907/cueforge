@@ -47,7 +47,7 @@ New-member to-dos:
 
 ```text
 1. Pick your roles.
-2. Run CueForge Setup Gate and Self Test.
+2. Run CueForge Setup Journey and Self Test.
 3. Post your setup chain.
 4. Play one match.
 5. Post a check-in, clip, or bug replay.

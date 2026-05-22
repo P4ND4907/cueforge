@@ -96,7 +96,7 @@ I am especially looking for:
 
 Best feedback:
 
-- Run `Setup Gate`.
+- Run `Setup Journey`.
 - Run `Self Test`.
 - Generate a calibration.
 - Play one match with `Player Trial`.
