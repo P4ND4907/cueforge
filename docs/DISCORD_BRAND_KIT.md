@@ -1,6 +1,6 @@
 # CueForge Discord Brand Kit
 
-## Current Identity
+## Server Identity
 
 Name:
 
@@ -8,46 +8,50 @@ Name:
 CueForge Beta
 ```
 
-Invite:
+Short description:
 
 ```text
-https://discord.gg/vyQwyJ49v
+Panda Lab for FPS audio testing.
 ```
 
-Positioning:
+Full description:
 
 ```text
-Panda lab for FPS audio tuning.
+CueForge Beta is a Discord home base for FPS players testing real audio setups: IEMs, headsets, mics, Discord chains, Equalizer APO, Peace, Sonar, clips, match check-ins, and honest before/after feedback.
 ```
 
-Server profile description:
+Tone:
 
 ```text
-Panda-themed FPS audio lab for real testers: IEM/headset EQ, mic checks, Equalizer APO exports, match check-ins, clips, and honest before/after feedback.
+Useful, sharp, friendly, player-first, slightly playful, never fake-hype.
 ```
 
-Traits:
+## Upload These Assets
 
-```text
-FPS audio lab
-IEM + headset tuning
-Mic checks
-Equalizer APO
-Real match feedback
-```
-
-## Assets
-
-Server icon:
+Server icon / profile picture:
 
 ```text
 assets/discord/cueforge-discord-icon.png
+assets/discord/cueforge-server-pfp.png
 ```
 
-Server banner / splash style image:
+Server banner / wallpaper:
 
 ```text
 assets/discord/cueforge-discord-banner.png
+assets/discord/cueforge-server-wallpaper.png
+```
+
+Profile/social header:
+
+```text
+assets/discord/cueforge-profile-header.png
+```
+
+Public share card:
+
+```text
+assets/discord/cueforge-social-card.png
 ```
 
 Custom emoji candidates:
@@ -59,129 +63,90 @@ assets/discord/emoji-wave.png
 assets/discord/emoji-paw.png
 ```
 
-Suggested emoji names:
+Emoji names:
 
 ```text
-:cf_panda:
-:cf_headphones:
-:cf_wave:
-:cf_paw:
+cf_panda
+cf_headphones
+cf_wave
+cf_paw
 ```
 
-## Channel Personality
+## Color System
 
-The server should feel like a real tester clubhouse, not a sterile support desk.
+```text
+Background: #071014
+Panel:      #132126
+Signal:     #12c99a
+Warm mark:  #f6b13d
+Text:       #edf8f7
+Muted:      #a7b8bc
+```
 
-Core serious channels:
+Use the dark background, teal signal color, and small amber highlights. Do not turn the whole server into one neon color. The panda/audio mark is the visual anchor.
+
+## Server Settings Copy
+
+Community topic:
+
+```text
+FPS audio testing for real players: IEM/headset EQ, mic checks, match evidence, Discord setup, and Equalizer APO exports.
+```
+
+Welcome text:
+
+```text
+Welcome to CueForge Beta, the Panda Lab for FPS audio.
+
+Run CueForge, play one real match, then tell us what actually changed. We care about footsteps, direction, comms, mic clarity, fatigue, and whether the issue is tuning, game audio, server timing, Discord, or Windows routing.
+```
+
+Rules summary:
+
+```text
+Real testing beats hype.
+Post game, gear, audio chain, and what changed.
+Do not post passwords, phone numbers, DOB, recovery codes, raw device IDs, or private screenshots.
+No spam, account selling, cheats, harassment, or fake reward farming.
+If CueForge makes something worse, say it. That is useful data.
+```
+
+## Channel Set
+
+Core read-only:
 
 ```text
 start-here
 rules
 lab-updates
-role-picker
-test-night
-match-checkins
-bug-replays
-signal-setups
-match-audio
-eq-forge
-mic-checks
-fps-specific
 faq-roadmap
 ```
 
-Community channels:
+Core active:
 
 ```text
-bamboo-lounge
-pawprint-ideas
+role-picker
+match-checkins
+bug-replays
+signal-setups
 clip-evidence
+mic-checks
+eq-forge
+fps-specific
+```
+
+Community:
+
+```text
+pawprint-ideas
 setup-showcase
 wild-lab
 wins-and-fails
 side-chat
+panda-radio
 ```
 
-Voice rooms:
-
-```text
-mic-check-voice
-match-comms-voice
-listening-lab-voice
-```
-
-## Server Rules Tone
-
-The rules should protect useful testing without killing conversation:
-
-```text
-Real testing beats hype.
-Say what game, gear, and audio chain you tested.
-Be specific: footsteps, direction reads, explosions, comms, fatigue, mic clarity.
-Do not post passwords, phone numbers, DOB, recovery codes, raw device IDs, or private account info.
-Redact screenshots before posting.
-No spam, account selling, cheats, harassment, or cheat discussion.
-If CueForge makes something worse, post it. That is useful data.
-```
-
-## Growth Rule
-
-Do not mass-post or auto-join random communities. Use communities that allow beta testing, self-promo, tools, or feedback requests, and tailor the post to the local rules.
-
-## Finished Start-Here Post
-
-```text
-🐼 Welcome to the CueForge Panda Lab.
-
-This is a public beta server for players who care about FPS audio but are tired of guessing forever.
-
-What happens here:
-🎧 IEM/headset tuning
-🎙 Mic checks and comms clarity
-〰 Equalizer APO / Peace / Sonar setup help
-🐾 Real match check-ins
-📎 Clips, replays, bug reports, and honest before/after feedback
-
-Fast start:
-1. Open CueForge: https://p4nd4907.github.io/cueforge/
-2. Run Setup Gate.
-3. Run Self Test.
-4. Record a Beta Check-in before or after one real match.
-5. If something breaks, export a redacted report and post it in #bug-reports.
-
-Best first posts:
-- #introductions: game, gear, mic, what you want fixed
-- #audio-setups: your IEM/headset/mic chain
-- #beta-checkins: one real match report
-- #clips-and-replays: moments where audio helped or lied to you
-
-The vibe: honest, useful, a little weird, not corporate.
-If CueForge makes something worse, say it. That is how it gets better.
-```
-
-## Final Channel Rename Map
-
-Use these names to make the server feel less generic while still understandable:
-
-```text
-welcome-start-here -> start-here
-announcements -> lab-updates
-beta-checkins -> match-checkins
-bug-reports -> bug-replays
-audio-setups -> signal-setups
-game-feedback -> match-audio
-equalizer-apo -> eq-forge
-mic-lab -> mic-checks
-tarkov-siege-cod -> fps-specific
-pawprint-feedback -> pawprint-ideas
-clips-and-replays -> clip-evidence
-setup-flex -> setup-showcase
-wild-ideas -> wild-lab
-off-topic -> side-chat
-dev-forge -> dev-backroom
-```
-
-Private / dev-only:
+Private:
 
 ```text
 dev-backroom
@@ -189,9 +154,40 @@ build-notes
 triage-queue
 ```
 
-These should be private to the owner/dev role. Do not use an actual password in a public channel name or topic.
+Voice:
 
-## Polished Start-Here Post
+```text
+mic-check-voice
+match-comms-voice
+listening-lab-voice
+panda-radio-voice
+```
+
+## Channel Topic Copy
+
+```text
+start-here: First stop for testers. Read this before posting reports or clips.
+rules: Privacy, safety, and testing rules.
+lab-updates: CueForge progress, daily plans, test nights, rewards, and release notes.
+faq-roadmap: What CueForge does now, what is next, and how to test it.
+role-picker: Pick tester roles, game tags, and audio focus.
+match-checkins: One real match, one honest before/after report.
+bug-replays: Repro steps, redacted reports, broken flows, and recovery notes.
+signal-setups: IEMs, headsets, mics, DACs, APO, Peace, Sonar, Discord, Windows routing.
+clip-evidence: Clips or replay notes showing audio wins, fails, or confusing moments.
+mic-checks: Gain, clipping, noise, boom, voice presence, and Discord mic tests.
+eq-forge: Equalizer APO configs, Peace imports, tuning questions, and curve comparisons.
+fps-specific: Tarkov, Siege, COD, Apex, CS2, Valorant, Battlefield, and other FPS notes.
+pawprint-ideas: Quick ideas, weird experiments, and useful complaints.
+setup-showcase: Show your desk, gear chain, or before/after setup.
+wild-lab: Experimental ideas that might become real CueForge features.
+wins-and-fails: What worked, what failed, and what surprised you.
+side-chat: Normal chat. Keep it human and clean.
+panda-radio: Approved music, watch-party links, and chill lab background.
+dev-backroom: Private build planning, triage, and release prep.
+```
+
+## Finished Start-Here Post
 
 ```text
 Welcome to CueForge Beta, the Panda Lab for FPS audio.
@@ -211,117 +207,107 @@ Where to go:
 - #mic-checks: mic gain, noise, clipping, Discord clarity.
 - #clip-evidence: moments where audio helped or lied to you.
 - #pawprint-ideas: ideas, rough thoughts, and useful complaints.
-- #bamboo-lounge: normal chat.
+- #side-chat: normal chat.
 
 The rule is simple: useful beats perfect. If CueForge makes something worse, say it.
 
 Privacy: do not post passwords, phone numbers, DOB, recovery codes, raw device IDs, or private screenshots.
 ```
 
-## Channel Topic Suggestions
-
-```text
-start-here: First stop for testers. Read this before posting reports or clips.
-lab-updates: CueForge progress, daily plans, test nights, and release notes.
-match-checkins: One real match, one honest before/after report.
-bug-replays: Repro steps, redacted reports, broken flows, and recovery notes.
-signal-setups: IEMs, headsets, mics, DACs, APO, Peace, Sonar, Discord, Windows routing.
-match-audio: Footsteps, direction reads, clutter, fatigue, comms, and game-specific feedback.
-eq-forge: Equalizer APO configs, Peace imports, tuning questions, and curve comparisons.
-mic-checks: Gain, clipping, noise, boom, voice presence, and Discord mic tests.
-fps-specific: Tarkov, Siege, COD, Apex, CS2, Valorant, Battlefield, and other FPS notes.
-pawprint-ideas: Quick ideas, weird experiments, and useful complaints.
-clip-evidence: Clips or replay notes showing audio wins, fails, or confusing moments.
-setup-showcase: Show your desk, gear chain, or before/after setup.
-wild-lab: Experimental ideas that might become real CueForge features.
-wins-and-fails: What worked, what failed, and what surprised you.
-dev-backroom: Private build planning, triage, and release prep.
-```
-
 ## Role Picker Post
 
 ```text
-🐾 Pick your lane. Post the roles that fit you and I will tag/organize testers as the server grows.
+Pick your lane. Reply with the roles that fit you.
 
 Tester roles:
-🎧 IEM Tester
-🎮 Headset Tester
-🎙 Mic Lab
-〰 Equalizer APO
-🧪 Bug Hunter
-🔥 Sweat Stack
-🌙 Casual Tester
+Panda Pilot - general beta tester
+IEM Listener - IEM testing
+Headset Grinder - headset testing
+Mic Checker - mic and Discord clarity
+EQ Forger - Equalizer APO / Peace tuning
+Clip Hunter - clips and replay evidence
+Bug Tracker - reports and repro steps
+Sweat Stack - serious competitive testing
+Casual Tester - lower pressure testing
 
 Game roles:
-Tarkov
-Siege
+Tarkov Ears
+Siege Sound
 COD / Warzone
-Apex
-CS2
-Valorant
-Battlefield
-Other FPS
-
-Useful intro format:
-Game:
-Gear:
-Mic:
-Audio tools:
-Biggest audio problem:
+Apex Audio
+CS2 / Valorant
 ```
 
-## FAQ / Roadmap Post
+## Pinned Room Formats
+
+Match check-in:
 
 ```text
-FAQ
-
-Does CueForge change Windows drivers?
-No. The web app exports settings and reports. The desktop shell can run explicit local scans, but it does not silently change routing or install drivers.
-
-Can it record audio?
-Only when you press the evidence button. It records a short local mic clip, analyzes basic signal stats, and keeps metadata local unless you export it.
-
-Can it capture game audio?
-Only if the browser or desktop flow gets explicit permission to capture a tab/window/system source. No hidden capture.
-
-What feedback helps most?
-Game, map/mode, gear, profile used, what improved, what got worse, and whether comms/footsteps/fatigue changed.
-
-Roadmap:
-- Cleaner onboarding
-- Better game-specific test scripts
-- More IEM/headset profile guidance
-- Desktop shell polish
-- Optional loopback/game-audio evidence when permission is explicit
-- Tester dashboards from real check-ins
-```
-
-## Test Night Post
-
-```text
-🐼 Test Night format
-
-Use this when we run a group test:
-
 Game:
-Mode/map:
-Time:
-Profile:
+Map/mode:
 Gear:
 Mic:
+Tools running:
+CueForge profile:
 
-Round 1 baseline:
-- Footsteps:
-- Direction:
-- Comms:
-- Fatigue:
-
-Round 2 tuned:
-- Footsteps:
-- Direction:
-- Comms:
-- Fatigue:
-
-Clip/report link:
-Final verdict:
+Before:
+After:
+What improved:
+What got worse:
+Tuning, game/server, Discord, mic, or Windows routing?
 ```
+
+Bug replay:
+
+```text
+What broke:
+Expected:
+Actual:
+Steps to reproduce:
+Game/gear/tools:
+Browser or desktop shell:
+Redacted report attached? yes/no
+Clip or screenshot link:
+```
+
+Reward claim:
+
+```text
+Use /claim only after real participation.
+Allowed: watch party, match test, clip evidence, bug replay, setup post, helping another tester.
+Not allowed: fake activity, auto-watchers, spam joins, reward farming, self-bots.
+```
+
+## Weekly Rhythm
+
+```text
+Monday - Setup clinic
+Tuesday - Mic checks
+Wednesday - Watch party / clip review
+Thursday - Match test night
+Friday - Patch notes and wild ideas
+Weekend - Open squad tests
+```
+
+## Final Checklist
+
+```text
+Upload server icon.
+Upload banner/wallpaper.
+Set server description.
+Make start-here, rules, lab-updates, and faq-roadmap read-only.
+Set private dev rooms to owner/dev role only.
+Pin formats in match-checkins, bug-replays, signal-setups, clip-evidence, and mic-checks.
+Register slash commands after bot changes.
+Post /serverguide, /rewardrules, and /questboard.
+```
+
+## Native Apply Helper
+
+If the bot has `Manage Server` permission and `discord-bot/.env` contains `DISCORD_TOKEN` plus `DISCORD_GUILD_ID`, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/Apply-DiscordBrand.ps1
+```
+
+This updates the server name, description, and icon through Discord's bot API. Banner upload may require Discord's server banner feature; if the server does not have it, the helper will leave the icon/name/description update in place and print a warning.
