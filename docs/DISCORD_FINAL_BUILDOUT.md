@@ -43,7 +43,7 @@ CueForge Panda Guide
 Purpose:
 
 ```text
-Welcomes new members, posts starter links, and gives slash-command templates for check-ins, bugs, setups, and test nights.
+Welcomes new members, posts starter links, gives slash-command templates for check-ins, bugs, setups, and test nights, and helps daily roll calls stay useful.
 ```
 
 Recommended moderation/helper bot:
@@ -63,6 +63,22 @@ Basic anti-spam
 ```
 
 Do not add multiple overlapping moderation bots at the start. One helper bot is enough.
+
+## Bot Commands
+
+```text
+/start - sends the new tester quick path
+/checkin - posts the before/after match check-in format
+/bug - posts the replayable bug report format
+/setup - posts the gear-chain format
+/testnight - posts a short test-night call
+/rollcall - posts a public daily tester roll call
+/diagnose - helps decide if an issue is tuning, game mix, server/desync, routing, Discord, or mic chain
+/social - drafts a human-approved Discord/X/Reddit post that points back to the hub
+/prompt - drops one quick community prompt
+```
+
+Use `/rollcall` in `lab-updates` or `match-checkins` before a test block. Use `/diagnose` when someone says "audio is bad" but the cause is unclear. Use `/social` for posts that need approval before leaving Discord.
 
 ## Welcome Message
 
@@ -137,6 +153,23 @@ What headset/IEM surprised you?
 Drop a clip where audio won or sold.
 What setting did you change that actually helped?
 What should CueForge test next?
+```
+
+Daily roll call examples:
+
+```text
+Tonight's Panda Lab roll call:
+- What game are you testing?
+- What headset/IEM/mic chain are you using?
+- Did CueForge help, hurt, or do nothing?
+- Drop one thing you want changed next.
+```
+
+Diagnosis split:
+
+```text
+Do not assume every audio problem is EQ.
+Check game mix, server/desync, Windows routing, Discord processing, mic gain, and only then CueForge tuning.
 ```
 
 Server vibe:

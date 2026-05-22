@@ -1,6 +1,6 @@
 # CueForge Panda Guide
 
-Small Discord bot for the CueForge Beta server. It gives new members a friendly welcome and provides slash-command templates for check-ins, bug reports, setup posts, and test nights.
+Small Discord bot for the CueForge Beta server. It welcomes new testers, keeps the server active, and turns messy player feedback into useful CueForge testing notes.
 
 ## Commands
 
@@ -10,7 +10,29 @@ Small Discord bot for the CueForge Beta server. It gives new members a friendly 
 /bug
 /setup
 /testnight
+/rollcall
+/diagnose
+/social
+/prompt
 ```
+
+## What The New Commands Do
+
+```text
+/rollcall
+Posts a quick public check-in. Use this before or after match sessions so testers can say what they are playing, what gear they are using, and what changed.
+
+/diagnose
+Helps separate a CueForge tuning issue from a game mix, bad server/desync, Windows routing, Discord processing, or mic setup problem.
+
+/social
+Drafts a short Discord, X, or Reddit update that points people back to the Discord hub. It is meant for human approval before posting.
+
+/prompt
+Drops a lightweight community question so the server does not feel dead between builds.
+```
+
+The bot does not scrape Discord, X, or Reddit. It gives clean prompts and structured language so you can collect feedback without turning the server into spam.
 
 ## Setup
 
@@ -35,4 +57,4 @@ node --env-file=.env src/index.js --register
 node --env-file=.env src/index.js
 ```
 
-Keep `.env` private. Do not commit bot tokens.
+Keep `.env` private. Do not commit bot tokens, passwords, phone numbers, DOB, recovery codes, or private account data.
