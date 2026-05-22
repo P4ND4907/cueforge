@@ -541,7 +541,7 @@ What I need next:
 - players to share redacted check-ins and reports
 - players to test one real match and say what changed
 
-Run one real match. Tell me what helped, what got worse, and whether the problem felt like tuning, the game, Discord, Windows routing, or the mic chain.
+Run one real match. Let CueForge import or auto-detect the setup, then tell me what helped, what got worse, and whether the problem felt like tuning, the game, Discord, Windows routing, or the mic chain.
 
 Future ideas I want tester input on:
 - desktop app flow for native device detection
