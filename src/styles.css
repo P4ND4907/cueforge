@@ -329,18 +329,43 @@ select {
   backdrop-filter: blur(18px);
 }
 
-.brand { display: flex; align-items: center; gap: 12px; }
+.brand { display: flex; align-items: flex-start; gap: 12px; }
 .brand-mark {
   width: 42px;
   height: 42px;
+  flex: 0 0 42px;
   display: grid;
   place-items: center;
   border-radius: 8px;
   background: linear-gradient(135deg, #16d6a3, #f59e0b);
   color: #071014;
 }
+.brand-copy { min-width: 0; }
 .brand strong { display: block; font-size: 18px; }
-.brand span { display: block; color: #8aa0a4; font-size: 12px; margin-top: 2px; }
+.brand span { display: block; color: #8aa0a4; font-size: 12px; margin-top: 2px; overflow-wrap: anywhere; }
+.brand-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+.brand-socials a {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border: 1px solid rgba(18,201,154,0.22);
+  border-radius: 8px;
+  color: #c9f6eb;
+  background: rgba(18,201,154,0.08);
+  font-size: 11px;
+  font-weight: 900;
+  text-decoration: none;
+}
+.brand-socials a:hover {
+  color: #04100d;
+  background: #12c99a;
+}
 
 nav { display: grid; gap: 8px; }
 nav button {

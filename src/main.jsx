@@ -89,6 +89,17 @@ const gameProfiles = [
 
 const bands = [31, 62, 125, 250, 500, '1k', '2k', '4k', '8k', '16k'];
 const baseEq = [-1, 1.5, 0.5, -2, -1, 0.5, 2.5, 3.2, 1.2, -0.5];
+const socialBrand = {
+  lab: 'Panda Lab',
+  owner: 'P4ND4907',
+  handle: '@CueForge907',
+  links: [
+    ['X', 'https://x.com/CueForge907'],
+    ['Reddit', 'https://www.reddit.com/user/P4ND4907/'],
+    ['GitHub', 'https://github.com/P4ND4907/cueforge'],
+    ['Discord', 'https://discord.gg/vyQwyJ49v']
+  ]
+};
 
 const driverLayers = [
   {
@@ -186,18 +197,13 @@ const pandaVideoTools = [
     'https://labs.google/fx/tools/flow'
   ],
   [
-    'Best controlled cinematic workflow: Runway',
-    'Use Runway Gen-4 with visual references to keep the panda, bamboo forest, and style consistent across the four controlled clips.',
-    'https://runwayml.com/'
-  ],
-  [
     'Easiest route: Canva AI Video',
     'Use Canva for a fast first draft, webpage-ready editing, overlays, text-free crops, poster frames, and exports.',
     'https://www.canva.com/ai-video-generator/'
   ],
   [
     'Best professional finishing: Adobe Firefly / Premiere',
-    'Use this when you want final edit, color grade, sound design, gentle dissolves, bloom, grain, and polished export control.',
+    'Optional only. Your current Adobe Firefly screen shows the video feature behind a premium gate, so do not block the build on this.',
     'https://firefly.adobe.com/generate/video'
   ],
   [
@@ -209,19 +215,19 @@ const pandaVideoTools = [
 
 const pandaFreeSubstitutions = [
   [
-    'Free finishing: DaVinci Resolve',
-    'Best free quality replacement for Premiere when you need color, sound, export control, and professional timeline work.',
-    'https://www.blackmagicdesign.com/products/davinciresolve'
-  ],
-  [
-    'Free/open editing fallback: Kdenlive',
-    'Use if you want an open-source editor for trims, dissolves, audio, and exports without a paid account.',
+    'Installed free editor: Kdenlive',
+    'Use this now for trims, slow dissolves, ambience audio, poster frame export, and final muted loop exports.',
     'https://kdenlive.org/'
   ],
   [
-    'Free/open compositing: Blender',
-    'Use only if AI generation fails for the ear reflection or droplets and you need manual compositing/animation control.',
+    'Installed free compositor: Blender',
+    'Use this if the AI tools fail the reflection-ear twitch, ferrofluid pulses, or poster frame polish.',
     'https://www.blender.org/'
+  ],
+  [
+    'Downloaded but not installed: DaVinci Resolve',
+    'Great free finishing option, but the Resolve editor is not installed yet. Use Kdenlive first so we can keep moving.',
+    'https://www.blackmagicdesign.com/products/davinciresolve'
   ],
   [
     'Free/open quick editor: Shotcut',
@@ -233,9 +239,9 @@ const pandaFreeSubstitutions = [
 const pandaProductionSteps = [
   ['Prep reference', 'Create or pick one still reference: realistic panda, wet bamboo, teal/amber droplets, pond mood.'],
   ['Generate Flow/Veo clips', 'Generate Shot 1-4 as separate controlled clips. Keep each output text-free, muted, and cinematic.'],
-  ['Stabilize in Runway', 'If the panda, forest, or reflection changes too much, rerun the weak shot with image references.'],
-  ['Assemble in Canva', 'Trim to the 16-second muted loop, create poster frame, and export desktop/mobile drafts.'],
-  ['Finish in DaVinci or Premiere', 'Use DaVinci Resolve free first for grade/audio/export. Use Premiere only if you prefer that workflow.'],
+  ['Assemble in Canva', 'Use Canva for quick assembly only if Flow exports are ready and Canva is logged in.'],
+  ['Finish in Kdenlive', 'Use installed Kdenlive for the 16-second loop, dissolves, poster, sound cut, and exports.'],
+  ['Polish in Blender if needed', 'Use installed Blender only for manual reflection-ear/droplet fixes.'],
   ['Live test here', 'Drop every exported asset into this page, switch preview modes, and verify hero readability.']
 ];
 
@@ -262,6 +268,14 @@ const pandaVideoDeliverables = [
   ['panda-soundwalk-hero-mobile.mp4', '1080x1920 or 720x1280, vertical crop, muted', 'Mobile hero source'],
   ['panda-soundwalk-poster.jpg', 'Still frame from the pond reflection or bamboo opening', 'Poster and reduced-motion fallback'],
   ['panda-soundwalk-full-cut.mp4', '20-30 seconds with sound', 'Watch full clip button, modal, and social export']
+];
+
+const pandaLocalToolStatus = [
+  ['Kdenlive', 'Installed', 'Use now for assembly, dissolves, poster frame, muted loop, and full cut exports.'],
+  ['Blender', 'Installed', 'Use if we need manual acoustic-ear twitch, reflection, or ferrofluid compositing.'],
+  ['DaVinci Resolve', 'Downloaded only', 'Zip is in Downloads, but Resolve.exe is not installed. Not blocking the build.'],
+  ['Adobe Firefly', 'Premium-gated', 'Current Chrome screen requires premium access for video generation. Optional later.'],
+  ['Runway', 'Ignored for now', 'Removed from active path because it is too much for this pass.']
 ];
 
 const pandaHeroEmbedCode = `<section class="hero">
@@ -550,9 +564,14 @@ function App() {
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark"><Waves size={22} /></div>
-          <div>
+          <div className="brand-copy">
             <strong>CueForge</strong>
-            <span>Tactical Audio Suite</span>
+            <span>{socialBrand.lab} / by {socialBrand.owner} / {socialBrand.handle}</span>
+            <div className="brand-socials" aria-label="CueForge social links">
+              {socialBrand.links.map(([label, href]) => (
+                <a key={label} href={href} target="_blank" rel="noreferrer">{label}</a>
+              ))}
+            </div>
           </div>
         </div>
         <nav>
@@ -1884,6 +1903,18 @@ function VideoStarterPage() {
                 <strong>{label}</strong>
                 <em>{detail}</em>
               </label>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel title="Checked Tools On This Machine" icon={ShieldCheck} className="wide">
+          <div className="asset-status-grid">
+            {pandaLocalToolStatus.map(([name, state, detail]) => (
+              <div className="data-card" key={name}>
+                <strong>{name}</strong>
+                <span>{state}</span>
+                <small>{detail}</small>
+              </div>
             ))}
           </div>
         </Panel>
