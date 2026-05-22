@@ -486,7 +486,7 @@ function App() {
           </section>
         )}
 
-        {active === 'inventory' && <Inventory />}
+        {active === 'inventory' && <Inventory onOpen={setActive} />}
       </main>
     </div>
   );
@@ -2730,24 +2730,118 @@ function autoNameDevice(device, index, bridgeReport) {
   return `Audio device ${index + 1} - permission needed for real name`;
 }
 
-function Inventory() {
+function Inventory({ onOpen }) {
+  const selfTests = getSavedJson('cueforge-self-test-results') || [];
+  const evidence = getSavedJson('cueforge-audio-evidence') || [];
+  const checkIns = getSavedJson('cueforge-beta-checkins') || [];
+  const snapshots = getSavedJson('cueforge-gameplay-snapshots') || [];
+  const lastReport = getSavedJson('cueforge-last-issue-report');
+  const desktopReady = Boolean(window.cueforgeDesktop?.isDesktop);
+  const passedTests = selfTests.filter((item) => item.status === 'pass').length;
+  const totalTests = selfTests.length;
+  const healthScore = clamp(
+    38 +
+      (totalTests ? 16 : 0) +
+      (evidence.length ? 14 : 0) +
+      (checkIns.length ? 12 : 0) +
+      (snapshots.length ? 8 : 0) +
+      (lastReport ? 8 : 0) +
+      (desktopReady ? 4 : 0),
+    0,
+    100
+  );
+  const healthLabel = healthScore > 80 ? 'tester ready' : healthScore > 62 ? 'needs one more pass' : 'setup in progress';
+  const modules = [
+    ['Setup Gate', 'permission, bridge, APO, and readiness checks', totalTests ? 'checked' : 'run self test'],
+    ['Signal Analyzer', 'spectral bands, FPS clarity, comms readiness, and likely-source diagnosis', 'live'],
+    ['Evidence Loop', 'local mic proof, beta check-ins, report replay, and export packs', evidence.length || checkIns.length ? 'active' : 'empty'],
+    ['Apply Boundary', 'exports configs and keeps native audio changes explicit', 'safe']
+  ];
+
   return (
-    <section className="grid two">
-      <Panel title="Product Build" icon={BrainCircuit}>
-        <ul className="clean-list">
-          <li>CueForge: gaming audio control center for IEMs, headsets, and mics.</li>
-          <li>Core modules: Self Test, Auto Detect, Mic Lab, Calibration, EQ Studio, Hearing Model, Audio DNA.</li>
-          <li>Output formats: Equalizer APO text config and JSON profile exports.</li>
-          <li>Hardware focus: IEMs, HyperX-style boom mics, Equalizer APO, Peace, and Sonar workflows.</li>
-        </ul>
+    <section className="grid two system-grid">
+      <Panel className="system-overview" title="CueForge Status" icon={Activity}>
+        <div className="system-hero">
+          <div>
+            <strong>{healthScore}%</strong>
+            <span>{healthLabel}</span>
+            <p>Local build is ready for controlled testing when the self test, analyzer evidence, and report replay all have recent proof.</p>
+          </div>
+          <div className="system-pill-stack">
+            <span>Local-first</span>
+            <span>{desktopReady ? 'Desktop bridge active' : 'Browser mode'}</span>
+            <span>No silent driver writes</span>
+          </div>
+        </div>
+        <div className="metric-row selftest-summary">
+          <Metric label="Self test" value={totalTests ? `${passedTests}/${totalTests}` : 'Run'} tone={passedTests === totalTests && totalTests ? 'teal' : 'amber'} />
+          <Metric label="Evidence" value={String(evidence.length)} tone={evidence.length ? 'teal' : 'amber'} />
+          <Metric label="Check-ins" value={String(checkIns.length)} tone={checkIns.length ? 'teal' : 'amber'} />
+          <Metric label="Saves" value={String(snapshots.length)} tone={snapshots.length ? 'teal' : 'amber'} />
+        </div>
       </Panel>
-      <Panel title="Platform Status" icon={ShieldCheck}>
-        <ul className="clean-list">
-          <li>Runs locally in the browser with optional Windows bridge data.</li>
-          <li>Includes live mic analysis, EQ sliders, game presets, hearing model, and APO export.</li>
-          <li>Does not silently modify Windows audio drivers. You stay in control of apply steps.</li>
-          <li>Desktop shell can run the Windows scan from inside CueForge and load the bridge report automatically.</li>
-        </ul>
+
+      <Panel title="Analyzer Core" icon={AudioLines}>
+        <p>CueForge now reads live mic buffers as a signal map, not just a volume meter.</p>
+        <div className="module-list">
+          {[
+            ['Clip and gain', 'peak, RMS, crest factor, DC offset'],
+            ['Noise and masking', 'rumble, low-mid load, sharp edge, air/noise'],
+            ['Game readiness', 'FPS clarity, cue strength, comms readiness'],
+            ['Tuning hint', 'likely source plus conservative EQ nudge']
+          ].map(([name, detail]) => (
+            <div className="module-row" key={name}>
+              <CheckCircle2 size={17} />
+              <div>
+                <strong>{name}</strong>
+                <span>{detail}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel title="Build Map" icon={BrainCircuit}>
+        <div className="module-list">
+          {modules.map(([name, detail, status]) => (
+            <div className="module-row" key={name}>
+              <span className={`status-dot ${status === 'safe' || status === 'live' || status === 'active' || status === 'checked' ? 'ready' : ''}`} />
+              <div>
+                <strong>{name}</strong>
+                <span>{detail}</span>
+              </div>
+              <em>{status}</em>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel title="Safety Boundary" icon={ShieldCheck}>
+        <div className="safety-list">
+          <div>
+            <strong>What it can do</strong>
+            <span>Detect, analyze, recommend, export APO text, save local reports, and replay state.</span>
+          </div>
+          <div>
+            <strong>What needs approval</strong>
+            <span>Driver installs, Windows routing changes, APO writes, and any public upload.</span>
+          </div>
+          <div>
+            <strong>What stays local</strong>
+            <span>Mic clips, redacted reports, device summaries, check-ins, and gameplay snapshots.</span>
+          </div>
+        </div>
+      </Panel>
+
+      <Panel title="Fast Path" icon={Search}>
+        <p>Use these in order before handing the app to a tester.</p>
+        <div className="system-action-grid">
+          <button className="primary" onClick={() => onOpen('selftest')}><TestTube2 size={18} /> Run self test</button>
+          <button className="ghost" onClick={() => onOpen('mic')}><Mic size={18} /> Open analyzer</button>
+          <button className="ghost" onClick={() => onOpen('beta')}><Activity size={18} /> Record check-in</button>
+          <button className="ghost" onClick={() => onOpen('reports')}><Bug size={18} /> Create report</button>
+        </div>
+        <p className="callout">{lastReport ? 'A replayable report exists locally. Import/export can prove the current state.' : 'Create one report after the next real test so failures can be replayed.'}</p>
       </Panel>
     </section>
   );
