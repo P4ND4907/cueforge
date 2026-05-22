@@ -1,8 +1,8 @@
 # CueForge Open Task Queue
 
-Last audited: May 22, 2026.
+Last audited: May 22, 2026. Chat sweep included.
 
-This queue is the checkpoint for requests that are not fully done yet. It pulls from the prompt audit, master plan, release checklist, analyzer plan, Discord docs, Reddit/X outreach docs, and current repo status.
+This queue is the checkpoint for requests that are not fully done yet. It pulls from the prompt audit, chat sweep, master plan, release checklist, analyzer plan, Discord docs, Reddit/X outreach docs, and current repo status.
 
 ## Queue Rules
 
@@ -20,6 +20,8 @@ This queue is the checkpoint for requests that are not fully done yet. It pulls 
 | Q-003 | Reconcile Discord live-settings status | Docs disagree: final buildout says roles/read-only/onboarding are done, high-flow playbook still says they need approval | `docs/DISCORD_FINAL_BUILDOUT.md`, `docs/DISCORD_HIGH_FLOW_PLAYBOOK.md` | Recheck live Discord settings, then update both docs to one truth |
 | Q-004 | Run full release proof gate | Before inviting more testers, the release checklist should be green end to end | `docs/RELEASE_CHECKLIST.md` | Run `npm test`, `npm run build`, `npm audit --audit-level=moderate`, desktop smoke, manual browser smoke |
 | Q-005 | Verify GitHub Pages public build after docs refresh | The public tester link must match the local build | `docs/MASTER_PLAN.md`, current Pages flow | Open public Pages URL, check brand strip, setup handoff, Mic Lab, Report Lab, Auto Detect |
+| Q-024 | Add reusable responsive/UI smoke harness | Chat repeatedly called out resizing, text, overflow, and "bulletproof when building" issues | chat sweep | Create a Playwright/browser QA script for key pages at desktop/tablet/mobile, checking overflow, console errors, clipped text, and basic interactions |
+| Q-025 | Permission-state recovery matrix | Mic permission was blocked in live testing, and browsers cannot auto-grant it | chat sweep | Test allow/block/skip/refresh flows for Setup Journey, Self Test, Auto Detect, Mic Lab, and evidence recording; update recovery copy where needed |
 
 ## P1 - Product Depth
 
@@ -32,6 +34,10 @@ This queue is the checkpoint for requests that are not fully done yet. It pulls 
 | Q-010 | Native APO apply/backup/undo design | Direct writes are future work and must be safer than manual paste | `docs/ARCHITECTURE.md`, `docs/DRIVER_LAYER.md` | Design explicit write target picker, backup folder, dry-run diff, undo flow, and warning copy |
 | Q-011 | Decide `setupReadiness.js` future | Old setup UI is gone, but readiness scoring may still be valuable as a backend helper | `docs/PROMPT_BACKLOG_AUDIT.md` | Trace current imports/tests, then keep, rename, or retire with tests |
 | Q-012 | Performance mode validation during gameplay | Gameplay Save should not hurt RAM or performance while a match is running | user request, `docs/RELEASE_CHECKLIST.md` | Add/verify low-overhead snapshot caps, run browser performance smoke, document expected cost |
+| Q-026 | Build Panda Notes developer inbox | Right-click notes exist, but the chat asked for retrievable developer-only tags and note review | chat sweep, `src/uiFeedback.js` | Add a sortable/filterable notes inbox with tag/page/area filters, export/attach controls, and local-only privacy copy |
+| Q-027 | Build game-audio issue research tracker | User asked to study Tarkov, Siege, COD, Apex, Valorant, CS2 issues from communities and official channels | chat sweep, `docs/MASTER_PLAN.md` | Create a sourced matrix of game audio issues, official notes, player complaints, and how CueForge should diagnose each bucket |
+| Q-028 | Harden auto-import setup kit | Chat repeatedly asked for auto-detect/import so testers can copy/paste setup quickly | chat sweep, `docs/REDDIT_PROFILE_AND_OUTREACH.md` | Make one clear setup summary from browser scan plus desktop bridge data, with redacted copy buttons for Discord, Reddit, GitHub, and reports |
+| Q-029 | Add optional match clip import path | User asked whether gameplay/audio logs can be analyzed and tweaked after a match | chat sweep, `docs/HIGH_END_ANALYZER_PLAN.md` | Let users manually import local clips or exported evidence files for offline analysis without hidden recording or upload |
 
 ## P2 - Brand, Media, And Tester Experience
 
@@ -41,6 +47,7 @@ This queue is the checkpoint for requests that are not fully done yet. It pulls 
 | Q-014 | Setup Journey visual polish pass after video | The 3D fallback works, but final media should still feel smooth, readable, and fast | `video-build/README.md`, browser QA notes | Test video load, motion opt-out, text contrast, audio start gesture, mobile layout |
 | Q-015 | Update screenshots after latest UI/brand changes | Social posts and docs should show the current Panda Lab brand strip and app state | current repo status | Capture fresh progress screenshots and replace stale assets when needed |
 | Q-016 | Keep social roadmap posts app-focused | User asked roadmap/news to stay about app development and future ideas | `docs/SOCIAL_POSTING_PLAN.md`, `docs/MASTER_PLAN.md` | Draft Update 002/003 from shipped app changes only, then stage in Community Hub approval queue |
+| Q-030 | Keep public copy human-owned after each release | User explicitly wanted no AI-trace language and project-owned wording | chat sweep, README/docs history | Run a plain-language pass on README, app copy, release notes, and social posts before public pushes |
 
 ## P3 - Community And Social Rollout
 
@@ -53,6 +60,9 @@ This queue is the checkpoint for requests that are not fully done yet. It pulls 
 | Q-021 | Discord role/channel audit screenshots | The server should prove read-only pages, onboarding, Chiefyy role, and mod boundaries | `docs/DISCORD_FINAL_BUILDOUT.md` | Capture/update evidence notes without exposing private Discord data |
 | Q-022 | Optional trusted music/radio bot review | User wanted a lively server, but music bots need permission and copyright-safe handling | `docs/DISCORD_FINAL_BUILDOUT.md` | Pick one bot only if it solves a real gap; review permissions before invite |
 | Q-023 | Public tester intake loop | Growth should feed back into app data, not just raw chatter | `docs/MASTER_PLAN.md` | Keep Discord as hub, stage all public copy in Community Hub, summarize signals weekly |
+| Q-031 | Discord Nitro/boost decision | User asked whether Nitro is worth paying for | chat sweep, `docs/DISCORD_RESEARCH_NOTES.md` | Document free vs paid/server-boost benefits, what CueForge actually needs, and a no-purchase default |
+| Q-032 | Social account/profile consistency audit | Chat asked to make Reddit, X, Discord, GitHub, and in-app branding feel connected | chat sweep | Verify avatar, banner, bio, links, display names, and current app social strip all match the Panda Lab identity |
+| Q-033 | Community posting result ledger | Posts were removed/blocked in places, and future posting needs memory | chat sweep, `docs/REDDIT_PROFILE_AND_OUTREACH.md` | Track each post/modmail/profile update with date, destination, copy variant, result, and next safe action |
 
 ## Blocked Or Deliberately Not Queued
 
@@ -60,6 +70,8 @@ This queue is the checkpoint for requests that are not fully done yet. It pulls 
 | --- | --- | --- |
 | Store passwords, DOB, phone numbers, recovery codes, or private account info in GitHub | Not queued | Unsafe and outside CueForge privacy rules |
 | Create accounts or use saved passwords automatically | Not queued | Account creation and credential handling must stay user-controlled |
+| Auto-grant browser microphone permissions | Not queued | Browser security requires the tester to grant permission; CueForge should guide and recover instead |
+| Auto-join or auto-post inside third-party servers/subreddits | Not queued | Platform rules and account trust require user-visible joining and posting choices |
 | Mass-post the same promo body into Reddit/X/Discord | Not queued | Spam risk and already caused Reddit filter trouble |
 | Self-bots, auto-watchers, fake activity, reward farming | Not queued | Violates platform trust and CueForge community rules |
 | Silent driver installs, silent Windows routing changes, hidden APO writes | Not queued | Native changes must be explicit, backed up, and reversible |

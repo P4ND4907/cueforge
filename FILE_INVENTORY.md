@@ -51,6 +51,7 @@ Read and verified for the current local release build.
 - `docs/SETUP_JOURNEY_DIRECTOR_SCRIPT.md` - cinematic direction, text-to-video prompt, negative prompt, and app integration notes for the panda bamboo soundwalk.
 - `docs/PROMPT_BACKLOG_AUDIT.md` - checkpoint of covered, partially covered, and open requests from the build session.
 - `docs/OPEN_TASK_QUEUE.md` - consolidated queue of open, partial, blocked, and deliberately rejected follow-up work from the audit pass.
+- `docs/CHAT_SWEEP_AUDIT.md` - chat-derived request sweep for items that were not obvious from repo docs alone.
 - `docs/updates/2026-05-22-update-001.md` - first public update copy for Discord, X, and Reddit-safe profile posting.
 - `docs/updates/2026-05-22-update-002.md` - Panda Notes update copy for the right-click UI debugger.
 - `docs/DISCORD_FINAL_BUILDOUT.md` - live Discord status, roles, onboarding, bot strategy, and channel setup.

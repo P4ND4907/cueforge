@@ -4,7 +4,7 @@ Date: May 22, 2026.
 
 This is a checkpoint against the major requests from the build session.
 
-Latest queue pass: open, partial, blocked, and deliberately rejected items are now consolidated in `docs/OPEN_TASK_QUEUE.md`.
+Latest queue pass: open, partial, blocked, and deliberately rejected items are now consolidated in `docs/OPEN_TASK_QUEUE.md`. Chat-only items are captured in `docs/CHAT_SWEEP_AUDIT.md`.
 
 ## Covered
 
