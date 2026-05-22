@@ -64,6 +64,12 @@ Open:
 http://127.0.0.1:5177
 ```
 
+Public page:
+
+```text
+https://p4nd4907.github.io/cueforge/
+```
+
 ## Optional Windows Bridge
 
 Run this if you want the app to see installed tools and Windows audio devices:
