@@ -76,9 +76,109 @@ Do not add multiple overlapping moderation bots at the start. One helper bot is 
 /diagnose - helps decide if an issue is tuning, game mix, server/desync, routing, Discord, or mic chain
 /social - drafts a human-approved Discord/X/Reddit post that points back to the hub
 /prompt - drops one quick community prompt
+/rewardrules - explains points, caps, proof, and tiers
+/watchparty - posts a real watch-party/test-lab prompt
+/questboard - posts five small useful quests
+/serverguide - posts the polished new-member guide
+/claim - lets testers claim capped points for real participation
+/score - shows a tester's points and tier
+/leaderboard - shows the top testers
+/award - mod-only verified reward
 ```
 
 Use `/rollcall` in `lab-updates` or `match-checkins` before a test block. Use `/diagnose` when someone says "audio is bad" but the cause is unclear. Use `/social` for posts that need approval before leaving Discord.
+
+## Server Guide Setup
+
+Use Discord `Server Settings > Onboarding` and set:
+
+Default channels:
+
+```text
+start-here
+rules
+lab-updates
+role-picker
+match-checkins
+bug-replays
+signal-setups
+clip-evidence
+```
+
+New member to-dos:
+
+```text
+Pick your tester roles.
+Run CueForge Setup Gate and Self Test.
+Post your setup chain.
+Play one real match.
+Post one useful check-in, clip, or bug replay.
+```
+
+Resource pages:
+
+```text
+Start Here
+Rules + Privacy
+Tester Guide
+Rewards
+FAQ / Roadmap
+```
+
+If a channel is mostly reading material, make it a Server Guide resource page or keep it read-only. If a channel needs conversation, give it one clear job and pin the format.
+
+## Alive But Not Messy
+
+Weekly server rhythm:
+
+```text
+Monday - Setup clinic
+Tuesday - Mic checks
+Wednesday - Watch party / clip review
+Thursday - Match test night
+Friday - Patch notes and wild ideas
+Weekend - Open squad tests
+```
+
+Pin one prompt per active room:
+
+```text
+match-checkins: Game, gear, before, after, what changed.
+bug-replays: What broke, steps, report, clip, no private info.
+signal-setups: Gear chain, tools, Windows routing, what you want fixed.
+clip-evidence: Link, timestamp, what audio did right or wrong.
+mic-checks: Mic, gain, Discord settings, evidence result.
+```
+
+## Reward Loop
+
+```text
+Allowed:
+- Real watch parties
+- Match tests
+- Clip evidence
+- Replayable bug reports
+- Setup-chain posts
+- Helping another tester
+
+Not allowed:
+- Auto-watchers
+- Fake activity
+- Reward farming
+- Spam joins
+- Self-bots
+```
+
+Point tiers:
+
+```text
+25 - Lab Regular
+60 - Signal Hunter
+120 - Panda Captain
+220 - Forge Legend
+```
+
+Self-claims are capped at 3 per person per day. Mods can use `/award` when someone does extra verified work.
 
 ## Welcome Message
 

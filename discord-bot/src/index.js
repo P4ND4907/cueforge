@@ -6,10 +6,14 @@ import {
   EmbedBuilder,
   Events,
   GatewayIntentBits,
+  PermissionFlagsBits,
   REST,
   Routes,
   SlashCommandBuilder
 } from 'discord.js';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const {
   DISCORD_TOKEN,
@@ -25,6 +29,18 @@ const links = {
   app: 'https://p4nd4907.github.io/cueforge/',
   discord: 'https://discord.gg/vyQwyJ49v',
   feedback: 'https://github.com/P4ND4907/cueforge/issues/1'
+};
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rewardStorePath = path.resolve(__dirname, '..', 'data', 'rewards.json');
+const dailyClaimLimit = 3;
+const rewardPoints = {
+  'watch-party': 6,
+  'match-test': 12,
+  'clip-evidence': 16,
+  'bug-replay': 18,
+  'setup-post': 10,
+  'helped-tester': 8
 };
 
 const commands = [
@@ -93,7 +109,97 @@ const commands = [
     ),
   new SlashCommandBuilder()
     .setName('prompt')
-    .setDescription('Get a quick engagement prompt for the Panda Lab.')
+    .setDescription('Get a quick engagement prompt for the Panda Lab.'),
+  new SlashCommandBuilder()
+    .setName('rewardrules')
+    .setDescription('Show how Panda Lab rewards work.'),
+  new SlashCommandBuilder()
+    .setName('watchparty')
+    .setDescription('Post a watch-party or test-lab reward prompt.')
+    .addStringOption((option) =>
+      option
+        .setName('focus')
+        .setDescription('What are people watching or testing?')
+        .setRequired(true)
+        .addChoices(
+          { name: 'CueForge walkthrough', value: 'CueForge walkthrough' },
+          { name: 'Tester clips', value: 'tester clips' },
+          { name: 'Patch notes / audio update', value: 'patch notes or audio update' },
+          { name: 'Match review', value: 'match review' },
+          { name: 'Setup help session', value: 'setup help session' }
+        )
+    ),
+  new SlashCommandBuilder()
+    .setName('questboard')
+    .setDescription('Post the current Panda Lab quests for making the server feel alive.'),
+  new SlashCommandBuilder()
+    .setName('serverguide')
+    .setDescription('Post the polished new-member guide for Discord Server Guide or start-here.'),
+  new SlashCommandBuilder()
+    .setName('claim')
+    .setDescription('Claim Panda Lab points for real participation.')
+    .addStringOption((option) =>
+      option
+        .setName('activity')
+        .setDescription('What did you actually do?')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Joined watch party', value: 'watch-party' },
+          { name: 'Ran match test', value: 'match-test' },
+          { name: 'Posted clip evidence', value: 'clip-evidence' },
+          { name: 'Filed bug replay', value: 'bug-replay' },
+          { name: 'Posted setup chain', value: 'setup-post' },
+          { name: 'Helped another tester', value: 'helped-tester' }
+        )
+    )
+    .addStringOption((option) =>
+      option
+        .setName('proof')
+        .setDescription('Message, clip, report, or screenshot link if you have one.')
+        .setRequired(false)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('note')
+        .setDescription('Short note, no private info.')
+        .setRequired(false)
+    ),
+  new SlashCommandBuilder()
+    .setName('score')
+    .setDescription('Check Panda Lab reward points.')
+    .addUserOption((option) =>
+      option
+        .setName('user')
+        .setDescription('Optional user to check.')
+        .setRequired(false)
+    ),
+  new SlashCommandBuilder()
+    .setName('leaderboard')
+    .setDescription('Show the top Panda Lab testers.'),
+  new SlashCommandBuilder()
+    .setName('award')
+    .setDescription('Mod-only manual reward for verified work.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .addUserOption((option) =>
+      option
+        .setName('user')
+        .setDescription('Tester to reward.')
+        .setRequired(true)
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName('points')
+        .setDescription('Points to add, 1-50.')
+        .setMinValue(1)
+        .setMaxValue(50)
+        .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('reason')
+        .setDescription('Why they earned it.')
+        .setRequired(true)
+    )
 ].map((command) => command.toJSON());
 
 const client = new Client({
@@ -130,6 +236,11 @@ client.on(Events.GuildMemberAdd, async (member) => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === 'claim') return replyClaim(interaction);
+  if (interaction.commandName === 'score') return replyScore(interaction);
+  if (interaction.commandName === 'leaderboard') return replyLeaderboard(interaction);
+  if (interaction.commandName === 'award') return replyAward(interaction);
 
   const payload = {
     start: {
@@ -223,6 +334,25 @@ Final verdict:`)
     },
     prompt: {
       content: pickPrompt(),
+      ephemeral: false
+    },
+    rewardrules: {
+      embeds: [buildRewardRulesEmbed()],
+      ephemeral: false
+    },
+    watchparty: {
+      embeds: [buildWatchPartyEmbed(interaction.options.getString('focus'))],
+      components: [buildLinkRow()],
+      ephemeral: false
+    },
+    questboard: {
+      embeds: [buildQuestBoardEmbed()],
+      components: [buildLinkRow()],
+      ephemeral: false
+    },
+    serverguide: {
+      embeds: [buildServerGuideEmbed()],
+      components: [buildLinkRow()],
       ephemeral: false
     }
   }[interaction.commandName];
@@ -334,6 +464,263 @@ function pickPrompt() {
     'Mic check: does your Discord voice sound clean, boomy, clipped, or thin?'
   ];
   return prompts[Math.floor(Math.random() * prompts.length)];
+}
+
+function buildRewardRulesEmbed() {
+  return new EmbedBuilder()
+    .setTitle('Panda Lab Rewards')
+    .setDescription('Rewards are for real testing and community help. No auto-watchers, fake activity, spam joins, or reward farming.')
+    .setColor(0xf6b13d)
+    .addFields(
+      { name: 'Earn points', value: '`/claim` after a real watch party, match test, clip, bug replay, setup post, or helping another tester.' },
+      { name: 'Daily cap', value: `${dailyClaimLimit} self-claims per person per day. Mods can use /award for verified extra work.` },
+      { name: 'Tiers', value: rewardTierText() },
+      { name: 'Proof helps', value: 'Clip links, redacted reports, setup posts, and useful notes make rewards easier to trust.' }
+    );
+}
+
+function buildWatchPartyEmbed(focus) {
+  return new EmbedBuilder()
+    .setTitle('Panda Lab Watch Party')
+    .setDescription(`Focus: ${focus}. Watch, test, talk, then claim points only if you actually participated.`)
+    .setColor(0x12c99a)
+    .addFields(
+      { name: 'How to join', value: 'Hop in the voice room, watch the clip/update/session, and write one useful note after.' },
+      { name: 'Claim after', value: '`/claim activity:Joined watch party` with a short note or proof link.' },
+      { name: 'Clean rule', value: 'No bots, no fake watch time, no reward farming. We want real testers, not inflated numbers.' }
+    );
+}
+
+function buildQuestBoardEmbed() {
+  return new EmbedBuilder()
+    .setTitle('Panda Lab Quest Board')
+    .setDescription('Pick one useful thing. Real testing beats noisy activity.')
+    .setColor(0xf6b13d)
+    .addFields(
+      { name: '5-minute quest', value: 'Run Setup Gate and post your gear chain in #signal-setups.' },
+      { name: 'One-match quest', value: 'Play one round, then post a before/after in #match-checkins.' },
+      { name: 'Clip quest', value: 'Drop a clip where audio helped, failed, or confused you in #clip-evidence.' },
+      { name: 'Mic quest', value: 'Record 12s mic evidence in CueForge and summarize voice/noise/clip risk.' },
+      { name: 'Helper quest', value: 'Help one tester separate tuning problems from game/server/Discord/routing problems.' }
+    );
+}
+
+function buildServerGuideEmbed() {
+  return new EmbedBuilder()
+    .setTitle('Start Here: CueForge Panda Lab')
+    .setDescription('This is the home base for FPS audio testing. Bring your real setup, run the app, and tell us what actually happened.')
+    .setColor(0x12c99a)
+    .addFields(
+      { name: 'First three moves', value: '1. Pick roles in #role-picker\n2. Run CueForge Setup Gate + Self Test\n3. Play one match and post a check-in' },
+      { name: 'Where to post', value: '#match-checkins for before/after, #bug-replays for broken flows, #clip-evidence for proof, #signal-setups for gear.' },
+      { name: 'How to help', value: 'Say whether the problem feels like tuning, game audio, server timing, Discord, mic gain, or Windows routing.' },
+      { name: 'Privacy', value: 'Do not post passwords, phone numbers, DOB, recovery codes, raw device IDs, or private screenshots.' }
+    );
+}
+
+async function replyClaim(interaction) {
+  const activity = interaction.options.getString('activity');
+  const proof = sanitizeText(interaction.options.getString('proof') || '', 180);
+  const note = sanitizeText(interaction.options.getString('note') || '', 280);
+  const state = await loadRewardState();
+  const userId = interaction.user.id;
+  const today = new Date().toISOString().slice(0, 10);
+  const todaysClaims = state.claims.filter((claim) =>
+    claim.userId === userId && claim.day === today && claim.source === 'self-claim'
+  );
+
+  if (todaysClaims.length >= dailyClaimLimit) {
+    return interaction.reply({
+      ephemeral: true,
+      embeds: [
+        new EmbedBuilder()
+          .setTitle('Daily claim cap reached')
+          .setDescription('You hit today\'s self-claim cap. A mod can still use `/award` for verified extra work.')
+          .setColor(0xff6f61)
+      ]
+    });
+  }
+
+  const points = rewardPoints[activity] || 4;
+  const record = applyPoints(state, {
+    user: interaction.user,
+    points,
+    reason: activityLabel(activity),
+    proof,
+    note,
+    source: 'self-claim'
+  });
+  await saveRewardState(state);
+
+  return interaction.reply({
+    ephemeral: false,
+    embeds: [
+      new EmbedBuilder()
+        .setTitle('Panda points claimed')
+        .setDescription(`${interaction.user} earned ${points} points for ${activityLabel(activity)}.`)
+        .setColor(0x12c99a)
+        .addFields(
+          { name: 'Total', value: `${record.points} points`, inline: true },
+          { name: 'Tier', value: rewardTier(record.points), inline: true },
+          { name: 'Proof', value: proof || 'No proof link added. Keep claims honest.' }
+        )
+    ]
+  });
+}
+
+async function replyScore(interaction) {
+  const target = interaction.options.getUser('user') || interaction.user;
+  const state = await loadRewardState();
+  const record = state.users[target.id] || emptyRewardUser(target);
+
+  return interaction.reply({
+    ephemeral: true,
+    embeds: [
+      new EmbedBuilder()
+        .setTitle('Panda Lab score')
+        .setDescription(`${target} has ${record.points} points.`)
+        .setColor(0xf6b13d)
+        .addFields(
+          { name: 'Tier', value: rewardTier(record.points), inline: true },
+          { name: 'Claims', value: String(record.claims || 0), inline: true }
+        )
+    ]
+  });
+}
+
+async function replyLeaderboard(interaction) {
+  const state = await loadRewardState();
+  const rows = Object.values(state.users)
+    .sort((a, b) => b.points - a.points)
+    .slice(0, 10)
+    .map((user, index) => `${index + 1}. ${user.name} - ${user.points} pts (${rewardTier(user.points)})`);
+
+  return interaction.reply({
+    ephemeral: false,
+    embeds: [
+      new EmbedBuilder()
+        .setTitle('Panda Lab Leaderboard')
+        .setDescription(rows.length ? rows.join('\n') : 'No rewards yet. Use `/claim` after real testing.')
+        .setColor(0x12c99a)
+    ]
+  });
+}
+
+async function replyAward(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+    return interaction.reply({ ephemeral: true, content: 'Only mods can award verified extra points.' });
+  }
+
+  const target = interaction.options.getUser('user');
+  const points = interaction.options.getInteger('points');
+  const reason = sanitizeText(interaction.options.getString('reason'), 220);
+  const state = await loadRewardState();
+  const record = applyPoints(state, {
+    user: target,
+    points,
+    reason,
+    proof: 'mod verified',
+    note: reason,
+    source: 'mod-award'
+  });
+  await saveRewardState(state);
+
+  return interaction.reply({
+    ephemeral: false,
+    embeds: [
+      new EmbedBuilder()
+        .setTitle('Verified reward awarded')
+        .setDescription(`${target} earned ${points} verified points.`)
+        .setColor(0xf6b13d)
+        .addFields(
+          { name: 'Reason', value: reason },
+          { name: 'New total', value: `${record.points} points - ${rewardTier(record.points)}` }
+        )
+    ]
+  });
+}
+
+function applyPoints(state, { user, points, reason, proof, note, source }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const record = state.users[user.id] || emptyRewardUser(user);
+  record.name = user.username || record.name;
+  record.points += points;
+  record.claims += 1;
+  record.lastSeen = new Date().toISOString();
+  state.users[user.id] = record;
+  state.claims.push({
+    userId: user.id,
+    name: record.name,
+    points,
+    reason,
+    proof,
+    note,
+    source,
+    day: today,
+    createdAt: new Date().toISOString()
+  });
+  state.claims = state.claims.slice(-1000);
+  return record;
+}
+
+function emptyRewardUser(user) {
+  return {
+    id: user.id,
+    name: user.username || 'tester',
+    points: 0,
+    claims: 0,
+    lastSeen: null
+  };
+}
+
+async function loadRewardState() {
+  try {
+    const text = await readFile(rewardStorePath, 'utf8');
+    const parsed = JSON.parse(text);
+    return {
+      users: parsed.users || {},
+      claims: Array.isArray(parsed.claims) ? parsed.claims : []
+    };
+  } catch {
+    return { users: {}, claims: [] };
+  }
+}
+
+async function saveRewardState(state) {
+  await mkdir(path.dirname(rewardStorePath), { recursive: true });
+  await writeFile(rewardStorePath, JSON.stringify(state, null, 2));
+}
+
+function activityLabel(activity) {
+  return {
+    'watch-party': 'joining a real watch party',
+    'match-test': 'running a real match test',
+    'clip-evidence': 'posting clip evidence',
+    'bug-replay': 'filing a replayable bug',
+    'setup-post': 'posting a setup chain',
+    'helped-tester': 'helping another tester'
+  }[activity] || 'helping the Panda Lab';
+}
+
+function rewardTier(points) {
+  if (points >= 220) return 'Forge Legend';
+  if (points >= 120) return 'Panda Captain';
+  if (points >= 60) return 'Signal Hunter';
+  if (points >= 25) return 'Lab Regular';
+  return 'Fresh Ears';
+}
+
+function rewardTierText() {
+  return '25 Lab Regular / 60 Signal Hunter / 120 Panda Captain / 220 Forge Legend';
+}
+
+function sanitizeText(text, limit) {
+  return String(text || '')
+    .replace(/\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/gi, '[redacted-email]')
+    .replace(/\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g, '[redacted-phone]')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, limit);
 }
 
 function channelList() {
