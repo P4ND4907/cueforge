@@ -297,6 +297,7 @@ Upload banner/wallpaper.
 Set server description.
 Make start-here, rules, lab-updates, and faq-roadmap read-only.
 Set private dev rooms to owner/dev role only.
+Keep LIVE ROOMS + STAFF collapsed so new testers see START HERE first.
 Pin formats in match-checkins, bug-replays, signal-setups, clip-evidence, and mic-checks.
 Register slash commands after bot changes.
 Post /serverguide, /rewardrules, and /questboard.
