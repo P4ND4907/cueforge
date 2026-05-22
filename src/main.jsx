@@ -41,6 +41,7 @@ import { buildIssueReport, validateIssueReport } from './reportPack.js';
 import { computeSetupReadiness } from './setupReadiness.js';
 import { buildTesterPacket, feedbackDefaults, scoreTrialFeedback, trialSteps } from './playerTrial.js';
 import { buildBetaTesterPacket, createBetaCheckIn, createTesterId, summarizeBetaActivity } from './betaCheckIn.js';
+import { buildAudioEvidencePacket, createAudioEvidenceSummary } from './audioEvidence.js';
 import {
   appendGameplaySnapshot,
   createGameplaySnapshot,
@@ -1007,6 +1008,11 @@ function BetaCheckInPage() {
   const [gear, setGear] = useState(() => localStorage.getItem('cueforge-beta-gear') || 'IEM/headset + HyperX-style mic');
   const [notes, setNotes] = useState('');
   const [checkIns, setCheckIns] = useState(() => getSavedJson('cueforge-beta-checkins') || []);
+  const [evidence, setEvidence] = useState(() => getSavedJson('cueforge-audio-evidence') || []);
+  const [recording, setRecording] = useState(false);
+  const [audioStatus, setAudioStatus] = useState('Audio evidence is off. Record only when a tester explicitly starts it.');
+  const [latestClip, setLatestClip] = useState(null);
+  const evidenceRef = useRef(null);
   const summary = summarizeBetaActivity(checkIns);
 
   const saveProfileFields = () => {
@@ -1038,8 +1044,131 @@ function BetaCheckInPage() {
   };
 
   const exportPacket = () => {
-    const packet = buildBetaTesterPacket({ testerId, checkIns, notes });
+    const packet = buildBetaTesterPacket({ testerId, checkIns, notes, evidence });
     downloadTextFile('cueforge-beta-tester-packet.json', JSON.stringify(packet, null, 2));
+  };
+
+  const startAudioEvidence = async () => {
+    if (recording) {
+      stopAudioEvidence();
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+      setAudioStatus('This browser cannot record local audio evidence.');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        }
+      });
+      const context = new AudioContext();
+      const source = context.createMediaStreamSource(stream);
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 2048;
+      source.connect(analyser);
+
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+      const startedAt = performance.now();
+      const stats = {
+        durationMs: 0,
+        frames: 0,
+        rmsTotal: 0,
+        peak: 0,
+        lowBandTotal: 0,
+        voiceBandTotal: 0,
+        highBandTotal: 0,
+        recordedAt: new Date()
+      };
+      const time = new Uint8Array(analyser.fftSize);
+      const freq = new Uint8Array(analyser.frequencyBinCount);
+
+      const stopAll = () => {
+        if (recorder.state !== 'inactive') recorder.stop();
+      };
+
+      recorder.ondataavailable = (event) => {
+        if (event.data?.size) chunks.push(event.data);
+      };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        context.close?.();
+        if (evidenceRef.current?.raf) cancelAnimationFrame(evidenceRef.current.raf);
+        if (evidenceRef.current?.timeout) clearTimeout(evidenceRef.current.timeout);
+        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        if (latestClip?.url) URL.revokeObjectURL(latestClip.url);
+        const completedStats = { ...stats, durationMs: performance.now() - startedAt };
+        const summaryItem = createAudioEvidenceSummary(completedStats);
+        const nextEvidence = [...evidence, summaryItem].slice(-20);
+        setEvidence(nextEvidence);
+        safeSetJson('cueforge-audio-evidence', nextEvidence);
+        setLatestClip({ url, blob, recordedAt: summaryItem.recordedAt });
+        setRecording(false);
+        setAudioStatus(`${Math.round(summaryItem.durationMs / 1000)}s evidence saved locally. ${summaryItem.recommendation}`);
+        evidenceRef.current = null;
+      };
+
+      const tick = () => {
+        analyser.getByteTimeDomainData(time);
+        analyser.getByteFrequencyData(freq);
+        let sum = 0;
+        let peak = 0;
+        for (const value of time) {
+          const centered = (value - 128) / 128;
+          sum += centered * centered;
+          peak = Math.max(peak, Math.abs(centered));
+        }
+        stats.frames += 1;
+        stats.rmsTotal += Math.sqrt(sum / time.length);
+        stats.peak = Math.max(stats.peak, peak);
+        stats.lowBandTotal += avg(freq, 2, 12);
+        stats.voiceBandTotal += avg(freq, 18, 85);
+        stats.highBandTotal += avg(freq, 95, 190);
+        evidenceRef.current.raf = requestAnimationFrame(tick);
+      };
+
+      evidenceRef.current = {
+        recorder,
+        stream,
+        context,
+        raf: null,
+        timeout: window.setTimeout(stopAll, 12000)
+      };
+      recorder.start();
+      setRecording(true);
+      setAudioStatus('Recording 12s local mic evidence. Speak naturally, then play one loud callout.');
+      tick();
+    } catch {
+      setRecording(false);
+      setAudioStatus('Mic permission was blocked, so audio evidence could not start.');
+    }
+  };
+
+  const stopAudioEvidence = () => {
+    const active = evidenceRef.current;
+    if (!active) return;
+    if (active.timeout) clearTimeout(active.timeout);
+    if (active.recorder?.state !== 'inactive') active.recorder.stop();
+  };
+
+  const exportEvidencePacket = () => {
+    const packet = buildAudioEvidencePacket({ testerId, handle, game, gear, evidence });
+    downloadTextFile('cueforge-audio-evidence.json', JSON.stringify(packet, null, 2));
+  };
+
+  const downloadLatestClip = () => {
+    if (!latestClip) return;
+    const link = document.createElement('a');
+    link.href = latestClip.url;
+    link.download = `cueforge-audio-evidence-${latestClip.recordedAt.replace(/[:.]/g, '-')}.webm`;
+    link.click();
   };
 
   return (
@@ -1097,10 +1226,30 @@ function BetaCheckInPage() {
           ))}
         </div>
       </Panel>
+      <Panel title="Audio Evidence Logger" icon={Mic}>
+        <p>Opt-in local mic clips for before/after proof. CueForge records a short clip only when you press the button, analyzes signal stats, and stores capped metadata locally.</p>
+        <div className="live-actions">
+          <button className="primary" onClick={startAudioEvidence}>{recording ? 'Stop evidence clip' : 'Record 12s mic evidence'}</button>
+          <button className="ghost" onClick={downloadLatestClip} disabled={!latestClip}><Download size={18} /> Download latest clip</button>
+          <button className="ghost" onClick={exportEvidencePacket} disabled={evidence.length === 0}><Download size={18} /> Export evidence JSON</button>
+        </div>
+        <p className="callout">{audioStatus}</p>
+        <div className="stack">
+          {evidence.length === 0 && <div className="data-card"><strong>No audio evidence yet</strong><span>Record one before tuning and one after a real match for useful comparison.</span></div>}
+          {evidence.slice(-4).reverse().map((item) => (
+            <div className="data-card" key={item.recordedAt}>
+              <strong>{new Date(item.recordedAt).toLocaleString()} - {Math.round(item.durationMs / 1000)}s</strong>
+              <span>Voice {item.voicePresence}% / noise {item.noise}% / clip {item.clipRisk}%</span>
+              <small>{item.suggestedTweak}</small>
+            </div>
+          ))}
+        </div>
+      </Panel>
       <Panel className="wide" title="How This Keeps It Real" icon={Bug}>
         <ul className="clean-list">
           <li>Each tester gets one local anonymous ID.</li>
           <li>Every check-in gets a date-based proof code, game, gear chain, and source.</li>
+          <li>Audio evidence is opt-in, local, and capped. Metadata exports do not include raw audio unless the tester downloads and attaches the clip themselves.</li>
           <li>Beta packets can be attached to GitHub issues so fake one-line feedback is easier to spot.</li>
           <li>No background tracking, no analytics beacon, and no private recovery data.</li>
         </ul>
@@ -1508,7 +1657,9 @@ async function getGeneratedBridgeReport() {
   try {
     const response = await withTimeout(fetch('/tools/cueforge-audio-setup-report.json', { cache: 'no-store' }), 1800, null);
     if (!response) return null;
-    return response.ok ? response.json() : null;
+    const contentType = response.headers.get('content-type') || '';
+    if (!response.ok || !contentType.includes('application/json')) return null;
+    return response.json();
   } catch {
     return null;
   }

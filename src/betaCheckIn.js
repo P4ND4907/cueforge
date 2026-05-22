@@ -35,7 +35,7 @@ export function summarizeBetaActivity(checkIns = []) {
   };
 }
 
-export function buildBetaTesterPacket({ testerId, checkIns, notes = '', now = new Date() }) {
+export function buildBetaTesterPacket({ testerId, checkIns, notes = '', evidence = [], now = new Date() }) {
   const summary = summarizeBetaActivity(checkIns);
   return {
     schema: 'cueforge.beta-tester-packet.v1',
@@ -43,6 +43,16 @@ export function buildBetaTesterPacket({ testerId, checkIns, notes = '', now = ne
     testerId,
     summary,
     checkIns,
+    audioEvidence: evidence.slice(-10).map((item) => ({
+      recordedAt: item.recordedAt,
+      durationMs: item.durationMs,
+      level: item.level,
+      voicePresence: item.voicePresence,
+      noise: item.noise,
+      clipRisk: item.clipRisk,
+      recommendation: item.recommendation,
+      suggestedTweak: item.suggestedTweak
+    })),
     notes: String(notes || '').trim().slice(0, 600),
     privacy: {
       containsPassword: false,
