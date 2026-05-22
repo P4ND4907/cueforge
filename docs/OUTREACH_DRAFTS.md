@@ -30,7 +30,9 @@ Main things I need feedback on:
 - Mic feedback accuracy.
 - Privacy/redaction report output.
 
-Repo: https://github.com/P4ND4907/cueforge
+Try it: https://p4nd4907.github.io/cueforge/
+
+Repo and feedback: https://github.com/P4ND4907/cueforge
 
 ## Longer Community Post
 
@@ -62,6 +64,10 @@ I am mainly looking for:
 - HyperX or USB mic users.
 - Equalizer APO / Peace / Sonar users.
 
+Try it here:
+
+https://p4nd4907.github.io/cueforge/
+
 Feedback can go into GitHub issues here:
 
 https://github.com/P4ND4907/cueforge
@@ -75,6 +81,10 @@ Body:
 CueForge is open for early tester feedback.
 
 This is for Windows players who care about game audio but do not want to keep guessing at random EQ presets. The app helps test mic input, tune IEM/headset EQ, run a guided match trial, export Equalizer APO configs, and create redacted reports when something breaks.
+
+Public page:
+
+https://p4nd4907.github.io/cueforge/
 
 I am especially looking for:
 

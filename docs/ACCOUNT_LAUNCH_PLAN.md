@@ -16,7 +16,7 @@ Use one consistent identity everywhere.
 
 ## Account Bio
 
-CueForge makes game audio less of a guessing game. Local-first Windows tuning for IEMs, headsets, mics, Equalizer APO, and real player feedback.
+CueForge helps FPS players stop guessing at audio settings. Test your mic, tune IEMs or headsets, build Equalizer APO configs, and send feedback without leaking your setup.
 
 ## Short Profile Post
 
@@ -25,6 +25,8 @@ I built CueForge because game audio tuning felt like guessing forever.
 It is a local-first Windows tool for FPS players using IEMs, headsets, mics, Discord, Equalizer APO, Peace, or Sonar. It helps test your mic, tune EQ, run a guided match trial, and send redacted feedback if something breaks.
 
 Looking for honest testers:
+
+https://p4nd4907.github.io/cueforge/
 
 https://github.com/P4ND4907/cueforge/issues/1
 
