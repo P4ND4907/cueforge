@@ -24,16 +24,16 @@ describe('player trial', () => {
     const packet = buildTesterPacket({
       feedback: { ...feedbackDefaults, footsteps: 4, notes: 'C:\\Users\\carls\\clip.wav test@example.com' },
       readiness: { score: 80, status: 'player-test-ready' },
-      issueReport: { schema: 'audiotuner.issue-report.v1' },
+      issueReport: { schema: 'cueforge.issue-report.v1' },
       eq: [-1, 1, 0, -2, -1, 0, 2, 3, 1, 0],
       game: 'Warzone / Apex',
       sourceProfile: 'iemFps'
     });
 
-    expect(packet.schema).toBe('audiotuner.player-trial.v1');
+    expect(packet.schema).toBe('cueforge.player-trial.v1');
     expect(packet.feedback.issues[0]).toContain('Footsteps');
     expect(packet.feedback.notes).not.toContain('carls');
     expect(packet.feedback.notes).not.toContain('test@example.com');
-    expect(packet.reproducible.issueReport.schema).toBe('audiotuner.issue-report.v1');
+    expect(packet.reproducible.issueReport.schema).toBe('cueforge.issue-report.v1');
   });
 });

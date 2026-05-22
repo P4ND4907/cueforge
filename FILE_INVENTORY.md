@@ -6,7 +6,7 @@ Read and verified for the current local release build.
 
 - `package.json` - Vite/React project metadata and scripts.
 - `index.html` - browser entry document.
-- `src/main.jsx` - full AudioTuner application: setup gate, player trial, report lab, mic analyzer, EQ studio, game profiles, hearing model, system info, and Equalizer APO export logic.
+- `src/main.jsx` - full CueForge application: setup gate, player trial, report lab, mic analyzer, EQ studio, game profiles, hearing model, system info, and Equalizer APO export logic.
 - `src/audioData.js` - local IEM, Valorant, competitive FPS, balanced, and HyperX target data pulled from accessible workspace profiles.
 - `src/audioData.test.js` - unit coverage for Equalizer APO export text and Valorant process metadata.
 - `src/autoTune.js` - calibration curve generator for IEM/headset/game/mic preferences.
@@ -40,7 +40,7 @@ Read and verified for the current local release build.
 - `dist/index.html` - production build entry.
 - `dist/assets/index-*.js` - production JavaScript bundle.
 - `dist/assets/index-*.css` - production CSS bundle.
-- `tools/audio-setup-report.json` - generated local Windows scan output. This is intentionally not included in the refreshed ZIP because it can contain local device IDs.
+- `tools/cueforge-audio-setup-report.json` - generated local Windows scan output. This is intentionally not included in the refreshed ZIP because it can contain local device IDs.
 
 ## Verification
 

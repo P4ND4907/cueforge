@@ -1,5 +1,5 @@
 param(
-  [string]$OutFile = "$PSScriptRoot\audio-setup-report.json"
+  [string]$OutFile = "$PSScriptRoot\cueforge-audio-setup-report.json"
 )
 
 $ErrorActionPreference = "SilentlyContinue"
@@ -66,7 +66,7 @@ $report = [ordered]@{
     iemOrDac = [bool](($soundDevices + $mediaPnP | Where-Object { $_.Name -match "IEM|DAC|USB Audio|Headphone|Headset" } | Select-Object -First 1))
   }
   nextSteps = @(
-    "Import this JSON into AudioTuner Local > Auto Detect.",
+    "Import this JSON into CueForge > Auto Detect.",
     "Use EQ Studio to export Equalizer APO config text.",
     "Paste the config into Equalizer APO or Peace after confirming your output device."
   )
@@ -74,4 +74,4 @@ $report = [ordered]@{
 
 $json = $report | ConvertTo-Json -Depth 6
 Set-Content -LiteralPath $OutFile -Value $json -Encoding UTF8
-Write-Host "Audio setup report written to: $OutFile"
+Write-Host "CueForge setup report written to: $OutFile"

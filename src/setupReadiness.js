@@ -14,7 +14,7 @@ export function computeSetupReadiness({
       label: 'Browser audio engine',
       ready: Boolean(audioApi),
       weight: 18,
-      fix: 'Use a Chromium-based browser and reload AudioTuner.'
+      fix: 'Use a Chromium-based browser and reload CueForge.'
     },
     {
       id: 'devices',

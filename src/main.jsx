@@ -107,7 +107,7 @@ function App() {
 
   const latestHearingProfile = () => {
     try {
-      const saved = localStorage.getItem('audiotuner-hearing-results');
+      const saved = localStorage.getItem('cueforge-hearing-results');
       if (!saved) return null;
       const results = JSON.parse(saved);
       const compensation = calculateCompensation(results);
@@ -124,7 +124,7 @@ function App() {
 
   const latestDnaProfile = () => {
     try {
-      const saved = JSON.parse(localStorage.getItem('audiotuner-dna-history') || '[]');
+      const saved = JSON.parse(localStorage.getItem('cueforge-dna-history') || '[]');
       return saved[0] || null;
     } catch {
       return null;
@@ -148,7 +148,7 @@ function App() {
   };
 
   const downloadConfig = () => {
-    downloadTextFile('audiotuner-equalizer-apo-config.txt', apoConfig);
+    downloadTextFile('cueforge-equalizer-apo-config.txt', apoConfig);
     setSaved(true);
   };
 
@@ -166,7 +166,7 @@ function App() {
     });
 
     Object.entries(pack.files).forEach(([filename, text], index) => {
-      setTimeout(() => downloadTextFile(`audiotuner-${filename}`, text), index * 160);
+      setTimeout(() => downloadTextFile(`cueforge-${filename}`, text), index * 160);
     });
   };
 
@@ -176,8 +176,8 @@ function App() {
         <div className="brand">
           <div className="brand-mark"><Waves size={22} /></div>
           <div>
-            <strong>AudioTuner</strong>
-            <span>Local Gaming Suite</span>
+            <strong>CueForge</strong>
+            <span>Tactical Audio Suite</span>
           </div>
         </div>
         <nav>
@@ -417,7 +417,7 @@ function PersonalHearingModel() {
   const [volume, setVolume] = useState(18);
   const [results, setResults] = useState(() => {
     try {
-      const saved = localStorage.getItem('audiotuner-hearing-results');
+      const saved = localStorage.getItem('cueforge-hearing-results');
       return saved ? JSON.parse(saved) : createEmptyHearingResults();
     } catch {
       return createEmptyHearingResults();
@@ -457,7 +457,7 @@ function PersonalHearingModel() {
       }
     };
     setResults(next);
-    safeSetJson('audiotuner-hearing-results', next);
+    safeSetJson('cueforge-hearing-results', next);
 
     if (step < hearingFrequencies.length - 1) {
       setStep(step + 1);
@@ -471,7 +471,7 @@ function PersonalHearingModel() {
   const reset = () => {
     const empty = createEmptyHearingResults();
     setResults(empty);
-    localStorage.removeItem('audiotuner-hearing-results');
+    localStorage.removeItem('cueforge-hearing-results');
     setEar('left');
     setStep(0);
     setStatus('Hearing model reset. Start with left ear at 250Hz.');
@@ -489,7 +489,7 @@ function PersonalHearingModel() {
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'audiotuner-personal-hearing-profile.json';
+    link.download = 'cueforge-personal-hearing-profile.json';
     link.click();
     URL.revokeObjectURL(link.href);
   };
@@ -587,8 +587,8 @@ function PlayerSetupGate({ eq, apoConfig, onGo }) {
     const audioApi = Boolean(window.AudioContext && navigator.mediaDevices?.enumerateDevices);
     const devices = await getBrowserAudioDevices();
     const bridge = await getGeneratedBridgeReport();
-    const selfTests = getSavedJson('audiotuner-self-test-results') || [];
-    const hearing = getSavedJson('audiotuner-hearing-results');
+    const selfTests = getSavedJson('cueforge-self-test-results') || [];
+    const hearing = getSavedJson('cueforge-hearing-results');
     const hearingAnswered = hearing ? hearingScore(hearing).answered : 0;
     const micPermission = await getMicPermissionState();
 
@@ -599,7 +599,7 @@ function PlayerSetupGate({ eq, apoConfig, onGo }) {
       bridgeLoaded: Boolean(bridge),
       apoFound: Boolean(bridge?.tools?.equalizerApo?.installed),
       selfTests,
-      reportReady: Boolean(getSavedJson('audiotuner-last-issue-report')),
+      reportReady: Boolean(getSavedJson('cueforge-last-issue-report')),
       hearingAnswered
     });
     setStatus('Setup check updated.');
@@ -631,15 +631,15 @@ function PlayerSetupGate({ eq, apoConfig, onGo }) {
       currentPage: 'setup',
       sample: 'Setup readiness report',
       analysis: analyzeSample('Setup readiness report'),
-      hearing: getSavedJson('audiotuner-hearing-results'),
-      dna: getSavedJson('audiotuner-dna-history')?.[0] || null,
+      hearing: getSavedJson('cueforge-hearing-results'),
+      dna: getSavedJson('cueforge-dna-history')?.[0] || null,
       bridgeReport: bridge,
       browserDevices: devices,
-      selfTestResults: getSavedJson('audiotuner-self-test-results') || [],
+      selfTestResults: getSavedJson('cueforge-self-test-results') || [],
       notes: 'Quick setup recovery report.'
     });
-    safeSetJson('audiotuner-last-issue-report', report);
-    downloadTextFile('audiotuner-setup-ready-report.json', JSON.stringify(report, null, 2));
+    safeSetJson('cueforge-last-issue-report', report);
+    downloadTextFile('cueforge-setup-ready-report.json', JSON.stringify(report, null, 2));
     setStatus('Redacted setup report created and saved for replay.');
     refresh();
   };
@@ -712,8 +712,8 @@ function PlayerTrialPage({ eq, selectedGame, selectedSourceProfile }) {
   };
 
   const exportTrial = () => {
-    const issueReport = getSavedJson('audiotuner-last-issue-report');
-    const selfTests = getSavedJson('audiotuner-self-test-results') || [];
+    const issueReport = getSavedJson('cueforge-last-issue-report');
+    const selfTests = getSavedJson('cueforge-self-test-results') || [];
     const readiness = computeSetupReadiness({
       audioApi: Boolean(window.AudioContext && navigator.mediaDevices?.enumerateDevices),
       micPermission: 'unknown',
@@ -732,8 +732,8 @@ function PlayerTrialPage({ eq, selectedGame, selectedSourceProfile }) {
       game: selectedGame,
       sourceProfile: selectedSourceProfile
     });
-    safeSetJson('audiotuner-last-player-trial', packet);
-    downloadTextFile('audiotuner-player-trial.json', JSON.stringify(packet, null, 2));
+    safeSetJson('cueforge-last-player-trial', packet);
+    downloadTextFile('cueforge-player-trial.json', JSON.stringify(packet, null, 2));
     setStatus(`Tester packet exported. Result: ${packet.feedback.status}, ${packet.feedback.score}/100.`);
   };
 
@@ -877,7 +877,7 @@ function MaskingLabPage({ eq, onApply }) {
         <div className="live-actions">
           <button className="ghost" onClick={playScenario}><Play size={18} /> Play stress sample</button>
           <button className="primary" onClick={() => onApply(tune.eq)}><CheckCircle2 size={18} /> Apply anti-masking EQ</button>
-          <button className="ghost" onClick={() => downloadTextFile('audiotuner-masking-eq.json', JSON.stringify(tune, null, 2))}><Download size={18} /> Export masking tune</button>
+          <button className="ghost" onClick={() => downloadTextFile('cueforge-masking-eq.json', JSON.stringify(tune, null, 2))}><Download size={18} /> Export masking tune</button>
         </div>
       </Panel>
       <Panel title="Anti-Masking Curve" icon={SlidersHorizontal}>
@@ -899,7 +899,7 @@ function BlindMatchPage({ baseEq, onApply }) {
   const [choices, setChoices] = useState({});
   const [savedResult, setSavedResult] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('audiotuner-blind-match') || 'null');
+      return JSON.parse(localStorage.getItem('cueforge-blind-match') || 'null');
     } catch {
       return null;
     }
@@ -952,14 +952,14 @@ function BlindMatchPage({ baseEq, onApply }) {
 
   const save = () => {
     const next = createBlindMatchResult(choices, baseEq);
-    safeSetJson('audiotuner-blind-match', next);
+    safeSetJson('cueforge-blind-match', next);
     setSavedResult(next);
     setStatus('Blind Match profile saved.');
   };
 
   const exportResult = () => {
     const payload = createBlindMatchResult(choices, baseEq);
-    downloadTextFile('audiotuner-blind-match.json', JSON.stringify(payload, null, 2));
+    downloadTextFile('cueforge-blind-match.json', JSON.stringify(payload, null, 2));
   };
 
   const complete = result.completedRounds === blindMatchRounds.length;
@@ -967,7 +967,7 @@ function BlindMatchPage({ baseEq, onApply }) {
   return (
     <section className="grid two">
       <Panel title="Blind Match Tuner" icon={Radio}>
-        <p>AudioTuner learns from your ears, not a generic preset. Compare hidden A/B samples, pick what works, and it builds your personal curve.</p>
+        <p>CueForge learns from your ears, not a generic preset. Compare hidden A/B samples, pick what works, and it builds your personal curve.</p>
         <div className="dna-hero">
           <strong>{round.label}</strong>
           <span>Round {roundIndex + 1} of {blindMatchRounds.length}</span>
@@ -1030,36 +1030,55 @@ function ReportLabPage({
   const fileInputRef = useRef(null);
 
   const collectReport = async () => {
-    setStatus('Collecting browser devices and local bridge data...');
-    const browserDevices = await getBrowserAudioDevices();
-    const bridgeReport = await getGeneratedBridgeReport();
-    const report = buildIssueReport({
-      eq,
-      apoConfig,
-      selectedGame,
-      selectedSourceProfile,
-      currentPage: active,
-      sample,
-      analysis,
-      hearing: getSavedJson('audiotuner-hearing-results'),
-      dna: getSavedJson('audiotuner-dna-history')?.[0] || null,
-      bridgeReport,
-      browserDevices,
-      selfTestResults: getSavedJson('audiotuner-self-test-results') || [],
-      notes
-    });
-    setLastReport(report);
-    safeSetJson('audiotuner-last-issue-report', report);
-    setStatus(`Redacted report ready: ${report.diagnostics.browserDevices.length} browser audio devices, ${report.diagnostics.selfTestResults.length} self-test rows.`);
+    setStatus('Building redacted report...');
+    try {
+      const report = buildIssueReport({
+        eq,
+        apoConfig,
+        selectedGame,
+        selectedSourceProfile,
+        currentPage: active,
+        sample,
+        analysis,
+        hearing: getSavedJson('cueforge-hearing-results'),
+        dna: getSavedJson('cueforge-dna-history')?.[0] || null,
+        bridgeReport: null,
+        browserDevices: [],
+        selfTestResults: getSavedJson('cueforge-self-test-results') || [],
+        notes
+      });
+      setLastReport(report);
+      safeSetJson('cueforge-last-issue-report', report);
+      setStatus(`Redacted report ready: ${report.diagnostics.browserDevices.length} browser audio devices, ${report.diagnostics.selfTestResults.length} self-test rows.`);
+    } catch {
+      const report = buildIssueReport({
+        eq,
+        apoConfig,
+        selectedGame,
+        selectedSourceProfile,
+        currentPage: active,
+        sample,
+        analysis,
+        hearing: null,
+        dna: null,
+        bridgeReport: null,
+        browserDevices: [],
+        selfTestResults: [],
+        notes
+      });
+      setLastReport(report);
+      safeSetJson('cueforge-last-issue-report', report);
+      setStatus('Redacted report ready with fallback diagnostics.');
+    }
   };
 
   const downloadReport = () => {
-    const report = lastReport || getSavedJson('audiotuner-last-issue-report');
+    const report = lastReport || getSavedJson('cueforge-last-issue-report');
     if (!report) {
       setStatus('Create a report first.');
       return;
     }
-    downloadTextFile('audiotuner-redacted-issue-report.json', JSON.stringify(report, null, 2));
+    downloadTextFile('cueforge-redacted-issue-report.json', JSON.stringify(report, null, 2));
     setStatus('Report downloaded. It can be imported later to reproduce this setup.');
   };
 
@@ -1087,7 +1106,8 @@ function ReportLabPage({
     onReplay(imported.reproducibleState);
   };
 
-  const report = lastReport || getSavedJson('audiotuner-last-issue-report');
+  const savedReport = getSavedJson('cueforge-last-issue-report');
+  const report = lastReport || (validateIssueReport(savedReport).ok ? savedReport : null);
 
   return (
     <section className="grid two">
@@ -1146,7 +1166,8 @@ function ReportLabPage({
 
 async function getBrowserAudioDevices() {
   try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
+    if (!navigator.mediaDevices?.enumerateDevices) return [];
+    const devices = await withTimeout(navigator.mediaDevices.enumerateDevices(), 1800, []);
     return devices.filter((device) => device.kind.includes('audio')).map((device) => ({
       kind: device.kind,
       label: device.label,
@@ -1161,11 +1182,19 @@ async function getBrowserAudioDevices() {
 
 async function getGeneratedBridgeReport() {
   try {
-    const response = await fetch('/tools/audio-setup-report.json', { cache: 'no-store' });
+    const response = await withTimeout(fetch('/tools/cueforge-audio-setup-report.json', { cache: 'no-store' }), 1800, null);
+    if (!response) return null;
     return response.ok ? response.json() : null;
   } catch {
     return null;
   }
+}
+
+function withTimeout(promise, timeoutMs, fallback) {
+  return Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(() => resolve(fallback), timeoutMs))
+  ]);
 }
 
 function getSavedJson(key) {
@@ -1193,14 +1222,14 @@ function AudioDnaPage({ eq }) {
   const [apoFound, setApoFound] = useState(false);
   const [history, setHistory] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('audiotuner-dna-history') || '[]');
+      return JSON.parse(localStorage.getItem('cueforge-dna-history') || '[]');
     } catch {
       return [];
     }
   });
 
   useEffect(() => {
-    fetch('/tools/audio-setup-report.json', { cache: 'no-store' })
+    fetch('/tools/cueforge-audio-setup-report.json', { cache: 'no-store' })
       .then((response) => (response.ok ? response.json() : null))
       .then((report) => {
         if (!report) return;
@@ -1212,7 +1241,7 @@ function AudioDnaPage({ eq }) {
 
   const hearingState = (() => {
     try {
-      const saved = localStorage.getItem('audiotuner-hearing-results');
+      const saved = localStorage.getItem('cueforge-hearing-results');
       if (!saved) return { complete: false, answered: 0, total: hearingFrequencies.length * 2 };
       return hearingScore(JSON.parse(saved));
     } catch {
@@ -1231,14 +1260,14 @@ function AudioDnaPage({ eq }) {
   const saveDna = () => {
     const next = [{ ...dna, savedAt: new Date().toISOString() }, ...history].slice(0, 6);
     setHistory(next);
-    safeSetJson('audiotuner-dna-history', next);
+    safeSetJson('cueforge-dna-history', next);
   };
 
   const exportDna = () => {
     const blob = new Blob([JSON.stringify(dna, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'audiotuner-audio-dna.json';
+    link.download = 'cueforge-audio-dna.json';
     link.click();
     URL.revokeObjectURL(link.href);
   };
@@ -1334,7 +1363,7 @@ function SelfTestRunner() {
     }
 
     try {
-      const response = await fetch('/tools/audio-setup-report.json', { cache: 'no-store' });
+      const response = await fetch('/tools/cueforge-audio-setup-report.json', { cache: 'no-store' });
       if (!response.ok) throw new Error('missing report');
       const report = await response.json();
       record('Windows bridge report', 'pass', `${report.soundDevices?.length || 0} sound devices, Equalizer APO ${report.tools?.equalizerApo?.installed ? 'found' : 'not found'}, Sonar ${report.tools?.steelSeriesSonar?.installed ? 'found' : 'not found'}.`);
@@ -1352,7 +1381,7 @@ function SelfTestRunner() {
         hearing: null,
         dna: null
       });
-      const exportOk = pack.files['README.txt'].includes('AudioTuner Setup Pack') && pack.files['equalizer-apo-config.txt'].includes('Filter 10');
+      const exportOk = pack.files['README.txt'].includes('CueForge Setup Pack') && pack.files['equalizer-apo-config.txt'].includes('Filter 10');
       record('Export payloads', exportOk ? 'pass' : 'fail', exportOk ? 'APO config and setup pack files are generated.' : 'Export pack did not include expected files.');
     } catch {
       record('Autotune generation', 'fail', 'Autotune generator threw an error.');
@@ -1385,9 +1414,9 @@ function SelfTestRunner() {
     }
 
     try {
-      localStorage.setItem('audiotuner-self-test', 'ok');
-      const ok = localStorage.getItem('audiotuner-self-test') === 'ok';
-      localStorage.removeItem('audiotuner-self-test');
+      localStorage.setItem('cueforge-self-test', 'ok');
+      const ok = localStorage.getItem('cueforge-self-test') === 'ok';
+      localStorage.removeItem('cueforge-self-test');
       record('Local profile storage', ok ? 'pass' : 'fail', ok ? 'Browser local storage works.' : 'Local storage did not persist.');
     } catch {
       record('Local profile storage', 'fail', 'Local storage is blocked.');
@@ -1416,7 +1445,7 @@ function SelfTestRunner() {
       record('Live mic permission', 'warn', 'Microphone permission is blocked or not granted yet.');
     }
 
-    safeSetJson('audiotuner-self-test-results', runLog);
+    safeSetJson('cueforge-self-test-results', runLog);
     setRunning(false);
   };
 
@@ -1497,7 +1526,7 @@ function CalibrationWizard({ onApply }) {
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'audiotuner-auto-calibration.json';
+    link.download = 'cueforge-auto-calibration.json';
     link.click();
     URL.revokeObjectURL(link.href);
   };
@@ -1780,7 +1809,7 @@ function AutoDetect() {
 
   const loadGeneratedBridgeReport = async () => {
     try {
-      const response = await fetch('/tools/audio-setup-report.json', { cache: 'no-store' });
+      const response = await fetch('/tools/cueforge-audio-setup-report.json', { cache: 'no-store' });
       if (!response.ok) throw new Error('missing report');
       const parsed = await response.json();
       setBridgeReport(parsed);
@@ -1829,7 +1858,7 @@ function AutoDetect() {
           <li>Use the built-in Generic IEM FPS profile as your first output config.</li>
           <li>Use HyperX mic starting point: 80-90% input gain, reduce if clipping appears.</li>
           <li>Export APO config from EQ Studio, then paste/import into Equalizer APO or Peace.</li>
-          <li>Optional native bridge: run `tools/Scan-AudioSetup.ps1`, then import `audio-setup-report.json` here.</li>
+          <li>Optional native bridge: run `tools/Scan-AudioSetup.ps1`, then import `cueforge-audio-setup-report.json` here.</li>
         </ul>
         <div className="link-grid">
           <a href="https://sourceforge.net/projects/equalizerapo/" target="_blank" rel="noreferrer">Equalizer APO</a>
@@ -1866,7 +1895,7 @@ function Inventory() {
     <section className="grid two">
       <Panel title="Product Build" icon={BrainCircuit}>
         <ul className="clean-list">
-          <li>AudioTuner Local: gaming audio control center for IEMs, headsets, and mics.</li>
+          <li>CueForge: gaming audio control center for IEMs, headsets, and mics.</li>
           <li>Core modules: Self Test, Auto Detect, Mic Lab, Calibration, EQ Studio, Hearing Model, Audio DNA.</li>
           <li>Output formats: Equalizer APO text config and JSON profile exports.</li>
           <li>Hardware focus: IEMs, HyperX-style boom mics, Equalizer APO, Peace, and Sonar workflows.</li>

@@ -1,6 +1,6 @@
 # Privacy Notes
 
-AudioTuner is local-first. The app does not send reports, device data, mic input, or tuning files to a server.
+CueForge is local-first. The app does not send reports, device data, mic input, or tuning files to a server.
 
 ## Local Data
 
@@ -36,4 +36,4 @@ Reports keep the useful debugging parts:
 
 ## Files Not For Git
 
-`tools/audio-setup-report.json` is generated from the local Windows machine. It can contain local device and install data, so it is ignored by Git and excluded from release ZIPs.
+`tools/cueforge-audio-setup-report.json` is generated from the local Windows machine. It can contain local device and install data, so it is ignored by Git and excluded from release ZIPs.

@@ -1,6 +1,6 @@
-# AudioTuner Architecture
+# CueForge Architecture
 
-AudioTuner has two platform layers.
+CueForge has two platform layers.
 
 ## Web Build
 
@@ -16,7 +16,7 @@ The web build should not write Windows audio settings, install drivers, or chang
 
 ## Windows Desktop Shell
 
-A desktop shell is the correct next layer when AudioTuner needs native control. The desktop app can wrap the existing React UI and add a small native bridge for:
+A desktop shell is the correct next layer when CueForge needs native control. The desktop app can wrap the existing React UI and add a small native bridge for:
 
 - Reading Windows audio endpoints with stable device names.
 - Detecting Equalizer APO, Peace, Sonar, and active routing.

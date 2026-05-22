@@ -1,8 +1,8 @@
 export function buildSetupReadme({ apoConfig, calibration, hearing, dna }) {
   return [
-    '# AudioTuner Setup Pack',
+    '# CueForge Setup Pack',
     '',
-    'This pack was generated locally by AudioTuner.',
+    'This pack was generated locally by CueForge.',
     '',
     '## Files',
     '',
@@ -16,7 +16,7 @@ export function buildSetupReadme({ apoConfig, calibration, hearing, dna }) {
     '1. Open Equalizer APO Configuration Editor or Peace.',
     '2. Review equalizer-apo-config.txt.',
     '3. Paste or import the config.',
-    '4. Save, then test in AudioTuner Mic Lab and Hearing Model.',
+    '4. Save, then test in CueForge Mic Lab and Hearing Model.',
     '',
     '## Summary',
     '',

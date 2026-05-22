@@ -1,10 +1,11 @@
 node_modules/
 dist/
-tools/audio-setup-report.json
-audiotuner-*.json
-audiotuner-*.txt
+tools/cueforge-audio-setup-report.json
+cueforge-*.json
+cueforge-*.txt
 .env
 .env.*
 *.log
 .DS_Store
 Thumbs.db
+tools/audio-setup-report.json

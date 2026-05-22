@@ -1,6 +1,6 @@
-# AudioTuner Platform Notes
+# CueForge Platform Notes
 
-AudioTuner is a Windows-first gaming audio control center for IEMs, headsets, microphones, and Equalizer APO workflows.
+CueForge is a Windows-first gaming audio control center for IEMs, headsets, microphones, and Equalizer APO workflows.
 
 ## Product Pillars
 

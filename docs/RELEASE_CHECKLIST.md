@@ -24,8 +24,8 @@ npm audit --audit-level=moderate
 
 Before sharing:
 
-- Confirm `tools/audio-setup-report.json` is not committed.
-- Confirm release ZIPs do not include `tools/audio-setup-report.json`.
+- Confirm `tools/cueforge-audio-setup-report.json` is not committed.
+- Confirm release ZIPs do not include `tools/cueforge-audio-setup-report.json`.
 - Confirm exported reports do not show raw device IDs, Windows paths, computer names, emails, or phone numbers.
 
 ## Platform Decision

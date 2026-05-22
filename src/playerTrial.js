@@ -59,7 +59,7 @@ export function scoreTrialFeedback(feedback = feedbackDefaults) {
 export function buildTesterPacket({ feedback, readiness, issueReport, eq, game, sourceProfile }) {
   const scored = scoreTrialFeedback(feedback);
   return {
-    schema: 'audiotuner.player-trial.v1',
+    schema: 'cueforge.player-trial.v1',
     generatedAt: new Date().toISOString(),
     readiness,
     feedback: {

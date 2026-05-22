@@ -1,4 +1,4 @@
-const REPORT_SCHEMA = 'audiotuner.issue-report.v1';
+const REPORT_SCHEMA = 'cueforge.issue-report.v1';
 
 const SENSITIVE_KEYS = new Set([
   'deviceid',
@@ -89,7 +89,7 @@ export function buildIssueReport({
     schema: REPORT_SCHEMA,
     generatedAt: new Date().toISOString(),
     app: {
-      name: 'AudioTuner Local',
+      name: 'CueForge',
       currentPage,
       selectedGame,
       selectedSourceProfile,
@@ -128,8 +128,8 @@ export function validateIssueReport(report) {
 
 function hasLocalStorage() {
   try {
-    localStorage.setItem('audiotuner-report-check', 'ok');
-    localStorage.removeItem('audiotuner-report-check');
+    localStorage.setItem('cueforge-report-check', 'ok');
+    localStorage.removeItem('cueforge-report-check');
     return true;
   } catch {
     return false;

@@ -1,6 +1,6 @@
-# AudioTuner Local
+# CueForge
 
-AudioTuner Local is a Windows-first gaming audio control center for IEMs, headsets, and mics. It gives players a repeatable way to test a setup, clean up a boom mic, tune IEMs for competitive games, build hearing-aware EQ, and export Equalizer APO configs.
+CueForge is a Windows-first gaming audio control center for IEMs, headsets, and mics. It gives players a repeatable way to test a setup, clean up a boom mic, tune IEMs for competitive games, build hearing-aware EQ, and export Equalizer APO configs.
 
 It does not silently install drivers or rewrite Windows audio routing. It makes the hidden parts visible, generates configs, and keeps the final system-level apply step explicit.
 
@@ -9,7 +9,7 @@ It does not silently install drivers or rewrite Windows audio routing. It makes 
 The current web build is the right foundation for safe testing, tuning, feedback capture, and GitHub distribution. The right way around browser limits is a desktop app shell, not a browser workaround.
 
 - Keep the web build for player trials, report replay, EQ generation, and privacy-safe exports.
-- Add a Windows desktop shell when AudioTuner needs one-click local setup, native device detection, Equalizer APO file writes, or Windows audio routing helpers.
+- Add a Windows desktop shell when CueForge needs one-click local setup, native device detection, Equalizer APO file writes, or Windows audio routing helpers.
 - Keep every native action explicit: show the planned change, require a user click, write a backup, then apply.
 
 ## What It Does
@@ -97,7 +97,7 @@ The browser app cannot silently install drivers, change firmware, or rewrite Win
 
 1. Detect and test in the app.
 2. Export readable config.
-3. Apply explicitly in Equalizer APO, Peace, Sonar, or a future native AudioTuner desktop shell.
+3. Apply explicitly in Equalizer APO, Peace, Sonar, or a future native CueForge desktop shell.
 
 ## GitHub Release Check
 
@@ -109,4 +109,4 @@ npm run build
 npm audit --audit-level=moderate
 ```
 
-Also verify that `tools/audio-setup-report.json` is not committed or included in public release files.
+Also verify that `tools/cueforge-audio-setup-report.json` is not committed or included in public release files.
