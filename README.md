@@ -1,6 +1,33 @@
 # AudioTuner Local
 
-AudioTuner Local is a safe, local-first gaming audio suite reconstructed from the Perplexity AudioTuner research task. It helps compare headset tuning, simulate mic/game-audio analysis, build EQ profiles, and export Equalizer APO config text without directly changing Windows audio settings.
+AudioTuner Local is a Windows-first gaming audio control center for IEMs, headsets, and mics. It gives players a repeatable way to test a setup, clean up a boom mic, tune IEMs for competitive games, build hearing-aware EQ, and export Equalizer APO configs.
+
+It does not silently install drivers or rewrite Windows audio routing. It makes the hidden parts visible, generates configs, and keeps the final system-level apply step explicit.
+
+## Platform Direction
+
+The current web build is the right foundation for safe testing, tuning, feedback capture, and GitHub distribution. The right way around browser limits is a desktop app shell, not a browser workaround.
+
+- Keep the web build for player trials, report replay, EQ generation, and privacy-safe exports.
+- Add a Windows desktop shell when AudioTuner needs one-click local setup, native device detection, Equalizer APO file writes, or Windows audio routing helpers.
+- Keep every native action explicit: show the planned change, require a user click, write a backup, then apply.
+
+## What It Does
+
+- Player Setup Gate that scores readiness, requests mic permission, checks browser audio, confirms bridge/APO status, creates setup reports, and routes testers through the right flow.
+- Player Trial with a repeatable match script, post-match ratings, next-fix recommendations, and an exportable tester packet.
+- Auto Self Test for browser audio APIs, devices, Windows bridge report, autotune, hearing model, storage, tone engine, and mic permission.
+- Auto Detect for browser audio devices plus an optional Windows bridge report.
+- Live Mic Lab with level, voice presence, noise estimate, clip risk, and HyperX-oriented guidance.
+- IEM/headphone checks for left, right, center, and sweep testing.
+- Auto Calibration wizard for output target, game focus, treble sensitivity, bass preference, footstep focus, and mic boom/noise.
+- Blind Match tuner that learns a personal EQ curve from A/B choices instead of presets.
+- Tactical Masking Lab that stress-tests footsteps, comms, and IEM sharpness against masking scenarios.
+- Report Lab for real player testing: create redacted issue reports, import them later, and replay the exact EQ/game/source/mic state that caused a problem.
+- EQ Studio with 10-band editing, local source profiles, and Equalizer APO export.
+- Export Pack that downloads setup instructions, APO config, calibration data, hearing profile, and Audio DNA snapshot.
+- Personal Hearing Model with left/right tone checks, saved results, compensation overlay, and JSON export.
+- Audio DNA, a saved fingerprint of EQ shape, hearing progress, device confidence, mic chain, and game focus.
 
 ## Run
 
@@ -9,22 +36,77 @@ npm install
 npm run dev
 ```
 
-## Included
+Open:
 
-- Mic analysis simulator for headset and Discord/game audio issues
-- 10-band EQ studio
-- Equalizer APO config export
-- Game-aware profiles for tactical FPS, battle royale, and comms focus
-- Personal hearing model screen
-- Extracted data inventory from the Perplexity task
+```text
+http://127.0.0.1:5177
+```
 
-This app does not change Windows audio settings directly. It safely generates tuning recommendations and exportable configs.
+## Optional Windows Bridge
 
-## Product Direction
+Run this if you want the app to see installed tools and Windows audio devices:
 
-AudioTuner should become the clean home for the audio projects in this workspace:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\Scan-AudioSetup.ps1
+```
 
-- `autoeq` can provide Windows/Equalizer APO profile switching.
-- `gaming-buddy` can become the Windows desktop shell.
-- `footstep-test` can become an audio test module.
-- Henry engine diagnostics should stay separate unless the product line expands into non-gaming sound diagnostics.
+Then open `Auto Detect` and click `Load generated bridge report`.
+
+The generated bridge report is local machine data. It is ignored by Git and excluded from release ZIPs.
+
+## Best Setup Path
+
+1. Open `Setup Gate`, refresh the check, grant mic permission, and create the first setup report.
+2. Open `Self Test` and run the full auto test.
+3. Open `Auto Detect`, allow microphone permission if prompted, and load the generated bridge report.
+4. Open `Mic Lab`, start live mic feedback, speak into the HyperX mic, and watch level/noise/clip risk.
+5. Use `Left`, `Right`, `Center`, and `Sweep` to check IEM channel balance and harsh peaks.
+6. Open `Hearing Model`, keep volume low, test left/right ears, and export the hearing profile.
+7. Open `Calibration`, generate autotune, and apply it to EQ Studio.
+8. Open `Blind Match`, run the A/B rounds, and apply the learned curve.
+9. Open `Masking Lab`, pick a scenario, and apply the anti-masking curve.
+10. Open `Player Trial`, run the guided match script, fill the ratings, and export the tester packet.
+11. Open `Report Lab`, create a redacted report, download it, import it back, and replay it into the app.
+12. Open `Audio DNA`, save the fingerprint after you like the result.
+13. Open `EQ Studio`, export the Equalizer APO config, and paste it into Equalizer APO or Peace.
+14. Use `Export Pack` when you want the full setup bundle instead of a single config.
+
+## Player Test Reports
+
+Use `Report Lab` during real player tests. It exports a redacted JSON report with the active EQ curve, selected game profile, source profile, analyzer notes, browser audio capability flags, sanitized device summary, and latest self-test results. Importing that same file restores the reproducible state so the issue can be debugged and fixed without guessing from screenshots.
+
+Report exports strip raw device IDs, group IDs, Windows paths, computer names, config paths, full browser user-agent strings, emails, and phone numbers before download.
+
+## Player Trial Packets
+
+Use `Player Trial` after tuning. It gives every tester the same five-step match script, captures ratings for footsteps, direction, comms, mic quality, and comfort, then exports a JSON tester packet with readiness state, feedback score, next-fix recommendations, EQ state, selected game, source profile, and the latest redacted issue report.
+
+## Troubleshooting
+
+- Hidden device names: allow microphone permission from the browser address bar, reload, and scan again.
+- No mic movement: set the HyperX mic as the default Windows input, then reload.
+- Clip risk high: lower Windows input gain or Discord input sensitivity.
+- IEM sounds harsh: reduce 4kHz/8kHz by 1-2dB or increase treble sensitivity in Calibration.
+- Autotune sounds thin: raise bass preference by 1-2 points.
+- Equalizer APO not affecting sound: open Configurator and ensure APO is installed on the actual output device.
+- Sonar active: check whether Sonar routes audio through a virtual device before applying APO to physical output.
+
+## Safety Boundary
+
+The browser app cannot silently install drivers, change firmware, or rewrite Windows routing. That is intentional. The useful path is:
+
+1. Detect and test in the app.
+2. Export readable config.
+3. Apply explicitly in Equalizer APO, Peace, Sonar, or a future native AudioTuner desktop shell.
+
+## GitHub Release Check
+
+Before sharing a build:
+
+```powershell
+npm test
+npm run build
+npm audit --audit-level=moderate
+```
+
+Also verify that `tools/audio-setup-report.json` is not committed or included in public release files.

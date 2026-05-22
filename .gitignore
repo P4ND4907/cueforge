@@ -1,5 +1,8 @@
 node_modules/
 dist/
+tools/audio-setup-report.json
+audiotuner-*.json
+audiotuner-*.txt
 .env
 .env.*
 *.log
