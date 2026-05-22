@@ -1,62 +1,49 @@
 name: Player Feedback
-description: Share match feedback from the CueForge Player Trial.
+description: One real test session, one useful note about what changed.
 title: "[Feedback]: "
 labels: ["player-feedback"]
 body:
   - type: markdown
     attributes:
       value: |
-        Use this after running the Player Trial. Attach the exported tester packet if possible.
+        Honest feedback beats hype. If CueForge made something worse, say that plainly.
   - type: input
     id: game
     attributes:
-      label: Game tested
-      placeholder: "Tarkov, Siege, COD/Warzone, Apex, Battlefield, Valorant, CS2..."
+      label: Game and mode
+      placeholder: Tarkov raid, Siege ranked, COD Warzone, CS2, Valorant...
     validations:
       required: true
   - type: textarea
     id: setup
     attributes:
-      label: Audio setup
-      placeholder: "IEM/headset, mic, DAC, Equalizer APO/Peace/Sonar/Discord"
+      label: Imported or auto-detected setup summary
+      description: Paste the redacted setup summary from CueForge, or describe what the app could not detect.
     validations:
-      required: true
+      required: false
   - type: dropdown
-    id: footsteps
+    id: result
     attributes:
-      label: Footstep clarity
-      options: ["Worse", "No change", "Slightly better", "Much better"]
-    validations:
-      required: true
-  - type: dropdown
-    id: direction
-    attributes:
-      label: Direction / positioning
-      options: ["Worse", "No change", "Slightly better", "Much better"]
-    validations:
-      required: true
-  - type: dropdown
-    id: comms
-    attributes:
-      label: Comms clarity
-      options: ["Worse", "No change", "Slightly better", "Much better"]
-    validations:
-      required: true
-  - type: dropdown
-    id: comfort
-    attributes:
-      label: Comfort / fatigue
-      options: ["Worse", "No change", "Slightly better", "Much better"]
+      label: What changed?
+      options:
+        - Better
+        - Worse
+        - Mixed
+        - No clear change
     validations:
       required: true
   - type: textarea
     id: notes
     attributes:
-      label: Notes
-      description: What felt better, worse, confusing, or surprisingly useful?
+      label: What did you notice in-game?
+      description: Footsteps, direction, comms, mic clarity, fatigue, harshness, mud, timing, or anything confusing.
+    validations:
+      required: true
   - type: textarea
     id: packet
     attributes:
-      label: Player Trial packet
-      description: Paste or attach the exported tester packet when possible.
+      label: Player Trial or Beta Check-in packet
+      description: Paste the exported packet if you have it.
       render: json
+    validations:
+      required: false

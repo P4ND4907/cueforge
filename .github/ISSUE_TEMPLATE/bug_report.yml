@@ -1,52 +1,49 @@
 name: Bug Report
-description: Report a broken flow, crash, incorrect output, or failed tester path.
+description: Something broke, froze, leaked, or did not match what CueForge promised.
 title: "[Bug]: "
-labels: ["bug", "needs-triage"]
+labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for testing CueForge. Attach a redacted Report Lab JSON when possible.
-  - type: input
-    id: version
-    attributes:
-      label: CueForge version or commit
-      placeholder: "Example: d434b6b or latest main"
-  - type: input
-    id: windows
-    attributes:
-      label: Windows version
-      placeholder: "Example: Windows 11 23H2"
+        Thanks for testing CueForge. Do not paste passwords, phone numbers, DOBs, emails, recovery codes, raw device IDs, full Windows paths, or private screenshots.
   - type: textarea
-    id: setup
+    id: what-happened
     attributes:
-      label: Audio setup
-      description: Headset/IEM, mic, DAC, Equalizer APO, Peace, Sonar, Discord, or other tools.
-      placeholder: "IEM/headset, mic, audio tools, game tested"
+      label: What happened?
+      description: Say what you clicked, what you expected, and what actually happened.
+      placeholder: I opened Self Test, clicked Run, then...
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: CueForge page or feature
+      placeholder: Self Test, Auto Detect, Mic Lab, Report Lab, EQ Studio...
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
       label: Steps to reproduce
-      placeholder: "1. Open Setup Gate..."
+      placeholder: |
+        1. Open...
+        2. Click...
+        3. See...
     validations:
       required: true
   - type: textarea
-    id: expected
+    id: setup
     attributes:
-      label: Expected result
+      label: Redacted setup summary
+      description: Paste the redacted setup/import summary or say if you could not generate one.
     validations:
-      required: true
-  - type: textarea
-    id: actual
-    attributes:
-      label: Actual result
-    validations:
-      required: true
+      required: false
   - type: textarea
     id: report
     attributes:
-      label: Redacted Report Lab JSON
-      description: Paste or attach only the redacted report. Do not paste raw Windows bridge output.
+      label: Report Lab packet
+      description: Paste redacted Report Lab JSON if available.
       render: json
+    validations:
+      required: false

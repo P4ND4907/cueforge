@@ -14,7 +14,7 @@ Profile post: blocked by Reddit profile composer error, "community doesn't exist
 r/alphaandbetausers post: submitted.
 Live post: https://www.reddit.com/r/alphaandbetausers/comments/1tkdalt/looking_for_fps_audio_testers_using_iems_headsets/
 Current status: Reddit filters removed the repeated/link-heavy alphaandbetausers post. Do not repost the same title/body/link.
-Safe action now: use profile-first posting, modmail permission asks, and no-link community drafts. Do not mass post the GitHub/app/Discord links.
+Safe action now: use the GitHub release/issue as the owned link hub, then do modmail permission asks and no-link helpful comments. Do not mass post the GitHub/app/Discord links.
 ```
 
 Joined communities:
@@ -41,7 +41,7 @@ Reddit is not Discord. Treat it like a place to participate first, promote secon
 The safe operating mode after the filter removal:
 
 ```text
-Profile post: okay as the main link hub.
+Profile post: paused until Reddit's profile composer works again.
 Community posts: no-link by default unless rules clearly allow links.
 Game subreddits: ask modmail first.
 Comments: answer existing audio/help threads with useful advice before mentioning CueForge.
@@ -87,8 +87,8 @@ Use this order now:
 
 ```text
 1. Stop reposting the same alphaandbetausers link.
-2. Make one profile post with full links.
-3. Use no-link community posts that say links are on the profile.
+2. Use the GitHub release and tester issue as the owned link hub.
+3. Use no-link community posts that offer to share the link only when allowed.
 4. Ask modmail before posting in game-specific subs.
 5. Leave useful non-link comments in audio/help threads.
 6. Only share the app link when the community asks or rules clearly allow it.
@@ -98,11 +98,10 @@ Use this order now:
 
 Use these in order. Stop if a post is filtered or removed, then ask mods instead of reposting.
 
-1. Reddit profile post with app, GitHub, Discord, and Master Plan links.
-2. One no-link post in a beta/project-friendly subreddit.
-3. Modmail permission ask for one game subreddit.
-4. Two helpful comments in existing audio/mic/EQ threads with no link.
-5. One tailored follow-up only after someone asks for the app.
+1. One no-link post in a beta/project-friendly subreddit.
+2. One modmail permission ask for a game subreddit.
+3. Two helpful comments in existing audio/mic/EQ threads with no link.
+4. One tailored follow-up only after someone asks for the app.
 
 Do not post the same body twice. Rewrite the hook for each community and keep the disclosure.
 
@@ -166,6 +165,7 @@ Social links:
 ```text
 App: https://p4nd4907.github.io/cueforge/
 GitHub: https://github.com/P4ND4907/cueforge
+Windows alpha: https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.1
 Discord: https://discord.gg/vyQwyJ49v
 ```
 
@@ -182,7 +182,7 @@ I built CueForge because I got tired of guessing whether a new EQ, mic setting, 
 
 The goal is simple: test the setup, play a real match, then write down what changed.
 
-CueForge is free to test and built for players using IEMs, headsets, USB mics, HyperX-style mics, Discord, Equalizer APO, Peace, Sonar, or messy real-world Windows audio setups.
+CueForge is free to test. Bring your own setup, import or auto-detect what you can, then run one real match and tell me what actually changed.
 
 It can:
 
@@ -199,7 +199,7 @@ I am looking for honest testers, not hype. If it helps, say exactly where. If it
 Good feedback:
 
 - game and mode tested
-- IEM/headset/mic/audio chain
+- imported or auto-detected setup summary
 - what improved
 - what got worse
 - whether the problem felt like tuning, game audio, server timing, Discord, mic gain, or Windows routing
@@ -209,6 +209,9 @@ https://p4nd4907.github.io/cueforge/
 
 GitHub:
 https://github.com/P4ND4907/cueforge
+
+Windows alpha:
+https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.1
 
 Discord:
 https://discord.gg/vyQwyJ49v

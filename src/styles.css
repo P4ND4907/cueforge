@@ -416,6 +416,9 @@ main { padding: 28px; overflow: hidden; }
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+.top-actions a {
+  text-decoration: none;
+}
 
 .tester-note-banner {
   display: grid;

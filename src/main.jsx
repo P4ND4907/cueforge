@@ -99,6 +99,12 @@ const socialBrand = {
   ]
 };
 
+const publicRelease = {
+  download: 'https://github.com/P4ND4907/cueforge/releases/download/v0.1.0-alpha.1/CueForge-0.1.0-x64.exe',
+  notes: 'https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.1',
+  feedback: 'https://github.com/P4ND4907/cueforge/issues/1'
+};
+
 const driverLayers = [
   {
     name: 'Equalizer APO',
@@ -405,6 +411,7 @@ function App() {
             <p>Test your mic, tune your IEMs, generate game-ready EQ, and keep your setup dialed in without guessing.</p>
           </div>
           <div className="top-actions">
+            <a className="ghost" href={publicRelease.download} target="_blank" rel="noreferrer"><Download size={18} /> Download Alpha</a>
             <button className="ghost" onClick={exportSetupPack}><Download size={18} /> Export Pack</button>
             <button className="primary" onClick={downloadConfig}><Download size={18} /> Export APO</button>
           </div>

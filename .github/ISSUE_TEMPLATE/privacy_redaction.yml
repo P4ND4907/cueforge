@@ -1,0 +1,37 @@
+name: Privacy / Redaction Review
+description: Report anything CueForge should redact before sharing.
+title: "[Privacy]: "
+labels: ["privacy"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not post the private value itself. Describe the kind of data that appeared and where it appeared.
+  - type: input
+    id: location
+    attributes:
+      label: Where did you see it?
+      placeholder: Report Lab preview, Export Pack, Auto Detect summary, GitHub issue text...
+    validations:
+      required: true
+  - type: dropdown
+    id: data-type
+    attributes:
+      label: What kind of data leaked?
+      options:
+        - Email or account info
+        - Phone number or DOB
+        - Raw device ID or group ID
+        - Windows path or computer name
+        - User-agent or browser fingerprint
+        - Other private detail
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description without the private value
+      placeholder: The preview showed a full Windows path under...
+    validations:
+      required: true
+

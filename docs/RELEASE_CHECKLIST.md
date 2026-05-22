@@ -11,6 +11,17 @@ npm audit --audit-level=moderate
 npm run desktop
 ```
 
+## May 22, 2026 Alpha Proof
+
+- `npm test`: 16 files, 42 tests passed.
+- `npm run build`: production build passed.
+- `npm audit --audit-level=moderate`: 0 vulnerabilities.
+- Windows portable package: `CueForge-0.1.0-x64.exe`.
+- Desktop startup smoke: packaged `CueForge.exe` launched and responded.
+- Public release: `v0.1.0-alpha.1`.
+- Release asset SHA256: `B6A90EEA50D07B76B9E3F1BB561C594349A94F11E4131203701767DD81C87AB0`.
+- Issue watch automation: active hourly triage for GitHub tester feedback and bugs.
+
 ## Manual Smoke Test
 
 1. Open the app at `http://127.0.0.1:5177`.

@@ -11,10 +11,10 @@ Thanks for testing CueForge. The goal is simple: find out whether the app helps 
 
 ## Test Session
 
-1. Run CueForge locally.
+1. Open the web app or Windows alpha build.
 2. Open `Community Hub` and copy the roll call if you are coordinating feedback in Discord.
 3. Run `Self Test`.
-4. Open `Auto Detect` and copy the redacted setup summary.
+4. Open `Auto Detect` and import or auto-detect your setup.
 5. Open `Mic Lab` and confirm live mic feedback works.
 6. Open `Calibration` and generate a profile.
 7. Open `EQ Studio` and review the Equalizer APO export.
@@ -35,6 +35,17 @@ Use GitHub issues and include:
 - The redacted Report Lab JSON for bugs.
 
 Do not paste unredacted Windows device reports into GitHub.
+
+## Response Expectations
+
+GitHub issues are the repair queue. The hourly CueForge issue watcher checks for new bug and tester-feedback reports, tries to reproduce clear issues, runs tests when it changes code, and comments back with either a fix result or the missing details needed.
+
+Target response rhythm:
+
+- Clear privacy leak: same day when seen.
+- Reproducible broken flow: first triage within about an hour while the watcher is active, fix attempt as soon as the report has enough detail.
+- Tuning feedback: grouped into the next calibration/profile pass.
+- Vague reports: watcher asks for the exact page, setup import, report packet, and what changed in-game.
 
 ## Privacy Check
 

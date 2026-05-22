@@ -27,6 +27,14 @@ Use GitHub issues for feedback:
 - Tuning impressions: open Player Feedback.
 - Privacy concern: open Privacy / Redaction Review.
 
+## Public Alpha
+
+- Web app: https://p4nd4907.github.io/cueforge/
+- Windows alpha download: https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.1
+- Feedback thread: https://github.com/P4ND4907/cueforge/issues/1
+
+The Windows build is unsigned while CueForge is in alpha, so Windows may show a SmartScreen warning. Use the web app first if you want the lightest test.
+
 ## Public Roadmap
 
 The big-picture plan lives here:
@@ -127,7 +135,7 @@ The generated bridge report is local machine data. It is ignored by Git and excl
 ## Best Setup Path
 
 1. Open `Self Test` and run the full auto test.
-2. Open `Auto Detect`, allow microphone permission if prompted, and load the generated bridge report.
+2. Open `Auto Detect`, allow microphone permission if prompted, and import or auto-detect your setup.
 3. Open `Mic Lab`, start live mic feedback, speak into the mic, and watch level/noise/clip risk.
 4. Use `Left`, `Right`, `Center`, and `Sweep` to check channel balance and harsh peaks.
 5. Open `Hearing Model`, keep volume low, test left/right ears, and export the hearing profile.
