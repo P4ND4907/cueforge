@@ -10,8 +10,9 @@ Profile updates completed:
 Display name: Panda | CueForge
 About: Panda behind CueForge. Building a free FPS audio lab for mic checks, IEM/headset EQ, Discord, Equalizer APO, and real match feedback. Honest tests > hype.
 Banner/avatar: CueForge panda brand assets applied.
-Profile post: drafted, not submitted.
-r/alphaandbetausers post: drafted, not submitted.
+Profile post: blocked by Reddit profile composer error, "community doesn't exist."
+r/alphaandbetausers post: submitted.
+Live post: https://www.reddit.com/r/alphaandbetausers/comments/1tkdalt/looking_for_fps_audio_testers_using_iems_headsets/
 ```
 
 Joined communities:
