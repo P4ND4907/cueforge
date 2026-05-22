@@ -47,8 +47,8 @@ New-member to-dos:
 
 ```text
 1. Pick your roles.
-2. Run CueForge Setup Journey and Self Test.
-3. Post your setup chain.
+2. Run CueForge Self Test.
+3. Import or auto-detect your setup and post the redacted setup chain.
 4. Play one match.
 5. Post a check-in, clip, or bug replay.
 ```

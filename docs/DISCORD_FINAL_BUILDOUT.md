@@ -279,8 +279,8 @@ This server is for players who want better FPS audio without guessing forever. B
 
 Fast path:
 1. Open CueForge: https://p4nd4907.github.io/cueforge/
-2. Run Setup Journey.
-3. Run Self Test.
+2. Run Self Test.
+3. Import or auto-detect your setup.
 4. Play one real match.
 5. Post what changed in #match-checkins or what broke in #bug-replays.
 

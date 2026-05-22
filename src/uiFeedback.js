@@ -61,6 +61,96 @@ export function summarizeUiFeedback(notes = []) {
   };
 }
 
+export function buildUiFeedbackRepairCheck(notes = [], { now = new Date() } = {}) {
+  const safe = sanitizeUiFeedbackNotes(notes);
+  const groups = new Map();
+
+  for (const item of safe) {
+    const area = item.target.panel || item.target.label || 'Unknown area';
+    const key = [item.page, area, item.tag].join('::');
+    if (!groups.has(key)) {
+      groups.set(key, {
+        id: `repair-${groups.size + 1}`,
+        page: item.page,
+        area,
+        tag: item.tag,
+        notes: [],
+        priority: priorityForTag(item.tag),
+        suggestedFix: suggestedFixForTag(item.tag),
+        testPlan: testPlanForTag(item.tag)
+      });
+    }
+    groups.get(key).notes.push(item);
+  }
+
+  const actions = [...groups.values()]
+    .map((group) => ({
+      ...group,
+      count: group.notes.length,
+      latestAt: group.notes.at(-1)?.createdAt || null,
+      title: `${titleForTag(group.tag)}: ${group.area}`,
+      evidence: group.notes.slice(-3).map((item) => ({
+        note: item.note,
+        target: item.target.label,
+        viewport: item.viewport,
+        createdAt: item.createdAt
+      }))
+    }))
+    .sort((a, b) => b.priority - a.priority || b.count - a.count || String(b.latestAt).localeCompare(String(a.latestAt)))
+    .slice(0, 12);
+
+  return {
+    schema: 'cueforge.ui-repair-check.v1',
+    generatedAt: safeDate(now).toISOString(),
+    status: safe.length ? 'repair-queue-ready' : 'no-notes-yet',
+    totalNotes: safe.length,
+    actionCount: actions.length,
+    topAction: actions[0] || null,
+    actions,
+    boundary: 'CueForge can auto-triage local notes and generate a repair packet. Source edits still need a developer or explicit desktop automation review.'
+  };
+}
+
+export function buildUiFeedbackRepairPacket(notes = [], options = {}) {
+  const check = buildUiFeedbackRepairCheck(notes, options);
+  const lines = [
+    'CueForge Panda Notes repair packet',
+    `Generated: ${check.generatedAt}`,
+    `Status: ${check.status}`,
+    `Notes scanned: ${check.totalNotes}`,
+    `Repair actions: ${check.actionCount}`,
+    '',
+    'Boundary:',
+    check.boundary,
+    '',
+    'Instruction:',
+    'Use these notes to make targeted code/UI fixes, then run tests, build, and browser QA. Do not remove privacy redaction, do not add hidden telemetry, and do not silently change Windows audio settings.',
+    ''
+  ];
+
+  if (!check.actions.length) {
+    lines.push('No developer notes were found. Right-click an app area, tag the issue, save a note, then rerun this packet.');
+    return lines.join('\n');
+  }
+
+  check.actions.forEach((action, index) => {
+    lines.push(`${index + 1}. ${action.title}`);
+    lines.push(`   Page: ${action.page}`);
+    lines.push(`   Tag: ${action.tag}`);
+    lines.push(`   Priority: ${action.priority}`);
+    lines.push(`   Evidence count: ${action.count}`);
+    lines.push(`   Suggested fix: ${action.suggestedFix}`);
+    lines.push(`   Test plan: ${action.testPlan}`);
+    action.evidence.forEach((item, evidenceIndex) => {
+      lines.push(`   Note ${evidenceIndex + 1}: ${item.note || '[empty]'}`);
+      lines.push(`   Target ${evidenceIndex + 1}: ${item.target || '[unknown]'} at ${item.viewport.width}x${item.viewport.height}, ${item.viewport.xPercent}%/${item.viewport.yPercent}%`);
+    });
+    lines.push('');
+  });
+
+  return lines.join('\n').trim();
+}
+
 function sanitizeTarget(target = {}) {
   return {
     label: sanitizeShortText(target.label || 'Unknown area', 120),
@@ -92,4 +182,52 @@ function safeDate(value) {
 
 function clampNumber(value, min, max) {
   return Math.max(min, Math.min(max, Math.round(Number(value) || 0)));
+}
+
+function priorityForTag(tag) {
+  return {
+    broken: 100,
+    'layout issue': 90,
+    'missing feedback': 78,
+    slow: 72,
+    'text issue': 64,
+    confusing: 58,
+    idea: 35
+  }[tag] || 50;
+}
+
+function titleForTag(tag) {
+  return {
+    broken: 'Fix broken control',
+    'layout issue': 'Fix layout or resize issue',
+    'missing feedback': 'Add missing state feedback',
+    slow: 'Profile slow flow',
+    'text issue': 'Rewrite unclear text',
+    confusing: 'Clarify confusing flow',
+    idea: 'Review product idea'
+  }[tag] || 'Review note';
+}
+
+function suggestedFixForTag(tag) {
+  return {
+    broken: 'Reproduce the target interaction, repair the handler/state path, and add a focused regression check.',
+    'layout issue': 'Inspect the target at the noted viewport, add containment/wrapping/responsive grid rules, and rerun overflow checks.',
+    'missing feedback': 'Add a visible loading, success, empty, blocked, or error state near the control that caused the note.',
+    slow: 'Profile the flow, reduce expensive synchronous work, and keep gameplay/live audio paths lightweight.',
+    'text issue': 'Replace vague or cramped copy with direct player-facing wording that fits the container.',
+    confusing: 'Simplify the workflow label, order, or next-step copy so the tester knows what to do next.',
+    idea: 'Decide whether this belongs in the current release, the roadmap, or the rejected list.'
+  }[tag] || 'Review the note and make the smallest targeted fix.';
+}
+
+function testPlanForTag(tag) {
+  return {
+    broken: 'Run the exact click/type/export path, then rerun unit tests and browser smoke.',
+    'layout issue': 'Check desktop, tablet, and mobile widths for overflow, clipping, and text collisions.',
+    'missing feedback': 'Trigger pass, fail, blocked, and empty states to confirm the message appears.',
+    slow: 'Run a before/after smoke while live audio/gameplay save features are idle and active.',
+    'text issue': 'Verify the longest visible text still wraps cleanly on mobile and desktop.',
+    confusing: 'Walk the page from a fresh tester state and confirm the next action is obvious.',
+    idea: 'Validate the idea against the master plan before adding UI.'
+  }[tag] || 'Run focused browser QA for the noted area.';
 }

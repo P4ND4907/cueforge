@@ -531,7 +531,7 @@ CueForge update 001:
 The Panda Lab roadmap is live. This is where app development news, build progress, and future CueForge ideas will live.
 
 What is ready to test:
-- Setup Journey and Self Test
+- Self Test and Auto Detect setup import
 - live mic feedback
 - Auto Detect setup summaries
 - IEM/headset EQ export

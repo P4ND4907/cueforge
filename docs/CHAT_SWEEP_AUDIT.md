@@ -25,7 +25,7 @@ These were added to `docs/OPEN_TASK_QUEUE.md` during the chat sweep:
 
 - Live mic feedback and headphone/IEM tests.
 - Auto Detect, setup import, and Windows bridge scanner.
-- Self Test and first-run Setup Journey.
+- Self Test and optional Setup Journey.
 - Personal Hearing Model, Auto Calibration, Blind Match, Masking Lab, Audio DNA, Player Trial, Gameplay Save, Report Lab, Community Hub, and Panda Notes.
 - Local opt-in audio evidence recording without hidden uploads.
 - Desktop shell direction for native scan/APO draft support.

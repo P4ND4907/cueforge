@@ -49,7 +49,7 @@ The current web build is the right foundation for safe testing, tuning, feedback
 
 ## What It Does
 
-- Immersive Setup Journey, a standalone first-run bamboo soundwalk with a 3D Three.js scene, click-to-start Web Audio bed, gear profile, device scan, calibration direction, and clean handoff into the main app.
+- Optional Setup Journey, a standalone bamboo soundwalk with a 3D Three.js scene, click-to-start Web Audio bed, gear profile, device scan, calibration direction, and clean handoff back into the main app.
 - Community Hub for Discord-first roll calls, this-or-that tester input, X/Reddit post drafts, an approval queue, and local signal summaries.
 - Player Trial with a repeatable match script, post-match ratings, next-fix recommendations, and an exportable tester packet.
 - Beta Check-in with anonymous local tester IDs, proof codes, active-day counts, opt-in 12-second local mic evidence, and exportable packets for real beta feedback without hidden telemetry.
@@ -126,24 +126,23 @@ The generated bridge report is local machine data. It is ignored by Git and excl
 
 ## Best Setup Path
 
-1. Start with the first-run Setup Journey, enter the gear profile, scan devices, and set the first calibration direction.
-2. Open `Self Test` and run the full auto test.
-3. Open `Auto Detect`, allow microphone permission if prompted, and load the generated bridge report.
-4. Open `Mic Lab`, start live mic feedback, speak into the mic, and watch level/noise/clip risk.
-5. Use `Left`, `Right`, `Center`, and `Sweep` to check channel balance and harsh peaks.
-6. Open `Hearing Model`, keep volume low, test left/right ears, and export the hearing profile.
-7. Open `Calibration`, generate autotune, and apply it to EQ Studio.
-8. Open `Blind Match`, run the A/B rounds, and apply the learned curve.
-9. Open `Masking Lab`, pick a scenario, and apply the anti-masking curve.
-10. Open `Player Trial`, run the guided match script, fill the ratings, and export the tester packet.
-11. Open `Beta Check-in`, record a short opt-in evidence clip if the tester agrees, and export the local evidence JSON.
-12. Open `Report Lab`, create a redacted report, download it, import it back, and replay it into the app.
-13. Open `Audio DNA`, save the fingerprint after you like the result.
-14. Open `EQ Studio`, export the Equalizer APO config, and paste it into Equalizer APO or Peace.
-15. In the desktop shell, open `Driver Layer` and save an APO draft if you want a native folder-based handoff.
-16. Use `Export Pack` when you want the full setup bundle instead of a single config.
+1. Open `Self Test` and run the full auto test.
+2. Open `Auto Detect`, allow microphone permission if prompted, and load the generated bridge report.
+3. Open `Mic Lab`, start live mic feedback, speak into the mic, and watch level/noise/clip risk.
+4. Use `Left`, `Right`, `Center`, and `Sweep` to check channel balance and harsh peaks.
+5. Open `Hearing Model`, keep volume low, test left/right ears, and export the hearing profile.
+6. Open `Calibration`, generate autotune, and apply it to EQ Studio.
+7. Open `Blind Match`, run the A/B rounds, and apply the learned curve.
+8. Open `Masking Lab`, pick a scenario, and apply the anti-masking curve.
+9. Open `Player Trial`, run the guided match script, fill the ratings, and export the tester packet.
+10. Open `Beta Check-in`, record a short opt-in evidence clip if the tester agrees, and export the local evidence JSON.
+11. Open `Report Lab`, create a redacted report, download it, import it back, and replay it into the app.
+12. Open `Audio DNA`, save the fingerprint after you like the result.
+13. Open `EQ Studio`, export the Equalizer APO config, and paste it into Equalizer APO or Peace.
+14. In the desktop shell, open `Driver Layer` and save an APO draft if you want a native folder-based handoff.
+15. Use `Export Pack` when you want the full setup bundle instead of a single config.
 
-To run setup again later, open `System Info` and click `Rerun setup`.
+To run the cinematic setup flow later, open `System Info` and click `Rerun setup`.
 
 ## Player Test Reports
 

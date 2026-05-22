@@ -12,9 +12,9 @@ Thanks for testing CueForge. The goal is simple: find out whether the app helps 
 ## Test Session
 
 1. Run CueForge locally.
-2. Complete the first-run `Setup Journey` so CueForge saves your gear profile and calibration direction.
-3. Open `Community Hub` and copy the roll call if you are coordinating feedback in Discord.
-4. Run `Self Test`.
+2. Open `Community Hub` and copy the roll call if you are coordinating feedback in Discord.
+3. Run `Self Test`.
+4. Open `Auto Detect` and copy the redacted setup summary.
 5. Open `Mic Lab` and confirm live mic feedback works.
 6. Open `Calibration` and generate a profile.
 7. Open `EQ Studio` and review the Equalizer APO export.

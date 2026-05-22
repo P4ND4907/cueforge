@@ -43,8 +43,6 @@ This queue is the checkpoint for requests that are not fully done yet. It pulls 
 
 | ID | Task | Why It Matters | Source | Next Action |
 | --- | --- | --- | --- | --- |
-| Q-013 | Photoreal panda bamboo pond cinematic | The director script exists, but the premium video asset is not wired in yet | `docs/PROMPT_BACKLOG_AUDIT.md`, `video-build/README.md` | Generate/render `webm`/`mp4`, add reduced-motion fallback, browser-test desktop/mobile |
-| Q-014 | Setup Journey visual polish pass after video | The 3D fallback works, but final media should still feel smooth, readable, and fast | `video-build/README.md`, browser QA notes | Test video load, motion opt-out, text contrast, audio start gesture, mobile layout |
 | Q-015 | Update screenshots after latest UI/brand changes | Social posts and docs should show the current Panda Lab brand strip and app state | current repo status | Capture fresh progress screenshots and replace stale assets when needed |
 | Q-016 | Keep social roadmap posts app-focused | User asked roadmap/news to stay about app development and future ideas | `docs/SOCIAL_POSTING_PLAN.md`, `docs/MASTER_PLAN.md` | Draft Update 002/003 from shipped app changes only, then stage in Community Hub approval queue |
 | Q-030 | Keep public copy human-owned after each release | User explicitly wanted no AI-trace language and project-owned wording | chat sweep, README/docs history | Run a plain-language pass on README, app copy, release notes, and social posts before public pushes |
@@ -77,13 +75,6 @@ This queue is the checkpoint for requests that are not fully done yet. It pulls 
 | Silent driver installs, silent Windows routing changes, hidden APO writes | Not queued | Native changes must be explicit, backed up, and reversible |
 | Hidden telemetry or automatic raw audio upload | Not queued | CueForge stays local-first and opt-in |
 
-## Current Loose Files To Review
+## Private Local Work
 
-These are currently untracked and should be decided separately:
-
-```text
-video-qa-current-desktop.png
-video-qa-current-mobile.png
-```
-
-Do not delete them without checking whether they are useful evidence for Q-013 or Q-014.
+Private concept media and draft-only build files stay out of the public repo until they are intentionally released.

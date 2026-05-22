@@ -7,20 +7,16 @@ import {
   Bug,
   ChevronRight,
   CheckCircle2,
-  Clapperboard,
   Copy,
   Download,
-  FileVideo,
   Gamepad2,
   Gauge,
   Headphones,
-  MonitorPlay,
   Mic,
   Play,
   Radio,
   RotateCcw,
   Save,
-  Scissors,
   Search,
   ShieldCheck,
   SlidersHorizontal,
@@ -66,6 +62,8 @@ import {
 } from './gameplaySave.js';
 import { analyzeAudioFrame, createEmptySignalAnalysis, signalBands } from './signalAnalyzer.js';
 import {
+  buildUiFeedbackRepairCheck,
+  buildUiFeedbackRepairPacket,
   createUiFeedbackNote,
   summarizeUiFeedback,
   UI_FEEDBACK_KEY,
@@ -144,204 +142,6 @@ const driverLayers = [
   }
 ];
 
-const pandaVideoPositivePrompt = `A realistic cinematic wildlife video at night: a calm giant panda walks slowly through a misty bamboo forest after rain. Wet bamboo stalks, moss-covered ground, fog drifting through moonlight, realistic damp panda fur, natural animal movement, premium nature documentary cinematography. Soft teal and warm amber audio-reactive ferrofluid droplets hover subtly near bamboo and moss, pulsing gently like sound waves, elegant and organic, not sci-fi. The panda reaches a quiet pond and looks at its reflection. In the pond reflection only, the panda appears with elegant bat-like hearing ears, symbolizing enhanced hearing and intelligent audio perception. The real panda remains natural. Calm, beautiful, premium, natural, cinematic, realistic fur, shallow depth of field, soft moonlight, slow camera movement, no cartoon, no horror, no monster, no exaggerated fantasy.`;
-
-const pandaVideoNegativePrompt = `cartoon, anime, horror, scary, monster, demon, glowing red eyes, aggressive animal, open mouth roar, gore, blood, extra limbs, distorted face, deformed panda, giant ears on the real panda, wings, bat creature, cheap sci-fi HUD, text, logo, watermark, plastic fur, toy-like panda, oversaturated neon, comedy, childish, low resolution, flickering, jittery camera, broken reflection, duplicated panda, uncanny animal movement`;
-
-const pandaHeroShots = [
-  {
-    time: '0:00-0:03',
-    title: 'Wet bamboo macro opening',
-    shot: 'Extreme close-up of wet bamboo stalks at night. Water beads roll down the bamboo, fog moves behind the stalks, and tiny ferrofluid droplets pulse near moss.',
-    camera: 'Slow macro push-in, 85mm lens feel, shallow depth of field.',
-    edit: 'No panda yet. Let the viewer enter the world quietly.',
-    prompt: 'Macro cinematic shot of wet bamboo in a misty forest at night, water droplets sliding down dark green bamboo, moss and leaves below, soft moonlight through fog, shallow depth of field, tiny glossy ferrofluid droplets with soft teal and amber rim light gently pulsing like audio waves, premium nature documentary look, slow push-in camera, realistic, calm, beautiful.'
-  },
-  {
-    time: '0:03-0:07',
-    title: 'Panda enters the soundwalk',
-    shot: 'Low tracking shot behind and beside a realistic panda moving through wet moss and bamboo leaves. Paws compress the moss and fog wraps around its legs.',
-    camera: 'Smooth low dolly/tracking movement with wildlife documentary restraint.',
-    edit: 'Keep the panda calm and majestic. Teal and amber pulses should answer steps and bamboo creaks.',
-    prompt: 'Low-angle tracking shot of a realistic giant panda walking slowly through wet moss and bamboo leaves at night, damp realistic fur, fog drifting around its legs, moonlight edge lighting, bamboo forest background, soft teal and amber ferrofluid droplets subtly reacting to footstep vibrations, calm natural wildlife behavior, cinematic, premium, realistic, no cartoon.'
-  },
-  {
-    time: '0:07-0:11',
-    title: 'Hearing detail',
-    shot: 'Close-up of the panda face and natural ears. One ear twitches as if detecting a distant sound while bamboo leaves move in a soft breeze.',
-    camera: 'Slow side profile, moonlight edge-lighting the fur.',
-    edit: 'Ferrofluid droplets form tiny wave peaks. This is the first subtle smart-audio signal.',
-    prompt: 'Close-up side profile of a realistic giant panda pausing in a misty bamboo forest at night, one natural round ear gently twitches as it listens, wet fur detail, soft moonlight, fog, shallow depth of field, small ferrofluid droplets nearby forming subtle wave peaks in teal and amber light, symbolizing enhanced hearing, calm and beautiful, realistic wildlife cinematography.'
-  },
-  {
-    time: '0:11-0:15',
-    title: 'Pond reveal',
-    shot: 'The panda reaches a still pond and looks down. In the reflection only, elegant bat-like hearing ears appear as an acoustic symbol.',
-    camera: 'Slow push over the panda shoulder toward the pond reflection.',
-    edit: 'Let the reflection breathe. The real panda above water stays natural. The reflected acoustic ears twitch subtly in sync with sound cues.',
-    prompt: 'Cinematic over-the-shoulder shot of a realistic giant panda reaching a still pond in a misty bamboo forest at night. The panda looks down into calm moonlit water. The real panda remains natural, but in the pond reflection only, the panda has elegant bat-like hearing ears, graceful and symbolic, not scary. Soft teal and amber ferrofluid droplets pulse gently around the water surface. Beautiful, premium, realistic, natural, calm, shallow depth of field.'
-  },
-  {
-    time: '0:15-0:16',
-    title: 'Loopable ending',
-    shot: 'A tiny ripple crosses the pond. Droplets pulse softly and fog passes in front of the frame.',
-    camera: 'Hold steady through the fog wipe.',
-    edit: 'Use fog and ripple to hide the cut back into the opening bamboo macro.'
-  }
-];
-
-const pandaVideoTools = [
-  [
-    'Best overall: Google Flow / Veo',
-    'Use this for the most cinematic AI-film style. Best for the panda walking, pond reveal, and premium nature-documentary look.',
-    'https://labs.google/fx/tools/flow'
-  ],
-  [
-    'Easiest route: Canva AI Video',
-    'Use Canva for a fast first draft, webpage-ready editing, overlays, text-free crops, poster frames, and exports.',
-    'https://www.canva.com/ai-video-generator/'
-  ],
-  [
-    'Best professional finishing: Adobe Firefly / Premiere',
-    'Optional only. Your current Adobe Firefly screen shows the video feature behind a premium gate, so do not block the build on this.',
-    'https://firefly.adobe.com/generate/video'
-  ],
-  [
-    'Do not build around Sora right now',
-    'Treat Sora as a non-primary path for this project because the Sora web/app experiences were discontinued on April 26, 2026, and the Sora API is scheduled to be discontinued September 24, 2026.',
-    'https://help.openai.com/en/articles/9957612-generating-videos-on-sora'
-  ]
-];
-
-const pandaFreeSubstitutions = [
-  [
-    'Installed free editor: Kdenlive',
-    'Use this now for trims, slow dissolves, ambience audio, poster frame export, and final muted loop exports.',
-    'https://kdenlive.org/'
-  ],
-  [
-    'Installed free compositor: Blender',
-    'Use this if the AI tools fail the reflection-ear twitch, ferrofluid pulses, or poster frame polish.',
-    'https://www.blender.org/'
-  ],
-  [
-    'Downloaded but not installed: DaVinci Resolve',
-    'Great free finishing option, but the Resolve editor is not installed yet. Use Kdenlive first so we can keep moving.',
-    'https://www.blackmagicdesign.com/products/davinciresolve'
-  ],
-  [
-    'Free/open quick editor: Shotcut',
-    'Use as a lighter fallback for basic trims, fades, and re-exports.',
-    'https://www.shotcut.org/'
-  ]
-];
-
-const pandaProductionSteps = [
-  ['Prep reference', 'Create or pick one still reference: realistic panda, wet bamboo, teal/amber droplets, pond mood.'],
-  ['Generate Flow/Veo clips', 'Generate Shot 1-4 as separate controlled clips. Keep each output text-free, muted, and cinematic.'],
-  ['Assemble in Canva', 'Use Canva for quick assembly only if Flow exports are ready and Canva is logged in.'],
-  ['Finish in Kdenlive', 'Use installed Kdenlive for the 16-second loop, dissolves, poster, sound cut, and exports.'],
-  ['Polish in Blender if needed', 'Use installed Blender only for manual reflection-ear/droplet fixes.'],
-  ['Live test here', 'Drop every exported asset into this page, switch preview modes, and verify hero readability.']
-];
-
-const pandaVideoEditNotes = [
-  'Use slow dissolves, not hard cuts. The finished piece should feel like one continuous walk.',
-  'Add a very soft film grain layer and slight lens bloom on the moonlight.',
-  'Keep the ferrofluid effect restrained. The droplets should support the audio concept, not steal the scene.',
-  'For the pond reveal, do not make the ears too large. They should look like elegant acoustic fins in the reflection, similar to bat-inspired hearing geometry, but still graceful and natural.',
-  'The reflection should be calm and symbolic, almost like the forest is showing the panda enhanced hearing ability.',
-  'Use a subtle dark gradient overlay on the final web version so website headline text stays readable.'
-];
-
-const pandaVideoAudioNotes = [
-  'Use soft night forest ambience, gentle bamboo creaks, distant water movement, light wind through leaves, and soft panda footsteps on wet moss.',
-  'Add a subtle low-frequency pulse when ferrofluid droplets react.',
-  'No scary drones, no loud music, and no jump sounds.',
-  'The reflected panda enhanced-hearing ears should react and twitch accurately to audio transients, bamboo creaks, water ripples, and low pulses.',
-  'Keep ear motion subtle, organic, and synchronized. The real panda ears stay natural; the bat-inspired acoustic fins appear only in the pond reflection.'
-];
-
-const pandaVideoDeliverables = [
-  ['panda-soundwalk-hero-desktop.webm', '1920x1080, 16:9, 12-16 seconds, muted, loopable', 'Primary webpage hero loop'],
-  ['panda-soundwalk-hero-desktop.mp4', '1920x1080, 16:9, H.264 backup', 'Safari and fallback source'],
-  ['panda-soundwalk-hero-mobile.mp4', '1080x1920 or 720x1280, vertical crop, muted', 'Mobile hero source'],
-  ['panda-soundwalk-poster.jpg', 'Still frame from the pond reflection or bamboo opening', 'Poster and reduced-motion fallback'],
-  ['panda-soundwalk-full-cut.mp4', '20-30 seconds with sound', 'Watch full clip button, modal, and social export']
-];
-
-const pandaLocalToolStatus = [
-  ['Kdenlive', 'Installed', 'Use now for assembly, dissolves, poster frame, muted loop, and full cut exports.'],
-  ['Blender', 'Installed', 'Use if we need manual acoustic-ear twitch, reflection, or ferrofluid compositing.'],
-  ['DaVinci Resolve', 'Downloaded only', 'Zip is in Downloads, but Resolve.exe is not installed. Not blocking the build.'],
-  ['Adobe Firefly', 'Premium-gated', 'Current Chrome screen requires premium access for video generation. Optional later.'],
-  ['Runway', 'Ignored for now', 'Removed from active path because it is too much for this pass.']
-];
-
-const pandaHeroEmbedCode = `<section class="hero">
-  <video
-    class="hero-video"
-    autoplay
-    muted
-    loop
-    playsinline
-    preload="metadata"
-    poster="/media/panda-soundwalk-poster.jpg"
-    aria-hidden="true"
-  >
-    <source src="/media/panda-soundwalk-hero-desktop.webm" type="video/webm" />
-    <source src="/media/panda-soundwalk-hero-desktop.mp4" type="video/mp4" />
-  </video>
-
-  <div class="hero-overlay"></div>
-
-  <div class="hero-content">
-    <h1>Hear the unseen.</h1>
-    <p>AI-enhanced audio awareness for immersive sound.</p>
-  </div>
-</section>`;
-
-const pandaHeroCssCode = `.hero {
-  position: relative;
-  min-height: 100vh;
-  overflow: hidden;
-  background: #071010;
-}
-
-.hero-video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 65% 55%, rgba(0, 180, 170, 0.18), transparent 30%),
-    linear-gradient(90deg, rgba(0,0,0,0.72), rgba(0,0,0,0.25));
-}
-
-.hero-content {
-  position: relative;
-  z-index: 2;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  max-width: 760px;
-  padding: 6vw;
-  color: white;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-video {
-    display: none;
-  }
-}`;
-
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
@@ -373,8 +173,7 @@ function analyzeSample(input) {
 }
 
 function App() {
-  const isVideoStarterPage = window.location.hash === '#video';
-  const [setupComplete, setSetupComplete] = useState(() => localStorage.getItem('cueforge-setup-complete') === 'yes');
+  const [setupComplete, setSetupComplete] = useState(() => localStorage.getItem('cueforge-setup-complete') !== 'no');
   const [active, setActive] = useState('dashboard');
   const [eq, setEq] = useState(baseEq);
   const [sample, setSample] = useState('HyperX Cloud Alpha, Discord, Valorant, teammates say mic is a little boomy');
@@ -537,18 +336,10 @@ function App() {
   };
 
   const rerunSetup = () => {
-    localStorage.removeItem('cueforge-setup-complete');
+    localStorage.setItem('cueforge-setup-complete', 'no');
     setSetupComplete(false);
     setActive('dashboard');
   };
-
-  if (isVideoStarterPage) {
-    return (
-      <main className="video-page-shell">
-        <VideoStarterPage />
-      </main>
-    );
-  }
 
   if (!setupComplete) {
     return (
@@ -578,7 +369,6 @@ function App() {
           {[
             ['hub', Radio, 'Community Hub'],
             ['dashboard', Gauge, 'Control'],
-            ['video', Clapperboard, 'Video Starter'],
             ['selftest', TestTube2, 'Self Test'],
             ['dna', BrainCircuit, 'Audio DNA'],
             ['blindmatch', Radio, 'Blind Match'],
@@ -646,8 +436,6 @@ function App() {
             </Panel>
           </section>
         )}
-
-        {active === 'video' && <VideoStarterPage />}
 
         {active === 'selftest' && <SelfTestRunner />}
 
@@ -1773,338 +1561,6 @@ function Metric({ label, value, tone }) {
   );
 }
 
-function VideoStarterPage() {
-  const [status, setStatus] = useState('Ready to generate the four main shots, then assemble the 16-second loop.');
-  const [videoAssets, setVideoAssets] = useState({});
-  const [previewMode, setPreviewMode] = useState('desktop');
-  const [productionDone, setProductionDone] = useState(() => Object.fromEntries(pandaProductionSteps.map((step) => [step[0], false])));
-  const assetUrlsRef = useRef([]);
-  const fullBrief = [
-    'Concept title: Panda Soundwalk - Hearing Beyond the Forest',
-    '',
-    'Hero loop: 16 seconds, muted, seamless, exported as webm with mp4 fallback. Use autoplay, muted, loop, playsinline, and respect prefers-reduced-motion.',
-    'Full cut: 20-30 seconds with restrained sound for social media or a landing-page modal.',
-    '',
-    'Positive prompt:',
-    pandaVideoPositivePrompt,
-    '',
-    'Negative prompt:',
-    pandaVideoNegativePrompt,
-    '',
-    'Shot timing:',
-    ...pandaHeroShots.map((shot) => `${shot.time} - ${shot.title}: ${shot.shot} Camera: ${shot.camera} Edit: ${shot.edit}${shot.prompt ? ` Prompt: ${shot.prompt}` : ''}`),
-    '',
-    'Audio direction:',
-    ...pandaVideoAudioNotes.map((note) => `- ${note}`),
-    '',
-    'Editing notes:',
-    ...pandaVideoEditNotes.map((note) => `- ${note}`),
-    '',
-    'Delivery manifest:',
-    ...pandaVideoDeliverables.map(([file, spec, use]) => `- ${file}: ${spec}. Use: ${use}.`),
-    '',
-    'Web hero embed code:',
-    pandaHeroEmbedCode,
-    '',
-    'Web hero CSS:',
-    pandaHeroCssCode,
-    '',
-    'Where to create it, in order:',
-    ...pandaVideoTools.map(([name, detail, url], index) => `${index + 1}. ${name} - ${detail} Link: ${url}`),
-    '',
-    'Free substitutions that preserve quality:',
-    ...pandaFreeSubstitutions.map(([name, detail, url]) => `- ${name}: ${detail} Link: ${url}`)
-  ].join('\n');
-
-  const copyToClipboard = async (text, label) => {
-    try {
-      await navigator.clipboard?.writeText(text);
-      setStatus(`${label} copied.`);
-    } catch {
-      setStatus(`${label} is ready, but clipboard access was blocked.`);
-    }
-  };
-
-  const exportBrief = () => {
-    downloadTextFile('cueforge-panda-soundwalk-video-brief.txt', fullBrief);
-    setStatus('Video brief exported.');
-  };
-
-  const setPreviewAsset = (key, file) => {
-    if (!file) return;
-    setVideoAssets((current) => {
-      if (current[key]?.url) URL.revokeObjectURL(current[key].url);
-      const url = URL.createObjectURL(file);
-      assetUrlsRef.current.push(url);
-      return {
-        ...current,
-        [key]: {
-          name: file.name,
-          type: file.type || 'local file',
-          url
-        }
-      };
-    });
-    setStatus(`${file.name} loaded for live preview.`);
-  };
-
-  useEffect(() => () => {
-    assetUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-    assetUrlsRef.current = [];
-  }, []);
-
-  const activeVideo = previewMode === 'mobile'
-    ? videoAssets.mobile
-    : previewMode === 'full'
-      ? videoAssets.full
-      : videoAssets.desktopWebm || videoAssets.desktopMp4;
-  const activePoster = videoAssets.poster?.url;
-
-  return (
-    <section className="video-starter">
-      <div className="video-hero">
-        <div>
-          <div className="video-mark"><MonitorPlay size={26} /></div>
-          <h2>Panda Soundwalk</h2>
-          <p>Hearing Beyond the Forest: a premium cinematic wildlife hero loop for CueForge setup, with the enhanced-hearing reveal saved for the pond reflection only.</p>
-          <div className="live-actions">
-            <button className="primary" onClick={() => copyToClipboard(fullBrief, 'Full video brief')}><Copy size={18} /> Copy full brief</button>
-            <button className="ghost" onClick={exportBrief}><Download size={18} /> Export brief</button>
-          </div>
-          <p className="callout">{status}</p>
-        </div>
-        <div className="video-loop-card" aria-label="16 second hero loop preview plan">
-          <div className="loop-frame">
-            <SetupThreeScene step={3} />
-            <div className="loop-vignette" />
-            <div className="loop-caption">
-              <strong>16s muted webpage loop</strong>
-              <span>Fog and pond ripple hide the seamless cut.</span>
-            </div>
-          </div>
-          <div className="metric-row">
-            <Metric label="Web hero" value="16s" tone="teal" />
-            <Metric label="Full cut" value="20-30s" tone="amber" />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid two">
-        <Panel title="Live Build Process" icon={Clapperboard} className="wide">
-          <div className="process-board">
-            {pandaProductionSteps.map(([label, detail], index) => (
-              <label className={`process-step ${productionDone[label] ? 'done' : ''}`} key={label}>
-                <input
-                  type="checkbox"
-                  checked={productionDone[label]}
-                  onChange={(event) => setProductionDone((current) => ({ ...current, [label]: event.target.checked }))}
-                />
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <strong>{label}</strong>
-                <em>{detail}</em>
-              </label>
-            ))}
-          </div>
-        </Panel>
-
-        <Panel title="Checked Tools On This Machine" icon={ShieldCheck} className="wide">
-          <div className="asset-status-grid">
-            {pandaLocalToolStatus.map(([name, state, detail]) => (
-              <div className="data-card" key={name}>
-                <strong>{name}</strong>
-                <span>{state}</span>
-                <small>{detail}</small>
-              </div>
-            ))}
-          </div>
-        </Panel>
-
-        <Panel title="Live Video Test Bench" icon={MonitorPlay} className="wide">
-          <div className="video-testbench">
-            <div className="video-test-controls">
-              <label className="field">
-                <span>Desktop WebM loop</span>
-                <input type="file" accept="video/webm" onChange={(event) => setPreviewAsset('desktopWebm', event.target.files?.[0])} />
-              </label>
-              <label className="field">
-                <span>Desktop MP4 fallback</span>
-                <input type="file" accept="video/mp4" onChange={(event) => setPreviewAsset('desktopMp4', event.target.files?.[0])} />
-              </label>
-              <label className="field">
-                <span>Mobile MP4 crop</span>
-                <input type="file" accept="video/mp4" onChange={(event) => setPreviewAsset('mobile', event.target.files?.[0])} />
-              </label>
-              <label className="field">
-                <span>Poster JPG</span>
-                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setPreviewAsset('poster', event.target.files?.[0])} />
-              </label>
-              <label className="field">
-                <span>Full cut with sound</span>
-                <input type="file" accept="video/mp4,video/webm" onChange={(event) => setPreviewAsset('full', event.target.files?.[0])} />
-              </label>
-            </div>
-            <div className="preview-mode-row" role="group" aria-label="Preview mode">
-              {[
-                ['desktop', 'Desktop loop'],
-                ['mobile', 'Mobile crop'],
-                ['full', 'Full cut']
-              ].map(([id, label]) => (
-                <button className={previewMode === id ? 'selected' : ''} key={id} onClick={() => setPreviewMode(id)}>{label}</button>
-              ))}
-            </div>
-            <div className={`live-hero-preview ${previewMode === 'mobile' ? 'mobile-preview' : ''}`}>
-              {activeVideo ? (
-                <video
-                  key={`${previewMode}-${activeVideo.url}`}
-                  autoPlay
-                  muted={previewMode !== 'full'}
-                  loop={previewMode !== 'full'}
-                  playsInline
-                  controls={previewMode === 'full'}
-                  poster={activePoster}
-                  src={activeVideo.url}
-                />
-              ) : activePoster ? (
-                <img src={activePoster} alt="Loaded panda soundwalk poster preview" />
-              ) : (
-                <div className="live-hero-empty">
-                  <MonitorPlay size={28} />
-                  <strong>Load a generated asset to test it here.</strong>
-                  <span>Desktop loop previews muted and looped. Full cut shows controls with sound available.</span>
-                </div>
-              )}
-              <div className="hero-overlay" />
-              <div className="live-hero-copy">
-                <h3>Hear the unseen.</h3>
-                <p>AI-enhanced audio awareness for immersive sound.</p>
-              </div>
-            </div>
-            <div className="asset-status-grid">
-              {[
-                ['Desktop WebM', videoAssets.desktopWebm],
-                ['Desktop MP4', videoAssets.desktopMp4],
-                ['Mobile MP4', videoAssets.mobile],
-                ['Poster', videoAssets.poster],
-                ['Full cut', videoAssets.full]
-              ].map(([label, asset]) => (
-                <div className="data-card" key={label}>
-                  <strong>{label}</strong>
-                  <span>{asset?.name || 'not loaded'}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Panel>
-
-        <Panel title="Positive Prompt" icon={Sparkles}>
-          <p>{pandaVideoPositivePrompt}</p>
-          <button className="ghost" onClick={() => copyToClipboard(pandaVideoPositivePrompt, 'Positive prompt')}><Copy size={18} /> Copy prompt</button>
-        </Panel>
-        <Panel title="Negative Prompt" icon={ShieldCheck}>
-          <p>{pandaVideoNegativePrompt}</p>
-          <button className="ghost" onClick={() => copyToClipboard(pandaVideoNegativePrompt, 'Negative prompt')}><Copy size={18} /> Copy negative</button>
-        </Panel>
-      </div>
-
-      <Panel title="16 Second Hero Loop" icon={Scissors} className="video-shot-panel">
-        <div className="shot-timeline">
-          {pandaHeroShots.map((shot) => (
-            <article className="shot-card" key={shot.time}>
-              <span>{shot.time}</span>
-              <strong>{shot.title}</strong>
-              <p>{shot.shot}</p>
-              <small>{shot.camera}</small>
-              <em>{shot.edit}</em>
-              {shot.prompt && (
-                <>
-                  <code>{shot.prompt}</code>
-                  <button className="ghost" onClick={() => copyToClipboard(shot.prompt, `${shot.title} prompt`)}><Copy size={16} /> Copy shot prompt</button>
-                </>
-              )}
-            </article>
-          ))}
-        </div>
-      </Panel>
-
-      <div className="grid two">
-        <Panel title="Generation Stack" icon={FileVideo}>
-          <div className="stack">
-            {pandaVideoTools.map(([name, detail, url]) => (
-              <div className="data-card" key={name}>
-                <strong>{name}</strong>
-                <span>{detail}</span>
-                <a className="tool-link" href={url} target="_blank" rel="noreferrer">Open tool</a>
-              </div>
-            ))}
-          </div>
-        </Panel>
-        <Panel title="Free Quality Substitutions" icon={Scissors}>
-          <div className="stack">
-            {pandaFreeSubstitutions.map(([name, detail, url]) => (
-              <div className="data-card" key={name}>
-                <strong>{name}</strong>
-                <span>{detail}</span>
-                <a className="tool-link" href={url} target="_blank" rel="noreferrer">Open tool</a>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      </div>
-
-      <div className="grid two">
-        <Panel title="Edit And Polish Notes" icon={Scissors}>
-          <ul className="clean-list">
-            {pandaVideoEditNotes.map((note) => <li key={note}>{note}</li>)}
-          </ul>
-        </Panel>
-      </div>
-
-      <div className="grid two">
-        <Panel title="Audio And Ear Reaction" icon={Volume2}>
-          <ul className="clean-list">
-            {pandaVideoAudioNotes.map((note) => <li key={note}>{note}</li>)}
-          </ul>
-        </Panel>
-        <Panel title="Delivery Manifest" icon={Download}>
-          <div className="setup-review video-spec-list">
-            {pandaVideoDeliverables.map(([file, spec, use]) => (
-              <div key={file}>
-                <strong>{file}</strong>
-                <span>{spec}</span>
-                <small>{use}</small>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      </div>
-
-      <div className="grid two">
-        <Panel title="Webpage Integration" icon={MonitorPlay}>
-          <div className="setup-review video-spec-list">
-            <div><strong>Loop files</strong><span>Export `panda-soundwalk-hero-desktop.webm`, `panda-soundwalk-hero-desktop.mp4`, and `panda-soundwalk-hero-mobile.mp4`.</span></div>
-            <div><strong>Hero video tag</strong><span>Use autoplay, muted, loop, playsInline, poster image, and no visible controls.</span></div>
-            <div><strong>Motion safety</strong><span>Respect reduced motion and fall back to the existing Three.js bamboo scene or a still poster.</span></div>
-            <div><strong>Full cut</strong><span>Use the 20-30 second sound version only in the modal or social export.</span></div>
-          </div>
-        </Panel>
-        <Panel title="Hero Embed Code" icon={MonitorPlay}>
-          <pre className="code-snippet">{pandaHeroEmbedCode}</pre>
-          <div className="live-actions">
-            <button className="ghost" onClick={() => copyToClipboard(pandaHeroEmbedCode, 'Hero embed code')}><Copy size={18} /> Copy code</button>
-          </div>
-          <p className="callout">For the vertical asset, swap the source in a mobile media query or render a separate mobile video source when the final page is wired.</p>
-        </Panel>
-        <Panel title="Hero CSS" icon={SlidersHorizontal}>
-          <pre className="code-snippet">{pandaHeroCssCode}</pre>
-          <div className="live-actions">
-            <button className="ghost" onClick={() => copyToClipboard(pandaHeroCssCode, 'Hero CSS')}><Copy size={18} /> Copy CSS</button>
-          </div>
-        </Panel>
-      </div>
-    </section>
-  );
-}
-
 function PlayerTrialPage({ eq, selectedGame, selectedSourceProfile }) {
   const [stepDone, setStepDone] = useState(() => Object.fromEntries(trialSteps.map((step) => [step.id, false])));
   const [feedback, setFeedback] = useState(feedbackDefaults);
@@ -2888,7 +2344,6 @@ async function getMicPermissionState() {
 function sectionTitle(id) {
   return {
     hub: 'Community Hub',
-    video: 'Video Starter',
     mic: 'Mic Lab',
     selftest: 'Auto Self Test',
     dna: 'Audio DNA',
@@ -4212,6 +3667,9 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
   const snapshots = getSavedJson('cueforge-gameplay-snapshots') || [];
   const lastReport = getSavedJson('cueforge-last-issue-report');
   const uiSummary = summarizeUiFeedback(uiNotes);
+  const repairCheck = useMemo(() => buildUiFeedbackRepairCheck(uiNotes), [uiNotes]);
+  const repairPacket = useMemo(() => buildUiFeedbackRepairPacket(uiNotes), [uiNotes]);
+  const [repairStatus, setRepairStatus] = useState('Auto repair check runs from saved Panda Notes.');
   const desktopReady = Boolean(window.cueforgeDesktop?.isDesktop);
   const passedTests = selfTests.filter((item) => item.status === 'pass').length;
   const totalTests = selfTests.length;
@@ -4234,6 +3692,21 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
     ['Evidence Loop', 'local mic proof, beta check-ins, report replay, and export packs', evidence.length || checkIns.length ? 'active' : 'empty'],
     ['Apply Boundary', 'exports configs and keeps native audio changes explicit', 'safe']
   ];
+
+  const copyRepairPacket = async () => {
+    try {
+      await navigator.clipboard?.writeText(repairPacket);
+      setRepairStatus('Repair packet copied. Paste it into the developer workflow, then test the fix.');
+    } catch {
+      setRepairStatus('Repair packet is ready, but clipboard access was blocked. Export it instead.');
+    }
+  };
+
+  const runRepairCheck = () => {
+    setRepairStatus(repairCheck.actionCount
+      ? `Auto check found ${repairCheck.actionCount} repair action${repairCheck.actionCount === 1 ? '' : 's'}. Top fix: ${repairCheck.topAction.title}.`
+      : 'No Panda Notes found yet. Right-click a broken/confusing area, save a note, then this check will build the repair queue.');
+  };
 
   return (
     <section className="grid two system-grid">
@@ -4328,6 +3801,7 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
         <div className="metric-row selftest-summary">
           <Metric label="Captured" value={String(uiSummary.total)} tone={uiSummary.total ? 'teal' : 'amber'} />
           <Metric label="Top tag" value={uiSummary.topTag} tone={uiSummary.total ? 'teal' : 'amber'} />
+          <Metric label="Repair actions" value={String(repairCheck.actionCount)} tone={repairCheck.actionCount ? 'teal' : 'amber'} />
         </div>
         {uiSummary.latest ? (
           <div className="data-card">
@@ -4342,8 +3816,39 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
           </div>
         )}
         <div className="live-actions">
+          <button className="primary" onClick={runRepairCheck}><Sparkles size={18} /> Run repair check</button>
+          <button className="ghost" onClick={copyRepairPacket} disabled={!uiNotes.length}><Copy size={18} /> Copy fix packet</button>
           <button className="ghost" onClick={() => downloadTextFile('cueforge-ui-feedback-notes.json', JSON.stringify(uiNotes, null, 2))} disabled={!uiNotes.length}><Download size={18} /> Export notes</button>
+          <button className="ghost" onClick={() => downloadTextFile('cueforge-ui-repair-packet.txt', repairPacket)} disabled={!uiNotes.length}><Download size={18} /> Export fix packet</button>
           <button className="ghost" onClick={onClearUiNotes} disabled={!uiNotes.length}><RotateCcw size={18} /> Clear notes</button>
+        </div>
+        <p className="callout">{repairStatus}</p>
+        <div className="repair-boundary">
+          <strong>Safe self-repair boundary</strong>
+          <span>{repairCheck.boundary}</span>
+        </div>
+        <div className="module-list repair-action-list">
+          {repairCheck.actions.length === 0 && (
+            <div className="module-row">
+              <span className="status-dot" />
+              <div>
+                <strong>No repair queue yet</strong>
+                <span>Save a Panda Note on a real UI problem and CueForge will turn it into a prioritized developer action.</span>
+              </div>
+              <em>idle</em>
+            </div>
+          )}
+          {repairCheck.actions.slice(0, 4).map((action) => (
+            <div className="module-row" key={action.id}>
+              <span className={`status-dot ${action.priority >= 78 ? 'ready' : ''}`} />
+              <div>
+                <strong>{action.title}</strong>
+                <span>{action.suggestedFix}</span>
+                <small>{action.page} / {action.count} note{action.count === 1 ? '' : 's'} / test: {action.testPlan}</small>
+              </div>
+              <em>{action.priority}</em>
+            </div>
+          ))}
         </div>
       </Panel>
     </section>
