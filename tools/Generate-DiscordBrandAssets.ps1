@@ -204,6 +204,22 @@ $brandFont.Dispose()
 $tagFont.Dispose()
 $smallFont.Dispose()
 
+$redditBanner = New-Canvas 1920 384
+$g = $redditBanner.Graphics
+Draw-PandaMark $g 1640 198 0.86
+$brandFont = New-Font 66 ([System.Drawing.FontStyle]::Bold)
+$tagFont = New-Font 28 ([System.Drawing.FontStyle]::Bold)
+$smallFont = New-Font 21
+Draw-Text $g "CueForge" $brandFont $white 96 92
+Draw-Text $g "Panda Lab for FPS Audio" $tagFont $teal 100 168
+Draw-Text $g "IEM/headset tuning | mic checks | match proof | Equalizer APO" $smallFont $muted 102 220
+Draw-Text $g "Free beta: p4nd4907.github.io/cueforge" $smallFont $gold 102 265
+$g.Dispose()
+Save-Png $redditBanner.Bitmap (Join-Path $assetDir "cueforge-reddit-banner.png")
+$brandFont.Dispose()
+$tagFont.Dispose()
+$smallFont.Dispose()
+
 $white.Dispose()
 $teal.Dispose()
 $gold.Dispose()

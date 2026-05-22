@@ -130,6 +130,8 @@ Invite: https://discord.gg/vyQwyJ49v
 - Do not auto-post into communities that forbid self-promo or beta recruiting.
 - Ask mods first when the rules are unclear.
 - Use fewer tags on Reddit; Reddit cares more about fit than hashtags.
+- On Reddit, disclose that CueForge is your project.
+- Start with your own profile and beta/project-friendly subreddits before game-specific communities.
 - X can use hashtags, but keep it readable.
 - Discord posts can be more personality-heavy and panda-themed.
 - Every public post should have one clear ask.
