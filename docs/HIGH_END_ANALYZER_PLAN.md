@@ -1,6 +1,6 @@
 # CueForge Analyzer Plan
 
-CueForge now has a local signal analyzer in `src/signalAnalyzer.js`. It runs on Web Audio `AnalyserNode` buffers and turns the live mic stream into a repeatable set of gaming-audio signals:
+CueForge now has a local signal analyzer in `src/signalAnalyzer.js` and an opt-in evidence recorder in `Beta Check-in`. The live analyzer runs on Web Audio `AnalyserNode` buffers and turns the mic stream into a repeatable set of gaming-audio signals:
 
 - level, peak, clipping risk, DC offset, crest factor, and zero-crossing rate
 - rumble, bass, low-mid mask, voice body, presence, cue window, sharp edge, and air/noise bands
@@ -8,7 +8,7 @@ CueForge now has a local signal analyzer in `src/signalAnalyzer.js`. It runs on 
 - likely source classification such as input clipping, low-end masking, sharpness fatigue, room/chain noise, voice too quiet, or buried game cue
 - a small 10-band EQ nudge that can guide the next tuning step without pretending every issue is an EQ issue
 
-This keeps the browser build useful today while leaving the heavier desktop analyzer path open.
+The evidence recorder captures a short local clip only after the tester presses record, stores capped metadata locally, and never uploads raw audio by itself. This keeps the browser build useful today while leaving the heavier desktop analyzer path open.
 
 ## Open-Source Stack To Build Toward
 
@@ -38,7 +38,7 @@ That loop is the product: analyze, explain, tune, test, replay.
 
 - Move analyzer math into an AudioWorklet for steadier low-latency sampling.
 - Add optional Meyda comparison in development builds to validate spectral features.
-- Add desktop-only FFmpeg clip analysis for downloaded evidence clips.
+- Add desktop-only FFmpeg clip analysis for downloaded evidence clips or local user-selected files.
 - Add VAD gates so silence does not pollute mic statistics.
 - Add analyzer-to-EQ handoff so `eqNudge` can be previewed before applying.
 - Add game-session tags so tester reports separate tuning problems from game mix, server timing, Discord, Windows routing, or mic gain.

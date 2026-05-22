@@ -14,6 +14,9 @@ This is a checkpoint against the major requests from the build session.
 - Equalizer APO export and export pack.
 - Auto Calibration, Blind Match, Tactical Masking Lab, Audio DNA, Personal Hearing Model, Player Trial, Beta Check-in, Gameplay Save, and Report Lab.
 - Panda Notes right-click UI feedback system with local-only notes that attach to redacted reports/export packs only when a tester chooses to send them.
+- Opt-in local audio evidence recorder with 12-second clips, analyzer summaries, metadata export, manual raw-clip download, capped storage, and no hidden upload.
+- Desktop APO draft helper that saves reviewed Equalizer APO text to the app-data folder and opens that folder without overwriting Windows or Equalizer APO files.
+- Community Hub approval queue for Discord/X/Reddit drafts so owned-account posting stays staged, copied, approved, and tracked manually.
 - Privacy/redaction pass for raw device IDs, group IDs, paths, computer names, emails, phone numbers, and sensitive account info.
 - Discord, Reddit, and X outreach plans, posting drafts, tag strategy, and community safety rules.
 - Discord server planning docs, role/channel guidance, bot strategy, and moderation guardrails.
@@ -26,16 +29,15 @@ This is a checkpoint against the major requests from the build session.
 ## Partially Covered
 
 - Realistic panda cinematic: director script exists, and the app has a real-time Three.js bamboo fallback. A true photoreal video/render asset still needs to be generated or rendered and wired as the premium background.
-- Desktop/native path: Electron shell exists and can run the Windows scan. Explicit driver writes, APO backup/apply, and Windows routing helpers are still future desktop work.
+- Desktop/native path: Electron shell exists, can run the Windows scan, and can save APO drafts. Direct driver writes, target APO overwrite, backups, undo, and Windows routing helpers are still future desktop work.
 - High-end analyzer: browser analyzer is useful and tested, but the full "serious analyzer" still needs optional desktop clip analysis, FFmpeg/RNNoise-style evidence processing, and game-session separation.
-- Social media rollout: drafts, profile copy, Reddit-safe strategy, and Discord docs exist. Actual posting into third-party communities should stay manual/mod-approved to avoid spam filters and account risk.
+- Social media rollout: drafts, profile copy, Reddit-safe strategy, Discord docs, and a local approval queue exist. Actual posting into third-party communities should stay manual/mod-approved to avoid spam filters and account risk.
 - Discord buildout: docs and bot strategy exist. Exact server role permissions, bot invites, and live settings still need visible account-level approval inside Discord.
-- Gameplay logging: the app stores lightweight local snapshots and privacy-safe evidence summaries. It does not yet record raw gameplay or mic audio files by default.
+- Gameplay logging: the app stores lightweight local snapshots and privacy-safe evidence summaries. It can record short opt-in mic evidence clips, but it does not record raw gameplay or mic audio by default.
 
 ## Still Open
 
-- Add an opt-in local audio clip recorder/analyzer for testers who explicitly choose to record a short clip. It should never auto-upload and should make raw-audio privacy obvious.
-- Package and smoke-test the Electron desktop shell as the recommended Windows build for players who need native scan/setup flow.
+- Smoke-test a packaged Electron portable build as the recommended Windows build for players who need native scan/setup flow.
 - Add the photoreal panda/bamboo/pond cinematic asset as `webm`/`mp4` with a reduced-motion fallback.
 - Run a fresh privacy/export audit after the new setup profile fields are included in reports or export packs.
 - Decide whether `setupReadiness.js` remains as a backend helper for tester readiness or gets retired now that the old setup UI is gone.

@@ -20,13 +20,13 @@ A desktop shell is the correct next layer when CueForge needs native control. Th
 
 - Reading Windows audio endpoints with stable device names.
 - Detecting Equalizer APO, Peace, Sonar, and active routing.
-- Writing Equalizer APO config files after explicit approval.
-- Backing up existing configs before changes.
+- Saving reviewed Equalizer APO draft files after explicit approval.
+- Backing up existing configs before any future target-file write.
 - Running setup checks without browser permission friction.
 
-Current path: Electron with a locked-down preload bridge. The first desktop bridge action runs the existing Windows audio scanner from inside CueForge, stores the report in the app data folder, and returns the parsed result to Auto Detect.
+Current path: Electron with a locked-down preload bridge. The desktop bridge can run the existing Windows audio scanner from inside CueForge, store the report in the app data folder, return the parsed result to Auto Detect, save timestamped APO draft files, and open the relevant app-data folders.
 
-Future native writes should stay behind the same bridge and must be reviewed separately.
+Future native writes to real Equalizer APO or Windows locations should stay behind the same bridge and must be reviewed separately.
 
 ## Native Action Rules
 

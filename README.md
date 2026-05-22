@@ -44,15 +44,15 @@ The roadmap breaks CueForge into five workstreams: player testing, audio engine,
 The current web build is the right foundation for safe testing, tuning, feedback capture, and GitHub distribution. The right way around browser limits is a desktop app shell, not a browser workaround.
 
 - Keep the web build for player trials, report replay, EQ generation, and privacy-safe exports.
-- Add a Windows desktop shell when CueForge needs one-click local setup, native device detection, Equalizer APO file writes, or Windows audio routing helpers.
+- Use the Windows desktop shell for one-click local setup scanning, native device detection, and safe Equalizer APO draft exports.
 - Keep every native action explicit: show the planned change, require a user click, write a backup, then apply.
 
 ## What It Does
 
 - Immersive Setup Journey, a standalone first-run bamboo soundwalk with a 3D Three.js scene, click-to-start Web Audio bed, gear profile, device scan, calibration direction, and clean handoff into the main app.
-- Community Hub for Discord-first roll calls, this-or-that tester input, X/Reddit post drafts, and local signal summaries.
+- Community Hub for Discord-first roll calls, this-or-that tester input, X/Reddit post drafts, an approval queue, and local signal summaries.
 - Player Trial with a repeatable match script, post-match ratings, next-fix recommendations, and an exportable tester packet.
-- Beta Check-in with anonymous local tester IDs, proof codes, active-day counts, and exportable packets for real beta feedback without hidden telemetry.
+- Beta Check-in with anonymous local tester IDs, proof codes, active-day counts, opt-in 12-second local mic evidence, and exportable packets for real beta feedback without hidden telemetry.
 - Gameplay Save with throttled local snapshots and a performance mode that keeps live meters lighter during matches.
 - Panda Notes, a right-click UI debugger for tagging confusing text, broken-feeling controls, layout issues, missing feedback, slow spots, and ideas. Notes stay local and attach only to reports/export packs the tester chooses to send.
 - Auto Self Test for browser audio APIs, devices, Windows bridge report, autotune, hearing model, storage, tone engine, and mic permission.
@@ -99,7 +99,18 @@ npm run desktop
 
 The desktop shell wraps the same CueForge UI, grants mic permission inside the app window, and adds a native Auto Detect action that runs the local Windows audio scan. It reads device/tool information and writes a local bridge report under the app data folder.
 
+It also adds a safer APO apply lane: `Driver Layer` can save the current Equalizer APO text as a timestamped draft inside CueForge's app-data folder and open that folder. The player still reviews and pastes the config into Equalizer APO or Peace.
+
 Native actions are still explicit. CueForge does not silently install drivers, change Windows routing, or rewrite Equalizer APO configs in the background.
+
+Build a local unpacked desktop folder or portable Windows package:
+
+```powershell
+npm run desktop:dir
+npm run desktop:package
+```
+
+Local packages are unsigned developer builds right now. A public installer should add real Windows code signing before broad distribution.
 
 ## Optional Windows Bridge
 
@@ -125,10 +136,12 @@ The generated bridge report is local machine data. It is ignored by Git and excl
 8. Open `Blind Match`, run the A/B rounds, and apply the learned curve.
 9. Open `Masking Lab`, pick a scenario, and apply the anti-masking curve.
 10. Open `Player Trial`, run the guided match script, fill the ratings, and export the tester packet.
-11. Open `Report Lab`, create a redacted report, download it, import it back, and replay it into the app.
-12. Open `Audio DNA`, save the fingerprint after you like the result.
-13. Open `EQ Studio`, export the Equalizer APO config, and paste it into Equalizer APO or Peace.
-14. Use `Export Pack` when you want the full setup bundle instead of a single config.
+11. Open `Beta Check-in`, record a short opt-in evidence clip if the tester agrees, and export the local evidence JSON.
+12. Open `Report Lab`, create a redacted report, download it, import it back, and replay it into the app.
+13. Open `Audio DNA`, save the fingerprint after you like the result.
+14. Open `EQ Studio`, export the Equalizer APO config, and paste it into Equalizer APO or Peace.
+15. In the desktop shell, open `Driver Layer` and save an APO draft if you want a native folder-based handoff.
+16. Use `Export Pack` when you want the full setup bundle instead of a single config.
 
 To run setup again later, open `System Info` and click `Rerun setup`.
 
@@ -158,7 +171,7 @@ The browser app cannot silently install drivers, change firmware, or rewrite Win
 
 1. Detect and test in the app.
 2. Export readable config.
-3. Apply explicitly in Equalizer APO, Peace, Sonar, or a future native CueForge desktop shell.
+3. Apply explicitly in Equalizer APO, Peace, Sonar, or the CueForge desktop shell's reviewed APO draft flow.
 
 ## GitHub Release Check
 

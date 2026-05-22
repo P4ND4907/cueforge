@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -17,6 +17,15 @@ function scriptPath() {
 
 function reportPath() {
   return path.join(app.getPath('userData'), 'cueforge-audio-setup-report.json');
+}
+
+function apoDraftFolder() {
+  return path.join(app.getPath('userData'), 'apo-drafts');
+}
+
+function apoDraftPath() {
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  return path.join(apoDraftFolder(), `cueforge-apo-draft-${stamp}.txt`);
 }
 
 async function readReport() {
@@ -56,6 +65,7 @@ ipcMain.handle('cueforge:desktop-info', () => ({
   platform: process.platform,
   reportPath: reportPath(),
   scriptPath: scriptPath(),
+  apoDraftFolder: apoDraftFolder(),
   packaged: app.isPackaged
 }));
 
@@ -109,6 +119,37 @@ ipcMain.handle('cueforge:open-bridge-folder', async () => {
   await mkdir(path.dirname(reportPath()), { recursive: true });
   await shell.openPath(path.dirname(reportPath()));
   return { ok: true, folder: path.dirname(reportPath()) };
+});
+
+ipcMain.handle('cueforge:save-apo-draft', async (event, payload = {}) => {
+  const configText = String(payload.configText || '').trim();
+  if (!configText) {
+    return { ok: false, error: 'No APO config text was provided.' };
+  }
+  if (configText.length > 120000) {
+    return { ok: false, error: 'APO config is too large for the safe draft helper.' };
+  }
+
+  await mkdir(apoDraftFolder(), { recursive: true });
+  const file = apoDraftPath();
+  const body = [
+    '# CueForge APO draft',
+    '# Saved by explicit user action from the CueForge desktop shell.',
+    '# Review this text before pasting it into Equalizer APO or Peace.',
+    '# CueForge does not overwrite Windows audio settings from this helper.',
+    '',
+    configText,
+    ''
+  ].join('\n');
+
+  await writeFile(file, body, 'utf8');
+  return { ok: true, file, folder: apoDraftFolder() };
+});
+
+ipcMain.handle('cueforge:open-apo-draft-folder', async () => {
+  await mkdir(apoDraftFolder(), { recursive: true });
+  await shell.openPath(apoDraftFolder());
+  return { ok: true, folder: apoDraftFolder() };
 });
 
 app.whenReady().then(createWindow);

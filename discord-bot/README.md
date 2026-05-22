@@ -36,7 +36,7 @@ Posts a quick public check-in. Use this before or after match sessions so tester
 Helps separate a CueForge tuning issue from a game mix, bad server/desync, Windows routing, Discord processing, or mic setup problem.
 
 /social
-Drafts a short Discord, X, or Reddit update that points people back to the Discord hub. It is meant for human approval before posting.
+Drafts a short Discord, X, or Reddit update that points people back to the Discord hub. It is meant for human approval before posting and pairs with the Community Hub approval queue inside CueForge.
 
 /prompt
 Drops a lightweight community question so the server does not feel dead between builds.
@@ -72,7 +72,7 @@ Shows the top testers.
 Mod-only verified reward for extra work.
 ```
 
-The bot does not scrape Discord, X, or Reddit, auto-watch content, fake activity, or farm rewards. It gives clean prompts, welcome messages, click-to-pick tester roles, and a proof-based reward loop so you can collect feedback without turning the server into spam.
+The bot does not scrape Discord, X, or Reddit, auto-watch content, fake activity, auto-post from personal accounts, or farm rewards. It gives clean prompts, welcome messages, click-to-pick tester roles, and a proof-based reward loop so you can collect feedback without turning the server into spam.
 
 Role buttons require the bot to have `Manage Roles` and for the bot's highest role to sit above the self-assignable tester roles.
 
