@@ -29,6 +29,8 @@ Read and verified for the current local release build.
 - `src/blindMatch.test.js` - unit coverage for Blind Match learned curves.
 - `src/maskingLab.js` - game-audio masking stress-test and anti-masking EQ generator.
 - `src/maskingLab.test.js` - unit coverage for masking score and tuning improvement.
+- `src/signalAnalyzer.js` - CueForge signal analyzer for live mic buffers: spectral bands, clipping, noise, FPS clarity, comms readiness, likely-source diagnosis, and EQ nudges.
+- `src/signalAnalyzer.test.js` - unit coverage for clipping, masking, usable signal, and empty analyzer output.
 - `src/hearingModel.js` - personal hearing model helpers for tone results, compensation, scoring, and APO overlay generation.
 - `src/hearingModel.test.js` - unit coverage for hearing model scoring and APO overlay generation.
 - `src/styles.css` - complete responsive dark desktop-tool styling.
@@ -37,6 +39,7 @@ Read and verified for the current local release build.
 - `tools/Scan-AudioSetup.ps1` - optional user-run Windows audio setup scanner that writes a JSON report for import.
 - `docs/ARCHITECTURE.md` - platform decision notes for web build and desktop shell.
 - `docs/DRIVER_LAYER.md` - trusted companion driver/audio-layer strategy and rules.
+- `docs/HIGH_END_ANALYZER_PLAN.md` - analyzer architecture, open-source audio stack options, and next build targets.
 - `docs/MASTER_PLAN.md` - public roadmap, master map, workstreams, release timeline, and update 001 posting plan.
 - `docs/updates/2026-05-22-update-001.md` - first public update copy for Discord, X, and Reddit-safe profile posting.
 - `docs/DISCORD_FINAL_BUILDOUT.md` - live Discord status, roles, onboarding, bot strategy, and channel setup.
@@ -59,11 +62,12 @@ Read and verified for the current local release build.
 ## Verification
 
 - `npm.cmd install` completed.
-- `npm.cmd test` completed: 14 test files / 34 tests passed.
+- `npm.cmd test` completed: 15 test files / 38 tests passed.
 - `npm.cmd run build` completed.
 - `npm.cmd audit --audit-level=moderate` completed with 0 vulnerabilities.
 - Local server responded at `http://127.0.0.1:5177`.
 - Browser workflow tested: setup gate, dashboard, mic analysis with IEM/HyperX sample text, EQ studio, local source profile tabs, game profiles, hearing model hardware targets, and system info page.
+- Responsive overflow sweep tested Community Hub, Mic Lab, Beta Check-in, Report Lab, EQ Studio, and Auto Detect at mobile, tablet, and desktop widths with no horizontal overflow offenders.
 - Auto Self Test tested: browser audio APIs, device enumeration, bridge report, autotune generation, export payload generation, hearing model, storage, tone engine, and mic permission reporting.
 - Personal Hearing Model tested: reset, heard/missed tone marking, progress update, compensation overlay, export control present.
 - Auto Calibration tested: generate autotune, apply to EQ Studio, and confirm exported APO config updates.

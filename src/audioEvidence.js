@@ -6,6 +6,7 @@ export function createAudioEvidenceSummary({
   lowBandTotal = 0,
   voiceBandTotal = 0,
   highBandTotal = 0,
+  signalAnalysis = null,
   recordedAt = new Date()
 } = {}) {
   const safeFrames = Math.max(1, Number(frames) || 1);
@@ -27,6 +28,7 @@ export function createAudioEvidenceSummary({
     voicePresence,
     noise,
     clipRisk,
+    signalAnalysis: normalizeSignalAnalysis(signalAnalysis),
     recommendation: buildEvidenceRecommendation({ level, voicePresence, noise, clipRisk }),
     suggestedTweak: buildSuggestedTweak({ level, voicePresence, noise, clipRisk }),
     privacy: {
@@ -67,6 +69,7 @@ function stripUnsafeEvidenceFields(item) {
     voicePresence: item.voicePresence,
     noise: item.noise,
     clipRisk: item.clipRisk,
+    signalAnalysis: normalizeSignalAnalysis(item.signalAnalysis),
     recommendation: item.recommendation,
     suggestedTweak: item.suggestedTweak,
     privacy: {
@@ -75,6 +78,24 @@ function stripUnsafeEvidenceFields(item) {
       localOnly: true
     }
   };
+}
+
+function normalizeSignalAnalysis(analysis) {
+  if (!analysis || typeof analysis !== 'object') return null;
+  return {
+    schema: analysis.schema === 'cueforge.signal-analysis.v1' ? analysis.schema : 'cueforge.signal-analysis.v1',
+    fpsClarity: clampNumber(analysis.fpsClarity),
+    commsReadiness: clampNumber(analysis.commsReadiness),
+    tuningConfidence: clampNumber(analysis.tuningConfidence),
+    dynamicRange: clampNumber(analysis.dynamicRange),
+    probableCause: String(analysis.probableCause || 'unknown').slice(0, 80),
+    spectralCentroidHz: Math.max(0, Math.round(Number(analysis.spectralCentroidHz) || 0)),
+    spectralRolloffHz: Math.max(0, Math.round(Number(analysis.spectralRolloffHz) || 0))
+  };
+}
+
+function clampNumber(value) {
+  return clamp(Math.round(Number(value) || 0), 0, 100);
 }
 
 function buildEvidenceRecommendation({ level, voicePresence, noise, clipRisk }) {

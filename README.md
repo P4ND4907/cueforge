@@ -34,6 +34,7 @@ The big-picture plan lives here:
 - [Master Plan](docs/MASTER_PLAN.md)
 - [Tester Guide](docs/TESTER_GUIDE.md)
 - [Privacy Notes](docs/PRIVACY.md)
+- [Analyzer Plan](docs/HIGH_END_ANALYZER_PLAN.md)
 - [Release Checklist](docs/RELEASE_CHECKLIST.md)
 
 The roadmap breaks CueForge into five workstreams: player testing, audio engine, game intelligence, community loop, and release system. It also includes the May-July 2026 release timeline and the first public update pack.
@@ -57,7 +58,7 @@ The current web build is the right foundation for safe testing, tuning, feedback
 - Auto Detect for browser audio devices plus an optional Windows bridge report.
 - Auto Detect copy/paste setup kit for Discord, Reddit, GitHub issues, and beta check-ins without raw device IDs.
 - Driver Layer for detecting trusted companion audio layers such as Equalizer APO, Peace, Sonar, VB-CABLE, and Voicemeeter without silently changing routing.
-- Live Mic Lab with level, voice presence, noise estimate, clip risk, and HyperX-oriented guidance.
+- Live Mic Lab with level, voice presence, noise estimate, clip risk, spectral bands, FPS clarity, comms readiness, tuning confidence, likely-source diagnosis, and conservative EQ nudges.
 - IEM/headphone checks for left, right, center, and sweep testing.
 - Auto Calibration wizard for output target, game focus, treble sensitivity, bass preference, footstep focus, and mic boom/noise.
 - Blind Match tuner that learns a personal EQ curve from A/B choices instead of presets.

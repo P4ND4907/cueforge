@@ -59,6 +59,7 @@ import {
   normalizeGameplaySaveSettings,
   shouldSaveGameplaySnapshot
 } from './gameplaySave.js';
+import { analyzeAudioFrame, createEmptySignalAnalysis, signalBands } from './signalAnalyzer.js';
 import './styles.css';
 
 const headsetProfiles = [
@@ -1144,6 +1145,11 @@ function BetaCheckInPage() {
         stats.lowBandTotal += avg(freq, 2, 12);
         stats.voiceBandTotal += avg(freq, 18, 85);
         stats.highBandTotal += avg(freq, 95, 190);
+        stats.signalAnalysis = analyzeAudioFrame({
+          timeDomain: time,
+          frequencyData: freq,
+          sampleRate: context.sampleRate || 48000
+        });
         evidenceRef.current.raf = requestAnimationFrame(tick);
       };
 
@@ -1253,7 +1259,7 @@ function BetaCheckInPage() {
             <div className="data-card" key={item.recordedAt}>
               <strong>{new Date(item.recordedAt).toLocaleString()} - {Math.round(item.durationMs / 1000)}s</strong>
               <span>Voice {item.voicePresence}% / noise {item.noise}% / clip {item.clipRisk}%</span>
-              <small>{item.suggestedTweak}</small>
+              <small>{item.signalAnalysis ? `Analyzer: ${item.signalAnalysis.probableCause} / FPS ${item.signalAnalysis.fpsClarity}% / comms ${item.signalAnalysis.commsReadiness}%` : item.suggestedTweak}</small>
             </div>
           ))}
         </div>
@@ -2251,6 +2257,7 @@ function LiveAudioLab() {
   const [noise, setNoise] = useState(0);
   const [clipRisk, setClipRisk] = useState(0);
   const [voicePresence, setVoicePresence] = useState(0);
+  const [signalAnalysis, setSignalAnalysis] = useState(() => createEmptySignalAnalysis());
   const [toneStatus, setToneStatus] = useState('Headphone checks are ready.');
   const audioRef = useRef(null);
   const rafRef = useRef(null);
@@ -2266,6 +2273,7 @@ function LiveAudioLab() {
     audioRef.current?.stream?.getTracks().forEach((track) => track.stop());
     audioRef.current?.context?.close?.();
     audioRef.current = null;
+    setSignalAnalysis(createEmptySignalAnalysis());
   };
 
   const startMic = async () => {
@@ -2316,11 +2324,17 @@ function LiveAudioLab() {
         const lowBand = avg(freq, 2, 12);
         const voiceBand = avg(freq, 18, 85);
         const highBand = avg(freq, 95, 190);
+        const nextAnalysis = analyzeAudioFrame({
+          timeDomain: time,
+          frequencyData: freq,
+          sampleRate: context.sampleRate || 48000
+        });
 
-        setLevel(clamp(Math.round(rms * 220), 0, 100));
-        setNoise(clamp(Math.round((lowBand + highBand * 0.45) / 2.2), 0, 100));
-        setVoicePresence(clamp(Math.round(voiceBand / 2.1), 0, 100));
-        setClipRisk(clamp(Math.round(Math.max(0, peak - 0.72) * 360), 0, 100));
+        setLevel(nextAnalysis.level || clamp(Math.round(rms * 220), 0, 100));
+        setNoise(nextAnalysis.noiseRisk || clamp(Math.round((lowBand + highBand * 0.45) / 2.2), 0, 100));
+        setVoicePresence(nextAnalysis.voicePresence || clamp(Math.round(voiceBand / 2.1), 0, 100));
+        setClipRisk(nextAnalysis.clipRisk || clamp(Math.round(Math.max(0, peak - 0.72) * 360), 0, 100));
+        setSignalAnalysis(nextAnalysis);
         rafRef.current = requestAnimationFrame(tick);
       };
 
@@ -2364,13 +2378,15 @@ function LiveAudioLab() {
   };
 
   const verdict =
-    clipRisk > 20
-      ? 'Lower HyperX mic gain: clipping risk is high.'
-      : noise > 55
-        ? 'Room or cable noise is high. Try mic gain down and noise suppression light.'
-        : voicePresence > 35 && level > 12
-          ? 'Voice signal looks healthy for Discord testing.'
-          : 'Speak normally into the HyperX mic to populate live readings.';
+    signalAnalysis.recommendation || (
+      clipRisk > 20
+        ? 'Lower mic gain: clipping risk is high.'
+        : noise > 55
+          ? 'Room or cable noise is high. Try mic gain down and noise suppression light.'
+          : voicePresence > 35 && level > 12
+            ? 'Voice signal looks healthy for Discord testing.'
+            : 'Speak normally into the mic to populate live readings.'
+    );
 
   return (
     <Panel className="wide" title="Live Mic + IEM Test Bench" icon={Activity}>
@@ -2386,6 +2402,32 @@ function LiveAudioLab() {
         <LiveMeter label="Voice presence" value={voicePresence} />
         <LiveMeter label="Noise estimate" value={noise} />
         <LiveMeter label="Clip risk" value={clipRisk} danger />
+      </div>
+      <div className="metric-row analyzer-summary">
+        <Metric label="FPS clarity" value={`${signalAnalysis.fpsClarity}%`} tone={signalAnalysis.fpsClarity > 62 ? 'teal' : 'amber'} />
+        <Metric label="Comms ready" value={`${signalAnalysis.commsReadiness}%`} tone={signalAnalysis.commsReadiness > 62 ? 'teal' : 'amber'} />
+        <Metric label="Confidence" value={`${signalAnalysis.tuningConfidence}%`} tone={signalAnalysis.tuningConfidence > 62 ? 'teal' : 'amber'} />
+      </div>
+      <div className="analyzer-grid">
+        <div className="data-card">
+          <strong>Likely source</strong>
+          <span>{signalAnalysis.probableCause.replaceAll('-', ' ')}</span>
+          <small>{signalAnalysis.suggestedTweak}</small>
+        </div>
+        <div className="data-card">
+          <strong>Signal fingerprint</strong>
+          <span>{signalAnalysis.spectralCentroidHz}Hz centroid / {signalAnalysis.spectralRolloffHz}Hz rolloff</span>
+          <small>Dynamic range {signalAnalysis.dynamicRange}% / flatness {signalAnalysis.spectralFlatness}</small>
+        </div>
+      </div>
+      <div className="band-radar" aria-label="live analyzer bands">
+        {signalBands.map((band) => (
+          <div className="band-bar" key={band.id}>
+            <span>{band.label}</span>
+            <div><i style={{ width: `${signalAnalysis.bands[band.id] || 0}%` }} /></div>
+            <strong>{signalAnalysis.bands[band.id] || 0}%</strong>
+          </div>
+        ))}
       </div>
       <p className="callout">{verdict}</p>
       <p>{toneStatus}</p>
