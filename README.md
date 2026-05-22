@@ -4,6 +4,24 @@ CueForge is a Windows-first gaming audio control center for IEMs, headsets, and 
 
 It does not silently install drivers or rewrite Windows audio routing. It makes the hidden parts visible, generates configs, and keeps the final system-level apply step explicit.
 
+## Tester Call
+
+CueForge is ready for controlled Windows player testing. The best testers are FPS players using IEMs, gaming headsets, USB mics, Equalizer APO, Peace, SteelSeries Sonar, Discord, or similar audio chains.
+
+Good feedback includes:
+
+- What game was tested.
+- What headset/IEM/mic was used.
+- Whether footsteps, direction, comms, mic quality, or comfort improved.
+- A redacted Report Lab JSON when something breaks.
+- A Player Trial packet after a match session.
+
+Use GitHub issues for feedback:
+
+- Bug or broken flow: open a Bug Report.
+- Tuning impressions: open Player Feedback.
+- Privacy concern: open Privacy / Redaction Review.
+
 ## Platform Direction
 
 The current web build is the right foundation for safe testing, tuning, feedback capture, and GitHub distribution. The right way around browser limits is a desktop app shell, not a browser workaround.

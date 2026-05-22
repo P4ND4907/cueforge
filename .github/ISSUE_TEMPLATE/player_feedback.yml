@@ -1,0 +1,62 @@
+name: Player Feedback
+description: Share match feedback from the CueForge Player Trial.
+title: "[Feedback]: "
+labels: ["player-feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this after running the Player Trial. Attach the exported tester packet if possible.
+  - type: input
+    id: game
+    attributes:
+      label: Game tested
+      placeholder: "Tarkov, Siege, COD/Warzone, Apex, Battlefield, Valorant, CS2..."
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Audio setup
+      placeholder: "IEM/headset, mic, DAC, Equalizer APO/Peace/Sonar/Discord"
+    validations:
+      required: true
+  - type: dropdown
+    id: footsteps
+    attributes:
+      label: Footstep clarity
+      options: ["Worse", "No change", "Slightly better", "Much better"]
+    validations:
+      required: true
+  - type: dropdown
+    id: direction
+    attributes:
+      label: Direction / positioning
+      options: ["Worse", "No change", "Slightly better", "Much better"]
+    validations:
+      required: true
+  - type: dropdown
+    id: comms
+    attributes:
+      label: Comms clarity
+      options: ["Worse", "No change", "Slightly better", "Much better"]
+    validations:
+      required: true
+  - type: dropdown
+    id: comfort
+    attributes:
+      label: Comfort / fatigue
+      options: ["Worse", "No change", "Slightly better", "Much better"]
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: What felt better, worse, confusing, or surprisingly useful?
+  - type: textarea
+    id: packet
+    attributes:
+      label: Player Trial packet
+      description: Paste or attach the exported tester packet when possible.
+      render: json

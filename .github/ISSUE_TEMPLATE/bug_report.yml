@@ -1,0 +1,52 @@
+name: Bug Report
+description: Report a broken flow, crash, incorrect output, or failed tester path.
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing CueForge. Attach a redacted Report Lab JSON when possible.
+  - type: input
+    id: version
+    attributes:
+      label: CueForge version or commit
+      placeholder: "Example: d434b6b or latest main"
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: "Example: Windows 11 23H2"
+  - type: textarea
+    id: setup
+    attributes:
+      label: Audio setup
+      description: Headset/IEM, mic, DAC, Equalizer APO, Peace, Sonar, Discord, or other tools.
+      placeholder: "IEM/headset, mic, audio tools, game tested"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open Setup Gate..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Redacted Report Lab JSON
+      description: Paste or attach only the redacted report. Do not paste raw Windows bridge output.
+      render: json

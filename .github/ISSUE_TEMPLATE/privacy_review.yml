@@ -1,0 +1,29 @@
+name: Privacy / Redaction Review
+description: Report anything that looks like a local identifier leaked into an export.
+title: "[Privacy]: "
+labels: ["privacy", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this if a CueForge export appears to include raw device IDs, Windows paths, computer names, emails, phone numbers, or full user-agent strings.
+  - type: dropdown
+    id: export_type
+    attributes:
+      label: Export type
+      options: ["Report Lab JSON", "Player Trial packet", "Setup Pack", "Equalizer APO config", "Other"]
+    validations:
+      required: true
+  - type: textarea
+    id: what_leaked
+    attributes:
+      label: What looked sensitive?
+      description: Describe the field name or value shape. Do not paste secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: safe_excerpt
+    attributes:
+      label: Safe excerpt
+      description: Paste a redacted/safe excerpt only.
+      render: json

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Tester guide
+    url: https://github.com/P4ND4907/cueforge/blob/main/docs/TESTER_GUIDE.md
+    about: Read the recommended test flow before opening feedback.

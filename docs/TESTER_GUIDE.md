@@ -1,0 +1,39 @@
+# CueForge Tester Guide
+
+Thanks for testing CueForge. The goal is simple: find out whether the app helps real players get clearer cues, cleaner comms, and better mic confidence without leaking local machine data.
+
+## Who Should Test
+
+- FPS players using IEMs, gaming headsets, or USB DACs.
+- Players using a HyperX-style boom mic, standalone USB mic, or headset mic.
+- Players using Equalizer APO, Peace, SteelSeries Sonar, Discord, or Windows audio routing.
+- Anyone who notices inconsistent footsteps, harsh IEM treble, muddy explosions, or unclear comms.
+
+## Test Session
+
+1. Run CueForge locally.
+2. Open `Setup Gate` and follow the readiness checklist.
+3. Run `Self Test`.
+4. Open `Mic Lab` and confirm live mic feedback works.
+5. Open `Calibration` and generate a profile.
+6. Open `EQ Studio` and review the Equalizer APO export.
+7. Open `Player Trial`, play one match or round, complete the five-step script, and export the tester packet.
+8. Open `Report Lab` and export a redacted issue report if anything breaks.
+
+## What To Send Back
+
+Use GitHub issues and include:
+
+- Game tested.
+- Headset/IEM and mic used.
+- Whether Equalizer APO, Peace, Sonar, or Discord was part of the setup.
+- What improved.
+- What got worse.
+- The exported Player Trial packet.
+- The redacted Report Lab JSON for bugs.
+
+Do not paste unredacted Windows device reports into GitHub.
+
+## Privacy Check
+
+Report Lab should remove raw device IDs, group IDs, Windows paths, computer names, full user-agent strings, emails, and phone numbers. If you see any of those in a report preview, open a Privacy / Redaction Review issue.
