@@ -69,6 +69,34 @@ VOICE LAB
 - listening-lab-voice
 ```
 
+## Live Status - May 22, 2026
+
+Posted and verified in the live CueForge Beta Discord:
+
+```text
+start-here: final quick path with CueForge link, testing loop, and privacy reminder.
+lab-updates: server cleanup announcement and channel flow.
+match-checkins: before/after real-match report template.
+bug-replays: replayable bug report template.
+signal-setups: gear-chain setup template.
+```
+
+Still needs Discord settings/UI approval:
+
+```text
+Make start-here, rules, lab-updates, and faq-roadmap read-only.
+Create public tester/game roles and staff roles.
+Assign Chiefyy's staff role only after confirming the exact account in-server.
+Enable Community Onboarding / Server Guide when available.
+Add one trusted moderation/helper bot only after reviewing its permission prompt.
+```
+
+Do not automate:
+
+```text
+Passwords, tokens, DOB, phone numbers, recovery codes, fake joins, auto-watchers, self-bots, or spam posting.
+```
+
 ## Server Guide Copy
 
 Post in `start-here`:
