@@ -43,6 +43,14 @@ import { buildTesterPacket, feedbackDefaults, scoreTrialFeedback, trialSteps } f
 import { buildBetaTesterPacket, createBetaCheckIn, createTesterId, summarizeBetaActivity } from './betaCheckIn.js';
 import { buildAudioEvidencePacket, createAudioEvidenceSummary } from './audioEvidence.js';
 import {
+  buildCommunityDraft,
+  buildRollCallPrompt,
+  communitySources,
+  createCommunityItem,
+  feedbackTypes,
+  summarizeCommunityFeedback
+} from './communityHub.js';
+import {
   appendGameplaySnapshot,
   createGameplaySnapshot,
   gameplaySaveDefaults,
@@ -235,6 +243,7 @@ function App() {
         <nav>
           {[
             ['setup', ShieldCheck, 'Setup Gate'],
+            ['hub', Radio, 'Community Hub'],
             ['dashboard', Gauge, 'Control'],
             ['selftest', TestTube2, 'Self Test'],
             ['dna', BrainCircuit, 'Audio DNA'],
@@ -284,6 +293,8 @@ function App() {
             onGo={setActive}
           />
         )}
+
+        {active === 'hub' && <CommunityHubPage />}
 
         {active === 'dashboard' && (
           <section className="grid dashboard-grid">
@@ -1258,6 +1269,148 @@ function BetaCheckInPage() {
   );
 }
 
+function CommunityHubPage() {
+  const appUrl = 'https://p4nd4907.github.io/cueforge/';
+  const discordUrl = 'https://discord.gg/';
+  const [items, setItems] = useState(() => getSavedJson('cueforge-community-feedback') || []);
+  const [source, setSource] = useState('Discord');
+  const [platform, setPlatform] = useState('Discord');
+  const [handle, setHandle] = useState('');
+  const [game, setGame] = useState('Tarkov / Siege / COD');
+  const [gear, setGear] = useState('IEM/headset + mic');
+  const [choice, setChoice] = useState('this');
+  const [type, setType] = useState('Footsteps');
+  const [note, setNote] = useState('');
+  const [status, setStatus] = useState('Discord is the main hub. Use this page to keep updates clean and useful.');
+  const summary = summarizeCommunityFeedback(items);
+  const rollCall = buildRollCallPrompt({ focus: type, game, summary });
+  const socialDraft = buildCommunityDraft({ platform, summary, appUrl, discordUrl });
+
+  const addFeedback = () => {
+    const item = createCommunityItem({ source, handle, game, gear, choice, type, note });
+    const next = [...items, item].slice(-120);
+    setItems(next);
+    safeSetJson('cueforge-community-feedback', next);
+    setNote('');
+    setStatus('Feedback added locally. Summary and drafts updated.');
+  };
+
+  const clearFeedback = () => {
+    setItems([]);
+    safeSetJson('cueforge-community-feedback', []);
+    setStatus('Community signal cleared from this browser.');
+  };
+
+  const copyText = async (text, label) => {
+    try {
+      await navigator.clipboard?.writeText(text);
+      setStatus(`${label} copied. Review it before posting.`);
+    } catch {
+      setStatus(`${label} is ready. Select the text and copy it manually if clipboard is blocked.`);
+    }
+  };
+
+  const exportFeedback = () => {
+    const packet = {
+      schema: 'cueforge.community-packet.v1',
+      exportedAt: new Date().toISOString(),
+      summary,
+      items
+    };
+    downloadTextFile('cueforge-community-feedback.json', JSON.stringify(packet, null, 2));
+  };
+
+  return (
+    <section className="grid two">
+      <Panel className="wide" title="Discord Command Center" icon={Radio}>
+        <p>Use Discord as the main hub, then turn X and Reddit replies into the same clean signal. No hidden tracking, no private account data, no spam posting.</p>
+        <div className="community-hero">
+          <Metric label="Signals" value={String(summary.total)} tone={summary.total ? 'teal' : 'amber'} />
+          <Metric label="Top issue" value={summary.topIssue} tone="teal" />
+          <Metric label="Status" value={summary.status.replace('-', ' ')} tone={summary.status === 'strong-signal' ? 'teal' : 'amber'} />
+        </div>
+        <p className="callout">{summary.recommendation}</p>
+        <div className="source-tabs">
+          {communitySources.map((name) => (
+            <button className={source === name ? 'selected' : ''} key={name} onClick={() => setSource(name)}>
+              {name}
+            </button>
+          ))}
+        </div>
+        <div className="calibration-grid">
+          <label className="field">
+            <span>Handle or tester name</span>
+            <input value={handle} onChange={(event) => setHandle(event.target.value)} placeholder="optional" />
+          </label>
+          <label className="field">
+            <span>Game / mode</span>
+            <input value={game} onChange={(event) => setGame(event.target.value)} />
+          </label>
+          <label className="field">
+            <span>Gear chain</span>
+            <input value={gear} onChange={(event) => setGear(event.target.value)} />
+          </label>
+          <label className="field">
+            <span>Issue type</span>
+            <select value={type} onChange={(event) => setType(event.target.value)}>
+              {feedbackTypes.map((name) => <option key={name}>{name}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="choice-row">
+          <button className={choice === 'this' ? 'primary' : 'ghost'} onClick={() => setChoice('this')}>This felt better</button>
+          <button className={choice === 'that' ? 'primary' : 'ghost'} onClick={() => setChoice('that')}>That felt better</button>
+        </div>
+        <label className="field">
+          <span>What did they actually say?</span>
+          <textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Paste or type the useful part. Emails and phone numbers are redacted on save." />
+        </label>
+        <div className="live-actions">
+          <button className="primary" onClick={addFeedback}><CheckCircle2 size={18} /> Add feedback</button>
+          <button className="ghost" onClick={exportFeedback} disabled={items.length === 0}><Download size={18} /> Export signal</button>
+          <button className="ghost" onClick={clearFeedback} disabled={items.length === 0}><RotateCcw size={18} /> Clear local signal</button>
+        </div>
+        <p className="callout">{status}</p>
+      </Panel>
+
+      <Panel title="Roll Call Copy" icon={Activity}>
+        <pre>{rollCall}</pre>
+        <button className="primary" onClick={() => copyText(rollCall, 'Roll call')}>Copy roll call</button>
+      </Panel>
+
+      <Panel title="Post Draft" icon={Bug}>
+        <div className="source-tabs">
+          {['Discord', 'X', 'Reddit'].map((name) => (
+            <button className={platform === name ? 'selected' : ''} key={name} onClick={() => setPlatform(name)}>
+              {name}
+            </button>
+          ))}
+        </div>
+        <pre>{socialDraft}</pre>
+        <button className="primary" onClick={() => copyText(socialDraft, `${platform} draft`)}>Copy draft</button>
+      </Panel>
+
+      <Panel className="wide" title="Latest Signal" icon={ShieldCheck}>
+        <div className="stack">
+          {items.length === 0 && (
+            <div className="data-card">
+              <strong>No community signal yet</strong>
+              <span>Start with one Discord roll call, then log the replies here.</span>
+            </div>
+          )}
+          {items.slice(-8).reverse().map((item) => (
+            <div className="data-card" key={`${item.receivedAt}-${item.source}-${item.note}`}>
+              <strong>{item.source} - {item.type} - {item.choice}</strong>
+              <span>{item.game || 'No game'} / {item.gear || 'No gear'}</span>
+              <small>{item.note || 'No note attached.'}</small>
+            </div>
+          ))}
+        </div>
+      </Panel>
+    </section>
+  );
+}
+
 async function getMicPermissionState() {
   try {
     if (!navigator.permissions?.query) return 'unknown';
@@ -1271,6 +1424,7 @@ async function getMicPermissionState() {
 function sectionTitle(id) {
   return {
     setup: 'Player Setup Gate',
+    hub: 'Community Hub',
     mic: 'Mic Lab',
     selftest: 'Auto Self Test',
     dna: 'Audio DNA',

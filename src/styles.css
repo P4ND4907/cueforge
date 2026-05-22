@@ -199,6 +199,20 @@ textarea {
   margin-bottom: 12px;
 }
 
+input {
+  width: 100%;
+  min-height: 40px;
+  color: #edf8f7;
+  background: #081116;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 0 12px;
+}
+
+input::placeholder {
+  color: #6f858a;
+}
+
 .callout {
   border-left: 3px solid #12c99a;
   background: rgba(18,201,154,0.08);
@@ -274,6 +288,20 @@ pre {
 .test-fail { border-color: rgba(255,111,97,0.42); }
 .selftest-summary {
   margin-top: 16px;
+}
+
+.community-hero {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.choice-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
 }
 
 .setup-grid {
@@ -663,6 +691,7 @@ pre {
   .calibration-grid { grid-template-columns: 1fr; }
   .dna-stats { grid-template-columns: 1fr; }
   .blind-actions { grid-template-columns: 1fr; }
+  .community-hero, .choice-row { grid-template-columns: 1fr; }
   .eq-board { grid-template-columns: repeat(5, 1fr); }
   h1 { font-size: 28px; }
 }

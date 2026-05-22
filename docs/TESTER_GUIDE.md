@@ -13,12 +13,13 @@ Thanks for testing CueForge. The goal is simple: find out whether the app helps 
 
 1. Run CueForge locally.
 2. Open `Setup Gate` and follow the readiness checklist.
-3. Run `Self Test`.
-4. Open `Mic Lab` and confirm live mic feedback works.
-5. Open `Calibration` and generate a profile.
-6. Open `EQ Studio` and review the Equalizer APO export.
-7. Open `Player Trial`, play one match or round, complete the five-step script, and export the tester packet.
-8. Open `Report Lab` and export a redacted issue report if anything breaks.
+3. Open `Community Hub` and copy the roll call if you are coordinating feedback in Discord.
+4. Run `Self Test`.
+5. Open `Mic Lab` and confirm live mic feedback works.
+6. Open `Calibration` and generate a profile.
+7. Open `EQ Studio` and review the Equalizer APO export.
+8. Open `Player Trial`, play one match or round, complete the five-step script, and export the tester packet.
+9. Open `Report Lab` and export a redacted issue report if anything breaks.
 
 ## What To Send Back
 
@@ -29,6 +30,7 @@ Use GitHub issues and include:
 - Whether Equalizer APO, Peace, Sonar, or Discord was part of the setup.
 - What improved.
 - What got worse.
+- Whether the issue feels like tuning, the game mix, server timing, Discord, mic setup, or Windows routing.
 - The exported Player Trial packet.
 - The redacted Report Lab JSON for bugs.
 

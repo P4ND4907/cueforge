@@ -17,6 +17,7 @@ Good feedback includes:
 - What game was tested.
 - What headset/IEM/mic was used.
 - Whether footsteps, direction, comms, mic quality, or comfort improved.
+- Which Discord/X/Reddit signal it came from if the note came through the community hub.
 - A redacted Report Lab JSON when something breaks.
 - A Player Trial packet after a match session.
 
@@ -37,6 +38,7 @@ The current web build is the right foundation for safe testing, tuning, feedback
 ## What It Does
 
 - Player Setup Gate that scores readiness, requests mic permission, checks browser audio, confirms bridge/APO status, creates setup reports, and routes testers through the right flow.
+- Community Hub for Discord-first roll calls, this-or-that tester input, X/Reddit post drafts, and local signal summaries.
 - Player Trial with a repeatable match script, post-match ratings, next-fix recommendations, and an exportable tester packet.
 - Beta Check-in with anonymous local tester IDs, proof codes, active-day counts, and exportable packets for real beta feedback without hidden telemetry.
 - Gameplay Save with throttled local snapshots and a performance mode that keeps live meters lighter during matches.
