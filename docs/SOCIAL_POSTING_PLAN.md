@@ -13,7 +13,7 @@ Feedback: https://github.com/P4ND4907/cueforge/issues/1
 
 ## Hashtag Bank
 
-Use 3-6 tags per post. Do not stuff every tag into every post.
+Use 2-4 tags on X/Twitter and 3-6 tags on TikTok/Instagram/Shorts. Do not stuff every tag into every post.
 
 ```text
 #CueForge
@@ -32,6 +32,78 @@ Use 3-6 tags per post. Do not stuff every tag into every post.
 #Valorant
 #PCGaming
 #BetaTesting
+```
+
+## X / Twitter Targeting
+
+Rule: hashtags invite the right crowd; @mentions should be rare and only used when the post is directly about that game/tool. Do not tag every official account in one post.
+
+Core X tag packs:
+
+```text
+General beta: #CueForge #FPSAudio #PCGaming #BetaTesting
+Audio tools: #CueForge #EqualizerAPO #GamingAudio #Headsets
+Mic testing: #CueForge #Microphone #GamingAudio #PCGaming
+IEM/headset: #CueForge #IEM #Headsets #FPSAudio
+Tarkov: #CueForge #EscapefromTarkov #FPSAudio #IEM
+Siege: #CueForge #RainbowSixSiege #FPSAudio #GamingAudio
+Warzone: #CueForge #Warzone #FPSAudio #GamingAudio
+Apex: #CueForge #ApexLegends #FPSAudio #PCGaming
+Valorant: #CueForge #Valorant #FPSAudio #PCGaming
+CS2: #CueForge #CS2 #CounterStrike #FPSAudio
+```
+
+Possible @mentions when a post is specifically about that game/tool:
+
+```text
+Tarkov: @tarkov
+Siege: @Rainbow6Game
+Warzone/COD: @CallofDuty, @CODUpdates, @RavenSoftware
+Apex: @PlayApex
+Valorant: @PlayVALORANT or @VALORANT
+Counter-Strike: @CounterStrike
+SteelSeries/Sonar: @SteelSeries
+HyperX mic/headsets: @HyperX
+```
+
+Do not tag official accounts in generic "try my app" posts. Use them only for no-link discussion posts or specific bug/audio-method questions.
+
+First X post:
+
+```text
+I’m building CueForge, a free FPS audio test lab for real players.
+
+It checks mic input, IEM/headset tuning, Equalizer APO exports, and before/after match notes so we can stop guessing what actually helped.
+
+Need honest testers:
+https://p4nd4907.github.io/cueforge/
+
+#CueForge #FPSAudio #PCGaming #BetaTesting
+```
+
+Follow-up X post:
+
+```text
+FPS audio question:
+
+When you change EQ, headset/IEM, Discord settings, Sonar, or Equalizer APO, how do you test whether it actually helped?
+
+One good match is not proof. I want repeatable before/after feedback.
+
+#FPSAudio #GamingAudio #EqualizerAPO #Headsets
+```
+
+Game-specific X post pattern:
+
+```text
+{game} players: how do you separate game audio issues from your own setup?
+
+I’m testing CueForge with real matches: IEM/headset tuning, mic/comms checks, and before/after notes.
+
+Looking for honest feedback, not hype.
+
+{optional link}
+{2-4 game-specific hashtags}
 ```
 
 ## Daily Rhythm
