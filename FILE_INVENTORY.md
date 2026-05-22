@@ -23,6 +23,8 @@ Read and verified for the current local release build.
 - `src/playerTrial.test.js` - unit coverage for trial steps, feedback scoring, and packet contents.
 - `src/betaCheckIn.js` - anonymous beta tester check-ins, proof codes, active-day summary, and export packet builder.
 - `src/betaCheckIn.test.js` - unit coverage for beta IDs, proofed check-ins, summaries, and privacy flags.
+- `src/gameplaySave.js` - throttled gameplay save snapshots and lightweight performance-save settings.
+- `src/gameplaySave.test.js` - unit coverage for snapshot bounds, trimming, and write throttling.
 - `src/blindMatch.js` - A/B preference-learning tuner that converts choices into a personal EQ curve.
 - `src/blindMatch.test.js` - unit coverage for Blind Match learned curves.
 - `src/maskingLab.js` - game-audio masking stress-test and anti-masking EQ generator.
@@ -34,6 +36,7 @@ Read and verified for the current local release build.
 - `electron/preload.cjs` - locked-down desktop API exposed to the React app.
 - `tools/Scan-AudioSetup.ps1` - optional user-run Windows audio setup scanner that writes a JSON report for import.
 - `docs/ARCHITECTURE.md` - platform decision notes for web build and desktop shell.
+- `docs/DRIVER_LAYER.md` - trusted companion driver/audio-layer strategy and rules.
 - `docs/RELEASE_CHECKLIST.md` - GitHub-ready hardening and release checklist.
 - `docs/PRIVACY.md` - local data and redaction notes.
 - `README.md` - product overview, run notes, setup flow, and testing workflow.

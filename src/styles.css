@@ -431,6 +431,20 @@ pre {
   text-align: center;
 }
 
+.button-link {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0 14px;
+  border-radius: 8px;
+  color: #041411;
+  background: #20c9a9;
+  text-decoration: none;
+  font-weight: 900;
+}
+
 .bridge-import {
   display: grid;
   gap: 8px;

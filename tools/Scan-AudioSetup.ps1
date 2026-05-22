@@ -35,6 +35,17 @@ $sonarPath = Test-PathAny @(
   "$env:LOCALAPPDATA\Programs\steelseries-gg-client\SteelSeries GG.exe"
 )
 
+$voicemeeterPath = Test-PathAny @(
+  "$env:ProgramFiles\VB\Voicemeeter\voicemeeter8.exe",
+  "$env:ProgramFiles\VB\Voicemeeter\voicemeeterpro.exe",
+  "$env:ProgramFiles\VB\Voicemeeter\voicemeeter.exe",
+  "${env:ProgramFiles(x86)}\VB\Voicemeeter\voicemeeter8.exe",
+  "${env:ProgramFiles(x86)}\VB\Voicemeeter\voicemeeterpro.exe",
+  "${env:ProgramFiles(x86)}\VB\Voicemeeter\voicemeeter.exe"
+)
+
+$vbCableDevice = ($soundDevices + $mediaPnP | Where-Object { $_.Name -match "VB-Audio|VB-Cable|CABLE Input|CABLE Output|Voicemeeter" } | Select-Object -First 1)
+
 $apoConfig = Test-PathAny @(
   "$env:ProgramFiles\EqualizerAPO\config\config.txt",
   "${env:ProgramFiles(x86)}\EqualizerAPO\config\config.txt"
@@ -58,12 +69,21 @@ $report = [ordered]@{
       installed = [bool]$sonarPath
       path = $sonarPath
     }
+    voicemeeter = [ordered]@{
+      installed = [bool]$voicemeeterPath
+      path = $voicemeeterPath
+    }
+    vbCable = [ordered]@{
+      installed = [bool]$vbCableDevice
+      device = if ($vbCableDevice) { $vbCableDevice.Name } else { $null }
+    }
   }
   soundDevices = $soundDevices
   mediaDevices = $mediaPnP
   matches = [ordered]@{
     hyperx = [bool](($soundDevices + $mediaPnP | Where-Object { $_.Name -match "HyperX|Hyper X" } | Select-Object -First 1))
     iemOrDac = [bool](($soundDevices + $mediaPnP | Where-Object { $_.Name -match "IEM|DAC|USB Audio|Headphone|Headset" } | Select-Object -First 1))
+    virtualRouting = [bool]$vbCableDevice
   }
   nextSteps = @(
     "Import this JSON into CueForge > Auto Detect.",

@@ -41,6 +41,13 @@ import { buildIssueReport, validateIssueReport } from './reportPack.js';
 import { computeSetupReadiness } from './setupReadiness.js';
 import { buildTesterPacket, feedbackDefaults, scoreTrialFeedback, trialSteps } from './playerTrial.js';
 import { buildBetaTesterPacket, createBetaCheckIn, createTesterId, summarizeBetaActivity } from './betaCheckIn.js';
+import {
+  appendGameplaySnapshot,
+  createGameplaySnapshot,
+  gameplaySaveDefaults,
+  normalizeGameplaySaveSettings,
+  shouldSaveGameplaySnapshot
+} from './gameplaySave.js';
 import './styles.css';
 
 const headsetProfiles = [
@@ -59,6 +66,49 @@ const gameProfiles = [
 
 const bands = [31, 62, 125, 250, 500, '1k', '2k', '4k', '8k', '16k'];
 const baseEq = [-1, 1.5, 0.5, -2, -1, 0.5, 2.5, 3.2, 1.2, -0.5];
+
+const driverLayers = [
+  {
+    name: 'Equalizer APO',
+    role: 'System EQ engine',
+    fit: 'Best first layer for CueForge exports and IEM/headset tuning.',
+    action: 'Install from SourceForge, attach it to the real output device, then paste CueForge APO config text.',
+    risk: 'Requires restart/reselecting playback device when Windows endpoints change.',
+    url: 'https://sourceforge.net/projects/equalizerapo/'
+  },
+  {
+    name: 'Peace UI',
+    role: 'Equalizer APO interface',
+    fit: 'Good for players who want visual preset management over raw config text.',
+    action: 'Use after Equalizer APO is installed. Keep CueForge as the generator and Peace as the manual apply surface.',
+    risk: 'Can hide the exact text config if too many presets are stacked.',
+    url: 'https://sourceforge.net/projects/peace-equalizer-apo-extension/'
+  },
+  {
+    name: 'SteelSeries Sonar',
+    role: 'Game/chat virtual mixer',
+    fit: 'Useful when players need separate game, chat, media, and mic channels.',
+    action: 'Detect it, then guide users to set Game as default output and Chat as communication output.',
+    risk: 'Virtual devices can break or route silently wrong after updates, so CueForge should verify routing.',
+    url: 'https://steelseries.com/gg/sonar'
+  },
+  {
+    name: 'VB-CABLE / Voicemeeter',
+    role: 'Virtual routing bridge',
+    fit: 'Useful later for loopback tests, stream mixes, and before/after capture.',
+    action: 'Detect only for now. Add guided routing once CueForge has a full desktop setup wizard.',
+    risk: 'Bad routing can create silence, echo, or doubled monitoring.',
+    url: 'https://vb-audio.com/Cable/'
+  },
+  {
+    name: 'CueForge Native APO',
+    role: 'Future signed driver layer',
+    fit: 'Only worth doing after the app proves real demand from beta testers.',
+    action: 'Design later as a signed Windows APO or packaged native helper with backups and undo.',
+    risk: 'High maintenance, signing, Windows compatibility, and trust burden.',
+    url: 'https://learn.microsoft.com/en-us/windows-hardware/drivers/audio/audio-processing-object-architecture'
+  }
+];
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -191,12 +241,14 @@ function App() {
             ['masking', AudioLines, 'Masking Lab'],
             ['trial', Gamepad2, 'Player Trial'],
             ['beta', Activity, 'Beta Check-in'],
+            ['saves', Save, 'Gameplay Save'],
             ['reports', Bug, 'Report Lab'],
             ['calibration', Sparkles, 'Calibration'],
             ['mic', Mic, 'Mic Lab'],
             ['eq', SlidersHorizontal, 'EQ Studio'],
             ['games', Gamepad2, 'Game Profiles'],
             ['detect', Search, 'Auto Detect'],
+            ['drivers', SlidersHorizontal, 'Driver Layer'],
             ['hearing', Headphones, 'Hearing Model'],
             ['inventory', BrainCircuit, 'System Info']
           ].map(([id, Icon, label]) => (
@@ -208,7 +260,7 @@ function App() {
         </nav>
         <div className="sidebar-foot">
           <ShieldCheck size={18} />
-          <span>Browser-safe tuning. Exports settings instead of touching drivers.</span>
+          <span>Safe tuning. Detects trusted audio layers and keeps native changes explicit.</span>
         </div>
       </aside>
 
@@ -273,6 +325,14 @@ function App() {
         )}
 
         {active === 'beta' && <BetaCheckInPage />}
+
+        {active === 'saves' && (
+          <GameplaySavePage
+            eq={eq}
+            selectedGame={selectedGame}
+            selectedSourceProfile={selectedSourceProfile}
+          />
+        )}
 
         {active === 'reports' && (
           <ReportLabPage
@@ -380,6 +440,8 @@ function App() {
         )}
 
         {active === 'detect' && <AutoDetect />}
+
+        {active === 'drivers' && <DriverLayerPage />}
 
         {active === 'hearing' && (
           <section className="grid two">
@@ -801,6 +863,137 @@ function TrialSlider({ label, value, onChange }) {
   );
 }
 
+function GameplaySavePage({ eq, selectedGame, selectedSourceProfile }) {
+  const [settings, setSettings] = useState(() => normalizeGameplaySaveSettings(getSavedJson('cueforge-gameplay-save-settings') || gameplaySaveDefaults));
+  const [snapshots, setSnapshots] = useState(() => getSavedJson('cueforge-gameplay-snapshots') || []);
+  const [lastSavedAt, setLastSavedAt] = useState(0);
+  const [status, setStatus] = useState('Gameplay save is ready.');
+  const summary = summarizeBetaActivity(getSavedJson('cueforge-beta-checkins') || []);
+
+  const persistSettings = (next) => {
+    const normalized = normalizeGameplaySaveSettings(next);
+    setSettings(normalized);
+    safeSetJson('cueforge-gameplay-save-settings', normalized);
+    localStorage.setItem('cueforge-gameplay-performance-mode', normalized.performanceMode ? 'on' : 'off');
+    setStatus('Gameplay save settings updated.');
+  };
+
+  const saveSnapshot = (source = 'manual') => {
+    const snapshot = createGameplaySnapshot({
+      eq,
+      selectedGame,
+      selectedSourceProfile,
+      betaSummary: summary
+    });
+    const next = appendGameplaySnapshot(snapshots, { ...snapshot, source }, settings.maxSnapshots);
+    setSnapshots(next);
+    safeSetJson('cueforge-gameplay-snapshots', next);
+    setLastSavedAt(Date.now());
+    setStatus(`${source === 'auto' ? 'Auto-saved' : 'Saved'} gameplay settings at ${new Date(snapshot.savedAt).toLocaleTimeString()}.`);
+  };
+
+  useEffect(() => {
+    if (!settings.enabled) return undefined;
+    const interval = setInterval(() => {
+      setLastSavedAt((current) => {
+        if (!shouldSaveGameplaySnapshot({ lastSavedAt: current, intervalSeconds: settings.intervalSeconds })) return current;
+        const snapshot = createGameplaySnapshot({
+          eq,
+          selectedGame,
+          selectedSourceProfile,
+          betaSummary: summary
+        });
+        setSnapshots((currentSnapshots) => {
+          const next = appendGameplaySnapshot(currentSnapshots, { ...snapshot, source: 'auto' }, settings.maxSnapshots);
+          safeSetJson('cueforge-gameplay-snapshots', next);
+          return next;
+        });
+        setStatus(`Auto-saved gameplay settings at ${new Date(snapshot.savedAt).toLocaleTimeString()}.`);
+        return Date.now();
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [eq, selectedGame, selectedSourceProfile, settings, summary.totalCheckIns, summary.uniqueDays]);
+
+  const clearSnapshots = () => {
+    setSnapshots([]);
+    safeSetJson('cueforge-gameplay-snapshots', []);
+    setStatus('Gameplay save history cleared.');
+  };
+
+  const exportSnapshots = () => {
+    downloadTextFile('cueforge-gameplay-save.json', JSON.stringify({
+      schema: 'cueforge.gameplay-save-pack.v1',
+      exportedAt: new Date().toISOString(),
+      settings,
+      snapshots
+    }, null, 2));
+  };
+
+  return (
+    <section className="grid two">
+      <Panel title="Gameplay Save" icon={Save}>
+        <p>Save useful tuning state during play without hammering storage or running analytics. CueForge writes a tiny local snapshot on a throttle.</p>
+        <div className="calibration-grid">
+          <label className="field">
+            <span>Auto-save</span>
+            <select value={settings.enabled ? 'on' : 'off'} onChange={(event) => persistSettings({ ...settings, enabled: event.target.value === 'on' })}>
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Performance mode</span>
+            <select value={settings.performanceMode ? 'on' : 'off'} onChange={(event) => persistSettings({ ...settings, performanceMode: event.target.value === 'on' })}>
+              <option value="on">On - lighter live meters</option>
+              <option value="off">Off - full live meters</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Auto-save interval: {settings.intervalSeconds}s</span>
+            <input type="range" min="10" max="300" step="10" value={settings.intervalSeconds} onChange={(event) => persistSettings({ ...settings, intervalSeconds: Number(event.target.value) })} />
+          </label>
+          <label className="field">
+            <span>Max snapshots: {settings.maxSnapshots}</span>
+            <input type="range" min="3" max="30" value={settings.maxSnapshots} onChange={(event) => persistSettings({ ...settings, maxSnapshots: Number(event.target.value) })} />
+          </label>
+        </div>
+        <div className="live-actions">
+          <button className="primary" onClick={() => saveSnapshot('manual')}><Save size={18} /> Save now</button>
+          <button className="ghost" onClick={exportSnapshots} disabled={snapshots.length === 0}><Download size={18} /> Export saves</button>
+          <button className="ghost" onClick={clearSnapshots}>Clear saves</button>
+        </div>
+        <p className="callout">{status}</p>
+      </Panel>
+      <Panel title="Performance Guard" icon={Gauge}>
+        <div className="metric-row selftest-summary">
+          <Metric label="Snapshots" value={String(snapshots.length)} tone={snapshots.length ? 'teal' : 'amber'} />
+          <Metric label="Writes" value={`${settings.intervalSeconds}s`} tone="teal" />
+          <Metric label="Meter mode" value={settings.performanceMode ? 'Light' : 'Full'} tone={settings.performanceMode ? 'teal' : 'amber'} />
+        </div>
+        <ul className="clean-list">
+          <li>Saves only small JSON snapshots: EQ, selected game, source profile, and beta summary.</li>
+          <li>Auto-save checks every 5 seconds but writes only after your selected interval.</li>
+          <li>History is capped, so RAM and local storage stay bounded.</li>
+          <li>Performance mode reduces live mic meter update frequency while keeping clip/noise readings usable.</li>
+        </ul>
+      </Panel>
+      <Panel className="wide" title="Recent Saves" icon={Download}>
+        <div className="stack">
+          {snapshots.length === 0 && <div className="data-card"><strong>No gameplay saves yet</strong><span>Click Save now or leave auto-save on while testing.</span></div>}
+          {snapshots.slice(-6).reverse().map((snapshot) => (
+            <div className="data-card" key={`${snapshot.savedAt}-${snapshot.source}`}>
+              <strong>{new Date(snapshot.savedAt).toLocaleString()} - {snapshot.source}</strong>
+              <span>{snapshot.selectedGame || 'No game'} / {snapshot.selectedSourceProfile || 'No source profile'}</span>
+              <small>{snapshot.eq.length} EQ bands saved.</small>
+            </div>
+          ))}
+        </div>
+      </Panel>
+    </section>
+  );
+}
+
 function BetaCheckInPage() {
   const [testerId, setTesterId] = useState(() => {
     const saved = localStorage.getItem('cueforge-beta-tester-id');
@@ -936,11 +1129,13 @@ function sectionTitle(id) {
     masking: 'Tactical Masking Lab',
     trial: 'Player Trial',
     beta: 'Beta Check-in',
+    saves: 'Gameplay Save',
     reports: 'Report Lab',
     calibration: 'Auto Calibration',
     eq: 'EQ Studio',
     games: 'Game Profiles',
     detect: 'Auto Detect',
+    drivers: 'Driver Layer',
     hearing: 'Personal Hearing Model',
     inventory: 'System Info'
   }[id];
@@ -1772,8 +1967,16 @@ function LiveAudioLab() {
       const freq = new Uint8Array(analyser.frequencyBinCount);
       audioRef.current = { context, stream, analyser, time, freq };
       setRunning(true);
+      const performanceMode = localStorage.getItem('cueforge-gameplay-performance-mode') === 'on';
+      let frame = 0;
 
       const tick = () => {
+        frame += 1;
+        if (performanceMode && frame % 3 !== 0) {
+          rafRef.current = requestAnimationFrame(tick);
+          return;
+        }
+
         analyser.getByteTimeDomainData(time);
         analyser.getByteFrequencyData(freq);
 
@@ -1928,6 +2131,8 @@ function AutoDetect() {
   const bridgeIem = Boolean(bridgeReport?.matches?.iemOrDac);
   const apoInstalled = Boolean(bridgeReport?.tools?.equalizerApo?.installed);
   const peaceInstalled = Boolean(bridgeReport?.tools?.peace?.installed);
+  const sonarInstalled = Boolean(bridgeReport?.tools?.steelSeriesSonar?.installed);
+  const virtualRouting = Boolean(bridgeReport?.tools?.vbCable?.installed || bridgeReport?.tools?.voicemeeter?.installed || bridgeReport?.matches?.virtualRouting);
 
   const importBridgeReport = async (event) => {
     const file = event.target.files?.[0];
@@ -2016,6 +2221,8 @@ function AutoDetect() {
           <Metric label="IEM/DAC output" value={iem || bridgeIem ? 'Likely' : 'Manual'} tone={iem || bridgeIem ? 'teal' : 'amber'} />
           <Metric label="Equalizer APO" value={apoInstalled ? 'Found' : 'Link'} tone={apoInstalled ? 'teal' : 'amber'} />
           <Metric label="Peace UI" value={peaceInstalled ? 'Found' : 'Optional'} tone={peaceInstalled ? 'teal' : 'amber'} />
+          <Metric label="Sonar" value={sonarInstalled ? 'Found' : 'Optional'} tone={sonarInstalled ? 'teal' : 'amber'} />
+          <Metric label="Virtual routing" value={virtualRouting ? 'Found' : 'Optional'} tone={virtualRouting ? 'teal' : 'amber'} />
         </div>
         <label className="bridge-import">
           <span>Import Windows bridge report</span>
@@ -2040,8 +2247,66 @@ function AutoDetect() {
           <a href="https://sourceforge.net/projects/peace-equalizer-apo-extension/" target="_blank" rel="noreferrer">Peace UI</a>
           <a href="https://github.com/jaakkopasanen/AutoEq" target="_blank" rel="noreferrer">AutoEq data</a>
           <a href="https://steelseries.com/gg/sonar" target="_blank" rel="noreferrer">SteelSeries Sonar</a>
+          <a href="https://vb-audio.com/Cable/" target="_blank" rel="noreferrer">VB-CABLE</a>
         </div>
       </Panel>
+    </section>
+  );
+}
+
+function DriverLayerPage() {
+  const [bridgeReport, setBridgeReport] = useState(null);
+  const [status, setStatus] = useState('Load a Windows bridge report to see which companion audio layers are installed.');
+
+  const loadReport = async () => {
+    const report = await getGeneratedBridgeReport();
+    if (!report) {
+      setStatus('No bridge report found yet. Run Auto Detect > Windows scan in desktop mode, or import the report there.');
+      return;
+    }
+    setBridgeReport(report);
+    setStatus('Driver layer scan loaded.');
+  };
+
+  useEffect(() => {
+    loadReport();
+  }, []);
+
+  const toolState = {
+    'Equalizer APO': Boolean(bridgeReport?.tools?.equalizerApo?.installed),
+    'Peace UI': Boolean(bridgeReport?.tools?.peace?.installed),
+    'SteelSeries Sonar': Boolean(bridgeReport?.tools?.steelSeriesSonar?.installed),
+    'VB-CABLE / Voicemeeter': Boolean(bridgeReport?.tools?.vbCable?.installed || bridgeReport?.tools?.voicemeeter?.installed || bridgeReport?.matches?.virtualRouting),
+    'CueForge Native APO': false
+  };
+
+  return (
+    <section className="grid two">
+      <Panel className="wide" title="Driver Layer Strategy" icon={SlidersHorizontal}>
+        <p>{status}</p>
+        <div className="live-actions">
+          <button className="primary" onClick={loadReport}><Search size={18} /> Refresh layer scan</button>
+        </div>
+        <div className="metric-row selftest-summary">
+          <Metric label="APO engine" value={toolState['Equalizer APO'] ? 'Found' : 'Add'} tone={toolState['Equalizer APO'] ? 'teal' : 'amber'} />
+          <Metric label="Mixer layer" value={toolState['SteelSeries Sonar'] ? 'Found' : 'Optional'} tone={toolState['SteelSeries Sonar'] ? 'teal' : 'amber'} />
+          <Metric label="Routing layer" value={toolState['VB-CABLE / Voicemeeter'] ? 'Found' : 'Later'} tone={toolState['VB-CABLE / Voicemeeter'] ? 'teal' : 'amber'} />
+        </div>
+      </Panel>
+      {driverLayers.map((layer) => (
+        <Panel title={layer.name} icon={SlidersHorizontal} key={layer.name}>
+          <div className="data-card">
+            <strong>{toolState[layer.name] ? 'Detected' : layer.name === 'CueForge Native APO' ? 'Future build' : 'Not detected yet'}</strong>
+            <span>{layer.role}</span>
+          </div>
+          <p>{layer.fit}</p>
+          <ul className="clean-list">
+            <li>{layer.action}</li>
+            <li>{layer.risk}</li>
+          </ul>
+          <a className="button-link" href={layer.url} target="_blank" rel="noreferrer">Open source</a>
+        </Panel>
+      ))}
     </section>
   );
 }

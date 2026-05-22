@@ -39,8 +39,10 @@ The current web build is the right foundation for safe testing, tuning, feedback
 - Player Setup Gate that scores readiness, requests mic permission, checks browser audio, confirms bridge/APO status, creates setup reports, and routes testers through the right flow.
 - Player Trial with a repeatable match script, post-match ratings, next-fix recommendations, and an exportable tester packet.
 - Beta Check-in with anonymous local tester IDs, proof codes, active-day counts, and exportable packets for real beta feedback without hidden telemetry.
+- Gameplay Save with throttled local snapshots and a performance mode that keeps live meters lighter during matches.
 - Auto Self Test for browser audio APIs, devices, Windows bridge report, autotune, hearing model, storage, tone engine, and mic permission.
 - Auto Detect for browser audio devices plus an optional Windows bridge report.
+- Driver Layer for detecting trusted companion audio layers such as Equalizer APO, Peace, Sonar, VB-CABLE, and Voicemeeter without silently changing routing.
 - Live Mic Lab with level, voice presence, noise estimate, clip risk, and HyperX-oriented guidance.
 - IEM/headphone checks for left, right, center, and sweep testing.
 - Auto Calibration wizard for output target, game focus, treble sensitivity, bass preference, footstep focus, and mic boom/noise.
