@@ -24,7 +24,9 @@ A desktop shell is the correct next layer when CueForge needs native control. Th
 - Backing up existing configs before changes.
 - Running setup checks without browser permission friction.
 
-Recommended path: Tauri or Electron with a locked-down native bridge. Keep the bridge narrow, audited, and user-approved.
+Current path: Electron with a locked-down preload bridge. The first desktop bridge action runs the existing Windows audio scanner from inside CueForge, stores the report in the app data folder, and returns the parsed result to Auto Detect.
+
+Future native writes should stay behind the same bridge and must be reviewed separately.
 
 ## Native Action Rules
 

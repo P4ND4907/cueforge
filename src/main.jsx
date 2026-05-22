@@ -1181,6 +1181,15 @@ async function getBrowserAudioDevices() {
 }
 
 async function getGeneratedBridgeReport() {
+  if (window.cueforgeDesktop?.readBridgeReport) {
+    try {
+      const report = await window.cueforgeDesktop.readBridgeReport();
+      if (report) return report;
+    } catch {
+      // Fall through to the web-served bridge report.
+    }
+  }
+
   try {
     const response = await withTimeout(fetch('/tools/cueforge-audio-setup-report.json', { cache: 'no-store' }), 1800, null);
     if (!response) return null;
@@ -1229,8 +1238,7 @@ function AudioDnaPage({ eq }) {
   });
 
   useEffect(() => {
-    fetch('/tools/cueforge-audio-setup-report.json', { cache: 'no-store' })
-      .then((response) => (response.ok ? response.json() : null))
+    getGeneratedBridgeReport()
       .then((report) => {
         if (!report) return;
         setBridgeLoaded(true);
@@ -1761,9 +1769,16 @@ function AutoDetect() {
   const [devices, setDevices] = useState([]);
   const [status, setStatus] = useState('Auto scan starts when this page opens.');
   const [bridgeReport, setBridgeReport] = useState(null);
+  const [desktopInfo, setDesktopInfo] = useState(null);
+  const [desktopBusy, setDesktopBusy] = useState(false);
 
   useEffect(() => {
     scanDevices({ auto: true });
+    if (window.cueforgeDesktop?.info) {
+      window.cueforgeDesktop.info()
+        .then(setDesktopInfo)
+        .catch(() => setDesktopInfo(null));
+    }
   }, []);
 
   const scanDevices = async ({ auto = false } = {}) => {
@@ -1809,14 +1824,41 @@ function AutoDetect() {
 
   const loadGeneratedBridgeReport = async () => {
     try {
-      const response = await fetch('/tools/cueforge-audio-setup-report.json', { cache: 'no-store' });
-      if (!response.ok) throw new Error('missing report');
-      const parsed = await response.json();
+      const parsed = await getGeneratedBridgeReport();
+      if (!parsed) throw new Error('missing report');
       setBridgeReport(parsed);
       setStatus('Loaded generated Windows bridge report locally.');
     } catch {
       setStatus('No generated bridge report found yet. Run tools/Scan-AudioSetup.ps1, then try again.');
     }
+  };
+
+  const runDesktopBridgeScan = async () => {
+    if (!window.cueforgeDesktop?.scanAudioSetup) {
+      setStatus('Desktop scan is only available in the CueForge desktop shell.');
+      return;
+    }
+
+    setDesktopBusy(true);
+    setStatus('Running Windows audio setup scan. This reads device/tool info and writes a local report.');
+    try {
+      const result = await window.cueforgeDesktop.scanAudioSetup();
+      if (!result?.ok) {
+        setStatus(result?.error || 'Desktop scan failed.');
+        return;
+      }
+      setBridgeReport(result.report);
+      setStatus(`Desktop scan complete. Report saved to ${result.reportPath}.`);
+    } catch {
+      setStatus('Desktop scan failed before a report could be created.');
+    } finally {
+      setDesktopBusy(false);
+    }
+  };
+
+  const openBridgeFolder = async () => {
+    if (!window.cueforgeDesktop?.openBridgeFolder) return;
+    await window.cueforgeDesktop.openBridgeFolder();
   };
 
   return (
@@ -1836,6 +1878,19 @@ function AutoDetect() {
         </div>
       </Panel>
       <Panel title="Auto Setup Links" icon={Download}>
+        {desktopInfo && (
+          <div className="desktop-bridge">
+            <strong>Desktop shell active</strong>
+            <span>Native Windows scan available. Mic permission is granted inside CueForge, and device/tool detection runs locally.</span>
+            <small>{desktopInfo.reportPath}</small>
+            <div className="live-actions">
+              <button className="primary" onClick={runDesktopBridgeScan} disabled={desktopBusy}>
+                <Search size={18} /> {desktopBusy ? 'Scanning...' : 'Run Windows scan'}
+              </button>
+              <button className="ghost" onClick={openBridgeFolder}>Open report folder</button>
+            </div>
+          </div>
+        )}
         <div className="detect-result">
           <Metric label="HyperX mic" value={hyperx || bridgeHyperx ? 'Seen' : 'Ready'} tone={hyperx || bridgeHyperx ? 'teal' : 'amber'} />
           <Metric label="IEM/DAC output" value={iem || bridgeIem ? 'Likely' : 'Manual'} tone={iem || bridgeIem ? 'teal' : 'amber'} />
@@ -1858,7 +1913,7 @@ function AutoDetect() {
           <li>Use the built-in Generic IEM FPS profile as your first output config.</li>
           <li>Use HyperX mic starting point: 80-90% input gain, reduce if clipping appears.</li>
           <li>Export APO config from EQ Studio, then paste/import into Equalizer APO or Peace.</li>
-          <li>Optional native bridge: run `tools/Scan-AudioSetup.ps1`, then import `cueforge-audio-setup-report.json` here.</li>
+          <li>{desktopInfo ? 'Desktop bridge: run Windows scan here, then use the loaded report for real device names.' : 'Optional native bridge: run `tools/Scan-AudioSetup.ps1`, then import `cueforge-audio-setup-report.json` here.'}</li>
         </ul>
         <div className="link-grid">
           <a href="https://sourceforge.net/projects/equalizerapo/" target="_blank" rel="noreferrer">Equalizer APO</a>
@@ -1906,7 +1961,7 @@ function Inventory() {
           <li>Runs locally in the browser with optional Windows bridge data.</li>
           <li>Includes live mic analysis, EQ sliders, game presets, hearing model, and APO export.</li>
           <li>Does not silently modify Windows audio drivers. You stay in control of apply steps.</li>
-          <li>Ready for a native desktop shell when direct device control is added.</li>
+          <li>Desktop shell can run the Windows scan from inside CueForge and load the bridge report automatically.</li>
         </ul>
       </Panel>
     </section>

@@ -70,6 +70,18 @@ Public page:
 https://p4nd4907.github.io/cueforge/
 ```
 
+## Desktop Shell
+
+Use the desktop shell when you want CueForge to handle the Windows bridge step from inside the app:
+
+```powershell
+npm run desktop
+```
+
+The desktop shell wraps the same CueForge UI, grants mic permission inside the app window, and adds a native Auto Detect action that runs the local Windows audio scan. It reads device/tool information and writes a local bridge report under the app data folder.
+
+Native actions are still explicit. CueForge does not silently install drivers, change Windows routing, or rewrite Equalizer APO configs in the background.
+
 ## Optional Windows Bridge
 
 Run this if you want the app to see installed tools and Windows audio devices:
