@@ -275,6 +275,41 @@ The app and Discord templates push players to diagnose the cause, not just compl
 
 Goal: turn public attention into useful feedback without spam.
 
+### App Development News
+
+Roadmap updates should stay focused on the app, not generic promotion.
+
+Use roadmap/news posts for:
+
+```text
+What shipped in CueForge
+What is being tested next
+What future ideas are being considered
+Which app screens need player feedback
+Which bug classes were fixed
+Which game/audio problems are shaping the next build
+```
+
+Do not use roadmap/news posts for:
+
+```text
+Repeated link drops
+Generic server chatter
+Reward farming
+Unverified claims
+Drama from game communities
+```
+
+The clean split:
+
+```text
+#lab-updates - app development news, roadmap, test nights, future ideas
+#signal-setups - player gear chains
+#match-checkins - before/after match evidence
+#bug-replays - reproducible app or audio-flow problems
+#clip-evidence - proof clips and timestamps
+```
+
 ### Discord Hub
 
 Current status:
@@ -294,7 +329,7 @@ Primary rooms:
 ```text
 #start-here - first stop
 #rules - safety and privacy rules
-#lab-updates - progress, roll calls, release notes
+#lab-updates - app development news, roadmap, release notes, future ideas
 #signal-setups - full gear/audio chain
 #match-checkins - before/after match feedback
 #bug-replays - reproducible problems
@@ -490,7 +525,7 @@ Use this as the first Discord/X/profile update after the plan is published.
 ```text
 CueForge update 001:
 
-The Panda Lab is no longer just a pile of channels. Discord onboarding is live, the first tester path is mapped, and the master roadmap is public.
+The Panda Lab roadmap is live. This is where app development news, build progress, and future CueForge ideas will live.
 
 What is ready to test:
 - Setup Gate and Self Test
@@ -508,6 +543,13 @@ What I need next:
 - Tarkov, Siege, COD/Warzone, Apex, CS2, Valorant players
 
 Run one real match. Tell me what helped, what got worse, and whether the problem felt like tuning, the game, Discord, Windows routing, or the mic chain.
+
+Future ideas I want tester input on:
+- desktop app flow for native device detection
+- cleaner Equalizer APO apply/backup helper
+- game-specific diagnosis pages
+- better proof clips and report replay
+- Discord bot commands for check-ins and bug templates
 
 App: https://p4nd4907.github.io/cueforge/
 Discord: https://discord.gg/vyQwyJ49v

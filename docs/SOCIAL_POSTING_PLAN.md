@@ -140,6 +140,13 @@ Primary ask:
 Run one real match and report what changed.
 ```
 
+Roadmap/news angle:
+
+```text
+Keep #lab-updates focused on app development news, future ideas, build progress, and what testers can influence next.
+Use the other rooms for raw setup chains, match notes, bug replays, and clips.
+```
+
 Post order:
 
 ```text
