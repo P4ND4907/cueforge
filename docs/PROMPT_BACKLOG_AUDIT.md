@@ -4,6 +4,8 @@ Date: May 22, 2026.
 
 This is a checkpoint against the major requests from the build session.
 
+Latest queue pass: open, partial, blocked, and deliberately rejected items are now consolidated in `docs/OPEN_TASK_QUEUE.md`.
+
 ## Covered
 
 - Local CueForge app rebuilt from the research task and renamed away from the old project identity.
@@ -25,6 +27,7 @@ This is a checkpoint against the major requests from the build session.
 - Director script for the realistic panda bamboo pond cinematic.
 - Public `docs/assets` build refreshed so GitHub Pages no longer serves the old setup bundle.
 - Fresh live browser QA for the Setup Journey: desktop nonblank/animated 3D canvas, click-to-start soundwalk, reflection stage, app handoff, no setup nav leak, and mobile no-overflow check.
+- Panda Lab social identity added inline with the app logo: `P4ND4907`, `@CueForge907`, and quick links for X, Reddit, GitHub, and Discord.
 
 ## Partially Covered
 
@@ -37,9 +40,14 @@ This is a checkpoint against the major requests from the build session.
 
 ## Still Open
 
+The full ordered queue now lives in `docs/OPEN_TASK_QUEUE.md`.
+
+Top open items:
+
 - Smoke-test a packaged Electron portable build as the recommended Windows build for players who need native scan/setup flow.
 - Add the photoreal panda/bamboo/pond cinematic asset as `webm`/`mp4` with a reduced-motion fallback.
 - Run a fresh privacy/export audit after the new setup profile fields are included in reports or export packs.
+- Reconcile Discord live status docs against the actual server settings.
 - Decide whether `setupReadiness.js` remains as a backend helper for tester readiness or gets retired now that the old setup UI is gone.
 - If Discord bots are shipped, keep them permission-light and avoid self-bots, fake reward farming, auto-watchers, or spam automation.
 
