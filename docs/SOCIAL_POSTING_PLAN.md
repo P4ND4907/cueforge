@@ -9,6 +9,7 @@ App: https://p4nd4907.github.io/cueforge/
 Discord: https://discord.gg/vyQwyJ49v
 GitHub: https://github.com/P4ND4907/cueforge
 Feedback: https://github.com/P4ND4907/cueforge/issues/1
+X: https://x.com/CueForge907
 ```
 
 ## Hashtag Bank

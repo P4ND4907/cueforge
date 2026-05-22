@@ -5,9 +5,15 @@ Snapshot date: May 22, 2026.
 ## Live Status
 
 ```text
-X posting attempted: May 22, 2026.
-Result: not posted because X redirected to login.
-Next action: log into X in Chrome, then post "General Beta Invite" first.
+X profile updated: May 22, 2026.
+Account: @CueForge907
+Display name: CueForge
+Bio: Free FPS audio test lab. Mic checks, IEM/headset tuning, Equalizer APO exports, and real match feedback. Proof over hype.
+Location: Panda Lab / FPS Audio
+Website: https://p4nd4907.github.io/cueforge/
+Avatar: assets/discord/cueforge-server-pfp.png
+Header: assets/discord/cueforge-profile-header.png
+First post: https://x.com/CueForge907/status/2057751260326174727
 ```
 
 ## Posting Guardrails
