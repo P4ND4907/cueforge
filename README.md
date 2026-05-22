@@ -54,6 +54,7 @@ The current web build is the right foundation for safe testing, tuning, feedback
 - Player Trial with a repeatable match script, post-match ratings, next-fix recommendations, and an exportable tester packet.
 - Beta Check-in with anonymous local tester IDs, proof codes, active-day counts, and exportable packets for real beta feedback without hidden telemetry.
 - Gameplay Save with throttled local snapshots and a performance mode that keeps live meters lighter during matches.
+- Panda Notes, a right-click UI debugger for tagging confusing text, broken-feeling controls, layout issues, missing feedback, slow spots, and ideas. Notes stay local and attach only to reports/export packs the tester chooses to send.
 - Auto Self Test for browser audio APIs, devices, Windows bridge report, autotune, hearing model, storage, tone engine, and mic permission.
 - Auto Detect for browser audio devices plus an optional Windows bridge report.
 - Auto Detect copy/paste setup kit for Discord, Reddit, GitHub issues, and beta check-ins without raw device IDs.

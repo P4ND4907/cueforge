@@ -60,6 +60,12 @@ import {
   shouldSaveGameplaySnapshot
 } from './gameplaySave.js';
 import { analyzeAudioFrame, createEmptySignalAnalysis, signalBands } from './signalAnalyzer.js';
+import {
+  createUiFeedbackNote,
+  summarizeUiFeedback,
+  UI_FEEDBACK_KEY,
+  uiFeedbackTags
+} from './uiFeedback.js';
 import './styles.css';
 
 const headsetProfiles = [
@@ -161,6 +167,10 @@ function App() {
   const [selectedSourceProfile, setSelectedSourceProfile] = useState('iemFps');
   const [saved, setSaved] = useState(false);
   const [replayNotice, setReplayNotice] = useState('');
+  const [uiNotes, setUiNotes] = useState(() => getSavedJson(UI_FEEDBACK_KEY) || []);
+  const [uiNoteDraft, setUiNoteDraft] = useState(null);
+  const [uiNoteNotice, setUiNoteNotice] = useState(() => localStorage.getItem('cueforge-ui-note-notice-dismissed') !== 'yes');
+  const [uiNoteStatus, setUiNoteStatus] = useState('Right-click any app area to leave a developer note.');
   const configRef = useRef(null);
   const apoConfig = useMemo(() => buildApoConfig(eq), [eq]);
   const sourceConfig = useMemo(
@@ -225,12 +235,60 @@ function App() {
       apoConfig,
       calibration,
       hearing: latestHearingProfile(),
-      dna: latestDnaProfile()
+      dna: latestDnaProfile(),
+      uiFeedbackNotes: uiNotes
     });
 
     Object.entries(pack.files).forEach(([filename, text], index) => {
       setTimeout(() => downloadTextFile(`cueforge-${filename}`, text), index * 160);
     });
+  };
+
+  const handleUiContextMenu = (event) => {
+    const target = event.target;
+    if (!(target instanceof Element) || target.closest('.ui-note-popover')) return;
+    event.preventDefault();
+
+    const rect = target.getBoundingClientRect();
+    setUiNoteDraft({
+      tag: 'confusing',
+      note: '',
+      page: sectionTitle(active),
+      target: describeFeedbackTarget(target),
+      viewport: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        xPercent: Math.round((event.clientX / Math.max(1, window.innerWidth)) * 100),
+        yPercent: Math.round((event.clientY / Math.max(1, window.innerHeight)) * 100)
+      },
+      position: {
+        x: Math.max(16, Math.min(event.clientX, window.innerWidth - 360)),
+        y: Math.max(16, Math.min(event.clientY, window.innerHeight - 260))
+      },
+      rect: {
+        width: Math.round(rect.width),
+        height: Math.round(rect.height)
+      }
+    });
+  };
+
+  const saveUiNote = () => {
+    if (!uiNoteDraft?.note.trim()) {
+      setUiNoteStatus('Add a quick note first, then save it.');
+      return;
+    }
+
+    const nextNote = createUiFeedbackNote(uiNoteDraft);
+    const next = [...uiNotes, nextNote].slice(-80);
+    setUiNotes(next);
+    safeSetJson(UI_FEEDBACK_KEY, next);
+    setUiNoteDraft(null);
+    setUiNoteStatus('Saved locally. It will attach to the next redacted report or export pack.');
+  };
+
+  const dismissUiNoteNotice = () => {
+    localStorage.setItem('cueforge-ui-note-notice-dismissed', 'yes');
+    setUiNoteNotice(false);
   };
 
   return (
@@ -277,7 +335,7 @@ function App() {
         </div>
       </aside>
 
-      <main>
+      <main onContextMenu={handleUiContextMenu}>
         <header className="topbar">
           <div>
             <h1>{active === 'dashboard' ? 'Audio Command Center' : sectionTitle(active)}</h1>
@@ -288,6 +346,22 @@ function App() {
             <button className="primary" onClick={downloadConfig}><Download size={18} /> Export APO</button>
           </div>
         </header>
+        {uiNoteNotice && (
+          <div className="tester-note-banner">
+            <Bug size={18} />
+            <span>Personal UI debugger is on: right-click any CueForge area to tag a note. Notes stay local and only ride with the redacted report or export pack you choose to send.</span>
+            <button className="ghost" onClick={dismissUiNoteNotice}>Got it</button>
+          </div>
+        )}
+        {uiNoteStatus && <p className="ui-note-status">{uiNoteStatus}</p>}
+        {uiNoteDraft && (
+          <UiNotePopover
+            draft={uiNoteDraft}
+            onChange={setUiNoteDraft}
+            onCancel={() => setUiNoteDraft(null)}
+            onSave={saveUiNote}
+          />
+        )}
 
         {active === 'setup' && (
           <PlayerSetupGate
@@ -359,6 +433,7 @@ function App() {
             analysis={analysis}
             active={active}
             replayNotice={replayNotice}
+            uiNotes={uiNotes}
             onReplay={(state) => {
               setEq(state.eq);
               setSample(state.sample || sample);
@@ -486,8 +561,67 @@ function App() {
           </section>
         )}
 
-        {active === 'inventory' && <Inventory onOpen={setActive} />}
+        {active === 'inventory' && <Inventory onOpen={setActive} uiNotes={uiNotes} onClearUiNotes={() => {
+          setUiNotes([]);
+          safeSetJson(UI_FEEDBACK_KEY, []);
+          setUiNoteStatus('Developer UI notes cleared from this browser.');
+        }} />}
       </main>
+    </div>
+  );
+}
+
+function describeFeedbackTarget(target) {
+  const panel = target.closest('.panel')?.querySelector('.panel-title span')?.textContent || '';
+  const aria = target.getAttribute('aria-label') || target.getAttribute('title') || '';
+  const text = target.textContent?.replace(/\s+/g, ' ').trim() || '';
+  const label = aria || text || panel || target.tagName.toLowerCase();
+
+  return {
+    label: label.slice(0, 120),
+    role: target.getAttribute('role') || '',
+    tagName: target.tagName,
+    panel
+  };
+}
+
+function UiNotePopover({ draft, onChange, onCancel, onSave }) {
+  return (
+    <div
+      className="ui-note-popover"
+      style={{ left: `${draft.position.x}px`, top: `${draft.position.y}px` }}
+      role="dialog"
+      aria-label="Developer UI note"
+    >
+      <div className="ui-note-head">
+        <strong>Panda note</strong>
+        <button className="ghost" onClick={onCancel}>Close</button>
+      </div>
+      <p>Tag what felt off here. This stays local until it is included in a report/export you send.</p>
+      <div className="data-card">
+        <strong>{draft.target.panel || draft.page}</strong>
+        <span>{draft.target.label}</span>
+        <small>{draft.page} / {draft.viewport.xPercent}% x {draft.viewport.yPercent}%</small>
+      </div>
+      <label className="field">
+        <span>Retrieval tag</span>
+        <select value={draft.tag} onChange={(event) => onChange({ ...draft, tag: event.target.value })}>
+          {uiFeedbackTags.map((tag) => <option key={tag} value={tag}>{tag}</option>)}
+        </select>
+      </label>
+      <label className="field">
+        <span>Note for developer</span>
+        <textarea
+          value={draft.note}
+          onChange={(event) => onChange({ ...draft, note: event.target.value })}
+          placeholder="What felt confusing, broken, too small, missing, or annoying?"
+          autoFocus
+        />
+      </label>
+      <div className="live-actions">
+        <button className="primary" onClick={onSave}>Save note</button>
+        <button className="ghost" onClick={onCancel}>Cancel</button>
+      </div>
     </div>
   );
 }
@@ -717,6 +851,7 @@ function PlayerSetupGate({ eq, apoConfig, onGo }) {
       bridgeReport: bridge,
       browserDevices: devices,
       selfTestResults: getSavedJson('cueforge-self-test-results') || [],
+      uiFeedbackNotes: getSavedJson(UI_FEEDBACK_KEY) || [],
       notes: 'Quick setup recovery report.'
     });
     safeSetJson('cueforge-last-issue-report', report);
@@ -1664,6 +1799,7 @@ function ReportLabPage({
   analysis,
   active,
   replayNotice,
+  uiNotes = [],
   onReplay
 }) {
   const [notes, setNotes] = useState('Describe what happened, what game was running, and what you expected to hear.');
@@ -1688,11 +1824,12 @@ function ReportLabPage({
         bridgeReport: null,
         browserDevices: [],
         selfTestResults: getSavedJson('cueforge-self-test-results') || [],
+        uiFeedbackNotes: uiNotes,
         notes
       });
       setLastReport(report);
       safeSetJson('cueforge-last-issue-report', report);
-      setStatus(`Redacted report ready: ${report.diagnostics.browserDevices.length} browser audio devices, ${report.diagnostics.selfTestResults.length} self-test rows.`);
+      setStatus(`Redacted report ready: ${report.diagnostics.browserDevices.length} browser audio devices, ${report.diagnostics.selfTestResults.length} self-test rows, ${report.diagnostics.uiFeedbackNotes.length} UI notes.`);
     } catch {
       const report = buildIssueReport({
         eq,
@@ -1707,6 +1844,7 @@ function ReportLabPage({
         bridgeReport: null,
         browserDevices: [],
         selfTestResults: [],
+        uiFeedbackNotes: uiNotes,
         notes
       });
       setLastReport(report);
@@ -1798,6 +1936,7 @@ function ReportLabPage({
               <Metric label="EQ bands" value={String(report.reproducibleState.eq.length)} tone="teal" />
               <Metric label="Devices" value={String(report.diagnostics.browserDevices.length)} tone="amber" />
               <Metric label="Self tests" value={String(report.diagnostics.selfTestResults.length)} tone="teal" />
+              <Metric label="UI notes" value={String(report.diagnostics.uiFeedbackNotes?.length || 0)} tone={report.diagnostics.uiFeedbackNotes?.length ? 'teal' : 'amber'} />
             </div>
             <pre>{JSON.stringify(report, null, 2)}</pre>
           </div>
@@ -2730,12 +2869,13 @@ function autoNameDevice(device, index, bridgeReport) {
   return `Audio device ${index + 1} - permission needed for real name`;
 }
 
-function Inventory({ onOpen }) {
+function Inventory({ onOpen, uiNotes = [], onClearUiNotes }) {
   const selfTests = getSavedJson('cueforge-self-test-results') || [];
   const evidence = getSavedJson('cueforge-audio-evidence') || [];
   const checkIns = getSavedJson('cueforge-beta-checkins') || [];
   const snapshots = getSavedJson('cueforge-gameplay-snapshots') || [];
   const lastReport = getSavedJson('cueforge-last-issue-report');
+  const uiSummary = summarizeUiFeedback(uiNotes);
   const desktopReady = Boolean(window.cueforgeDesktop?.isDesktop);
   const passedTests = selfTests.filter((item) => item.status === 'pass').length;
   const totalTests = selfTests.length;
@@ -2746,6 +2886,7 @@ function Inventory({ onOpen }) {
       (checkIns.length ? 12 : 0) +
       (snapshots.length ? 8 : 0) +
       (lastReport ? 8 : 0) +
+      (uiSummary.total ? 4 : 0) +
       (desktopReady ? 4 : 0),
     0,
     100
@@ -2778,6 +2919,7 @@ function Inventory({ onOpen }) {
           <Metric label="Evidence" value={String(evidence.length)} tone={evidence.length ? 'teal' : 'amber'} />
           <Metric label="Check-ins" value={String(checkIns.length)} tone={checkIns.length ? 'teal' : 'amber'} />
           <Metric label="Saves" value={String(snapshots.length)} tone={snapshots.length ? 'teal' : 'amber'} />
+          <Metric label="UI notes" value={String(uiSummary.total)} tone={uiSummary.total ? 'teal' : 'amber'} />
         </div>
       </Panel>
 
@@ -2842,6 +2984,30 @@ function Inventory({ onOpen }) {
           <button className="ghost" onClick={() => onOpen('reports')}><Bug size={18} /> Create report</button>
         </div>
         <p className="callout">{lastReport ? 'A replayable report exists locally. Import/export can prove the current state.' : 'Create one report after the next real test so failures can be replayed.'}</p>
+      </Panel>
+
+      <Panel title="Developer UI Notes" icon={Bug}>
+        <p>Right-click notes are private to the local report/export loop. They are not posted publicly and they do not leave the machine unless a tester sends the packet.</p>
+        <div className="metric-row selftest-summary">
+          <Metric label="Captured" value={String(uiSummary.total)} tone={uiSummary.total ? 'teal' : 'amber'} />
+          <Metric label="Top tag" value={uiSummary.topTag} tone={uiSummary.total ? 'teal' : 'amber'} />
+        </div>
+        {uiSummary.latest ? (
+          <div className="data-card">
+            <strong>{uiSummary.latest.tag} / {uiSummary.latest.page}</strong>
+            <span>{uiSummary.latest.note}</span>
+            <small>{uiSummary.latest.target.panel || uiSummary.latest.target.label}</small>
+          </div>
+        ) : (
+          <div className="data-card">
+            <strong>No notes yet</strong>
+            <span>Right-click any app area to tag confusing text, layout issues, broken controls, or ideas.</span>
+          </div>
+        )}
+        <div className="live-actions">
+          <button className="ghost" onClick={() => downloadTextFile('cueforge-ui-feedback-notes.json', JSON.stringify(uiNotes, null, 2))} disabled={!uiNotes.length}><Download size={18} /> Export notes</button>
+          <button className="ghost" onClick={onClearUiNotes} disabled={!uiNotes.length}><RotateCcw size={18} /> Clear notes</button>
+        </div>
       </Panel>
     </section>
   );

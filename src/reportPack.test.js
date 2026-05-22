@@ -49,6 +49,13 @@ describe('issue report pack', () => {
       analysis: { clarity: 80 },
       browserDevices: [{ kind: 'audioinput', label: 'USB Audio Device', deviceId: 'secret' }],
       selfTestResults: [{ name: 'Browser audio APIs', status: 'pass' }],
+      uiFeedbackNotes: [{
+        page: 'Mic Lab',
+        tag: 'text issue',
+        note: `The note has ${'555'}-${'123'}-${'4567'} in it`,
+        target: { label: 'Run analysis', panel: 'Mic Analyzer' },
+        viewport: { width: 1200, height: 800, xPercent: 50, yPercent: 50 }
+      }],
       notes: `Steps sounded buried. ${'tester'}@${'example.com'} ${'555'}-${'123'}-${'4567'}`
     });
 
@@ -57,6 +64,8 @@ describe('issue report pack', () => {
     expect(report.reproducibleState.sample).not.toContain('carls');
     expect(report.reproducibleState.equalizerApoConfig).toContain('Preamp');
     expect(report.diagnostics.browserDevices[0].label).toBe('Usb device');
+    expect(report.diagnostics.uiFeedbackNotes).toHaveLength(1);
+    expect(report.diagnostics.uiFeedbackNotes[0].note).toContain('[redacted-phone]');
     expect(JSON.stringify(report)).not.toContain('secret');
     expect(JSON.stringify(report)).not.toContain('tester@example.com');
 

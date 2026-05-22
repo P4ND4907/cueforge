@@ -25,6 +25,8 @@ Read and verified for the current local release build.
 - `src/betaCheckIn.test.js` - unit coverage for beta IDs, proofed check-ins, summaries, and privacy flags.
 - `src/gameplaySave.js` - throttled gameplay save snapshots and lightweight performance-save settings.
 - `src/gameplaySave.test.js` - unit coverage for snapshot bounds, trimming, and write throttling.
+- `src/uiFeedback.js` - right-click developer UI notes with retrieval tags, area metadata, redaction, and summary helpers.
+- `src/uiFeedback.test.js` - unit coverage for UI note redaction, caps, and summaries.
 - `src/blindMatch.js` - A/B preference-learning tuner that converts choices into a personal EQ curve.
 - `src/blindMatch.test.js` - unit coverage for Blind Match learned curves.
 - `src/maskingLab.js` - game-audio masking stress-test and anti-masking EQ generator.
@@ -42,6 +44,7 @@ Read and verified for the current local release build.
 - `docs/HIGH_END_ANALYZER_PLAN.md` - analyzer architecture, open-source audio stack options, and next build targets.
 - `docs/MASTER_PLAN.md` - public roadmap, master map, workstreams, release timeline, and update 001 posting plan.
 - `docs/updates/2026-05-22-update-001.md` - first public update copy for Discord, X, and Reddit-safe profile posting.
+- `docs/updates/2026-05-22-update-002.md` - Panda Notes update copy for the right-click UI debugger.
 - `docs/DISCORD_FINAL_BUILDOUT.md` - live Discord status, roles, onboarding, bot strategy, and channel setup.
 - `docs/DISCORD_SETUP.md` - Discord setup guide, welcome copy, onboarding state, and tester formats.
 - `docs/SOCIAL_POSTING_PLAN.md` - social cadence, tag strategy, and update 001 image map.
@@ -62,7 +65,7 @@ Read and verified for the current local release build.
 ## Verification
 
 - `npm.cmd install` completed.
-- `npm.cmd test` completed: 15 test files / 38 tests passed.
+- `npm.cmd test` completed: 16 test files / 40 tests passed.
 - `npm.cmd run build` completed.
 - `npm.cmd audit --audit-level=moderate` completed with 0 vulnerabilities.
 - Local server responded at `http://127.0.0.1:5177`.

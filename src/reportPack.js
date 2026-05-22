@@ -1,3 +1,5 @@
+import { sanitizeUiFeedbackNotes } from './uiFeedback.js';
+
 const REPORT_SCHEMA = 'cueforge.issue-report.v1';
 
 const SENSITIVE_KEYS = new Set([
@@ -80,6 +82,7 @@ export function buildIssueReport({
   bridgeReport,
   browserDevices,
   selfTestResults,
+  uiFeedbackNotes = [],
   notes = ''
 }) {
   const safeDevices = summarizeDevices(browserDevices);
@@ -112,7 +115,8 @@ export function buildIssueReport({
       localStorage: hasLocalStorage(),
       browserDevices: safeDevices,
       bridgeReport: redactedBridge,
-      selfTestResults: selfTestResults || []
+      selfTestResults: selfTestResults || [],
+      uiFeedbackNotes: sanitizeUiFeedbackNotes(uiFeedbackNotes)
     },
     notes: sanitizeUserText(notes)
   };

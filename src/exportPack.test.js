@@ -8,13 +8,16 @@ describe('export pack', () => {
       apoConfig,
       calibration: { eq: [-1, 0, 1] },
       hearing: { score: { answered: 2 } },
-      dna: { id: 'Tactical Cue Hunter' }
+      dna: { id: 'Tactical Cue Hunter' },
+      uiFeedbackNotes: [{ tag: 'layout issue', note: 'button text wraps badly' }]
     });
 
     expect(pack.files['equalizer-apo-config.txt']).toContain('Filter 1');
     expect(pack.files['calibration.json']).toContain('"eq"');
     expect(pack.files['audio-dna.json']).toContain('Tactical Cue Hunter');
+    expect(pack.files['ui-feedback-notes.json']).toContain('layout issue');
     expect(pack.files['README.txt']).toContain('Open Equalizer APO');
+    expect(pack.files['README.txt']).toContain('UI feedback notes included: 1');
   });
 
   it('summarizes missing optional profiles clearly', () => {

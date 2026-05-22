@@ -108,6 +108,67 @@ main { padding: 28px; overflow: hidden; }
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+
+.tester-note-banner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin: -8px 0 20px;
+  padding: 12px;
+  border: 1px solid rgba(18,201,154,0.24);
+  border-radius: 8px;
+  background: rgba(18,201,154,0.08);
+  color: #d8f7f0;
+}
+
+.tester-note-banner svg {
+  color: #12c99a;
+}
+
+.tester-note-banner span {
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+.ui-note-status {
+  margin: -8px 0 16px;
+  color: #8fb0b4;
+  font-size: 13px;
+}
+
+.ui-note-popover {
+  position: fixed;
+  z-index: 30;
+  width: min(340px, calc(100vw - 32px));
+  padding: 14px;
+  border: 1px solid rgba(18,201,154,0.3);
+  border-radius: 8px;
+  background: rgba(8, 17, 22, 0.98);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.48);
+}
+
+.ui-note-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.ui-note-head strong {
+  color: #edf8f7;
+  font-size: 17px;
+}
+
+.ui-note-popover p {
+  margin: 8px 0 12px;
+  font-size: 13px;
+}
+
+.ui-note-popover textarea {
+  min-height: 100px;
+}
+
 h1 { margin: 0; font-size: 34px; letter-spacing: 0; line-height: 1.08; }
 h2 { margin: 8px 0 10px; font-size: 21px; line-height: 1.16; }
 p {
@@ -952,6 +1013,7 @@ pre {
 @media (max-width: 540px) {
   .sidebar { padding: 18px; }
   nav { grid-template-columns: 1fr; }
+  .tester-note-banner { grid-template-columns: 1fr; }
   .live-actions > * { flex: 1 1 100%; }
   .community-hero, .metric-row, .meter-grid { grid-template-columns: 1fr; }
   .module-row { grid-template-columns: auto minmax(0, 1fr); }

@@ -1,4 +1,8 @@
-export function buildSetupReadme({ apoConfig, calibration, hearing, dna }) {
+import { sanitizeUiFeedbackNotes, summarizeUiFeedback } from './uiFeedback.js';
+
+export function buildSetupReadme({ apoConfig, calibration, hearing, dna, uiFeedbackNotes = [] }) {
+  const uiSummary = summarizeUiFeedback(uiFeedbackNotes);
+
   return [
     '# CueForge Setup Pack',
     '',
@@ -10,6 +14,7 @@ export function buildSetupReadme({ apoConfig, calibration, hearing, dna }) {
     '- calibration.json - autotune settings and generated EQ bands.',
     '- hearing-profile.json - hearing model snapshot if available.',
     '- audio-dna.json - Audio DNA snapshot if available.',
+    '- ui-feedback-notes.json - right-click tester notes for the developer if any were captured.',
     '',
     '## Apply',
     '',
@@ -23,19 +28,23 @@ export function buildSetupReadme({ apoConfig, calibration, hearing, dna }) {
     `APO config lines: ${apoConfig.split('\n').length}`,
     `Calibration bands: ${calibration?.eq?.length || 0}`,
     `Hearing profile included: ${hearing ? 'yes' : 'no'}`,
-    `Audio DNA included: ${dna ? 'yes' : 'no'}`
+    `Audio DNA included: ${dna ? 'yes' : 'no'}`,
+    `UI feedback notes included: ${uiSummary.total}`
   ].join('\n');
 }
 
-export function buildExportPack({ apoConfig, calibration, hearing, dna }) {
+export function buildExportPack({ apoConfig, calibration, hearing, dna, uiFeedbackNotes = [] }) {
+  const safeUiFeedbackNotes = sanitizeUiFeedbackNotes(uiFeedbackNotes);
+
   return {
     generatedAt: new Date().toISOString(),
     files: {
-      'README.txt': buildSetupReadme({ apoConfig, calibration, hearing, dna }),
+      'README.txt': buildSetupReadme({ apoConfig, calibration, hearing, dna, uiFeedbackNotes: safeUiFeedbackNotes }),
       'equalizer-apo-config.txt': apoConfig,
       'calibration.json': JSON.stringify(calibration || {}, null, 2),
       'hearing-profile.json': JSON.stringify(hearing || {}, null, 2),
-      'audio-dna.json': JSON.stringify(dna || {}, null, 2)
+      'audio-dna.json': JSON.stringify(dna || {}, null, 2),
+      'ui-feedback-notes.json': JSON.stringify(safeUiFeedbackNotes, null, 2)
     }
   };
 }
