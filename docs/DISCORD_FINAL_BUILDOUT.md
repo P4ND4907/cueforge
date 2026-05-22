@@ -2,6 +2,70 @@
 
 This is the finished server setup target.
 
+## Live Status - May 22, 2026
+
+Completed in the live `CueForge Beta` Discord:
+
+```text
+Community Server: enabled
+Onboarding: ON
+Rules channel: #rules
+Community updates channel: #lab-updates
+Default onboarding channels: 9 total, 6 chattable
+Server Guide: welcome sign, starter tasks, and resource pages configured
+Chiefyy Forge Queen: assigned to Chiefyy / chiefbabyy with Administrator enabled
+Bamboo Mod: moderation permissions enabled without Administrator
+Read-only pages verified: start-here, rules, lab-updates, faq-roadmap
+```
+
+Onboarding default path:
+
+```text
+start-here
+rules
+lab-updates
+role-picker
+signal-setups
+match-checkins
+bug-replays
+clip-evidence
+bamboo-lounge
+```
+
+Onboarding question:
+
+```text
+What are you testing first?
+```
+
+Answers:
+
+```text
+IEM / headset tuning - signal-setups, eq-forge, match-checkins, clip-evidence
+Mic and comms check - mic-checks, match-audio, bug-replays
+Bug replay or clip review - bug-replays, clip-evidence, match-checkins
+Game-specific audio feedback - match-audio, match-checkins plus game roles
+```
+
+Server Guide tasks:
+
+```text
+Read the rules.
+Post your audio chain in #signal-setups.
+Say what changed after one match in #match-checkins.
+Drop a clip or replay when audio feels off in #clip-evidence.
+```
+
+Resource pages:
+
+```text
+lab-updates
+faq-roadmap
+start-here
+```
+
+Bot note: do not authorize any third-party bot without a visible permission review. Start with the custom CueForge Panda Guide, then add one trusted helper only if it solves a real gap.
+
 ## Public Roles
 
 ```text
@@ -24,8 +88,8 @@ Sweat Stack
 ## Staff / Private Roles
 
 ```text
-Forge Lead
-Lab Mod
+Chiefyy Forge Queen
+Bamboo Mod
 Build Tester
 Triage
 ```
@@ -101,20 +165,20 @@ start-here
 rules
 lab-updates
 role-picker
+signal-setups
 match-checkins
 bug-replays
-signal-setups
 clip-evidence
+bamboo-lounge
 ```
 
 New member to-dos:
 
 ```text
-Pick your tester roles.
-Run CueForge Setup Gate and Self Test.
-Post your setup chain.
-Play one real match.
-Post one useful check-in, clip, or bug replay.
+Read the rules.
+Post your audio chain in #signal-setups.
+Say what changed after one match in #match-checkins.
+Drop a clip or replay when audio feels off in #clip-evidence.
 ```
 
 Resource pages:

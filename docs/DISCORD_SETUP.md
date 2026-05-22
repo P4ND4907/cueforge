@@ -13,7 +13,7 @@ CueForge Beta
 Short description:
 
 ```text
-FPS audio tuning, mic checks, IEM/headset EQ, Equalizer APO configs, and real match feedback.
+Panda-themed FPS audio lab for real testers: IEM/headset EQ, mic checks, Equalizer APO exports, match check-ins, clips, and honest before/after feedback.
 ```
 
 Community description:
@@ -26,37 +26,44 @@ The goal is simple: test what actually helps in-game, report what breaks, and tu
 
 ## Channels
 
-Create these first:
+Current public structure:
 
 ```text
-welcome
+start-here
 rules
-announcements
-beta-checkins
-bug-reports
-audio-setups
-game-feedback
-equalizer-apo
-mic-lab
-tarkov-siege-cod
-off-topic
+lab-updates
+faq-roadmap
+role-picker
+signal-setups
+eq-forge
+mic-checks
+match-audio
+match-checkins
+bug-replays
+clip-evidence
+bamboo-lounge
+setup-showcase
+wild-lab
+wins-and-fails
+dev-backroom
 ```
 
 ## Welcome Post
 
 ```text
-Welcome to CueForge Beta.
+Welcome to CueForge Beta, the Panda Lab for FPS audio.
 
-This is for real FPS audio testing: IEMs, headsets, mics, Discord, Equalizer APO, Peace, Sonar, and messy real-world setups.
+This server is open for honest players, weird setups, strong opinions, and real tests. You can be casual here, but the feedback should still be useful.
 
-Start here:
+Quick path:
 1. Open CueForge: https://p4nd4907.github.io/cueforge/
 2. Run Setup Gate and Self Test.
-3. Use Beta Check-in before and after a real match.
-4. Export a beta packet or report if something breaks.
-5. Post your game, gear, what improved, and what got worse.
+3. Pick your tester path in onboarding.
+4. Post your gear chain in #signal-setups.
+5. Play one real match.
+6. Post a check-in, setup, clip, or issue.
 
-Keep it honest. "It made things worse" is useful feedback.
+Say what helped. Say what got worse. Both matter.
 Do not post passwords, phone numbers, DOB, raw device IDs, recovery codes, or private account info.
 ```
 
@@ -99,6 +106,34 @@ After:
 What improved:
 What got worse:
 What should CueForge change next:
+```
+
+## Live Onboarding
+
+Configured May 22, 2026:
+
+```text
+Community Server: enabled
+Onboarding: ON
+Rules channel: #rules
+Updates channel: #lab-updates
+Default channels: start-here, rules, lab-updates, role-picker, signal-setups, match-checkins, bug-replays, clip-evidence, bamboo-lounge
+Server Guide resources: lab-updates, faq-roadmap, start-here
+```
+
+Required onboarding question:
+
+```text
+What are you testing first?
+```
+
+Starter tasks:
+
+```text
+Read the rules.
+Post your audio chain in #signal-setups.
+Say what changed after one match in #match-checkins.
+Drop a clip or replay when audio feels off in #clip-evidence.
 ```
 
 ## Bug Report Format

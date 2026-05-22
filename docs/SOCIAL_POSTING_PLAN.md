@@ -130,6 +130,38 @@ Ask for moments where audio helped or failed.
 Sunday: roadmap / behind the scenes  
 Share what is coming next and ask what should be prioritized.
 
+## Update 001 Posting Pack
+
+Use after the master plan is committed.
+
+Primary ask:
+
+```text
+Run one real match and report what changed.
+```
+
+Post order:
+
+```text
+1. Discord #lab-updates with setup/progress screenshots.
+2. Discord #match-checkins with the check-in format.
+3. Discord #bug-replays with the replayable report format.
+4. X with the social card and 2-4 tags.
+5. Reddit profile post, not a repeated community repost.
+```
+
+Image map:
+
+```text
+assets/discord/progress/cueforge-setup-gate.png -> Discord #lab-updates
+assets/discord/progress/cueforge-gameplay-save.png -> Discord #lab-updates
+assets/discord/progress/cueforge-beta-checkin.png -> Discord #match-checkins
+assets/discord/progress/cueforge-report-lab.png -> Discord #bug-replays
+assets/discord/cueforge-social-card.png -> X and Reddit profile
+```
+
+Full copy lives in `docs/updates/2026-05-22-update-001.md`.
+
 ## X / Short Post Template
 
 ```text

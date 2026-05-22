@@ -37,6 +37,12 @@ Read and verified for the current local release build.
 - `tools/Scan-AudioSetup.ps1` - optional user-run Windows audio setup scanner that writes a JSON report for import.
 - `docs/ARCHITECTURE.md` - platform decision notes for web build and desktop shell.
 - `docs/DRIVER_LAYER.md` - trusted companion driver/audio-layer strategy and rules.
+- `docs/MASTER_PLAN.md` - public roadmap, master map, workstreams, release timeline, and update 001 posting plan.
+- `docs/updates/2026-05-22-update-001.md` - first public update copy for Discord, X, and Reddit-safe profile posting.
+- `docs/DISCORD_FINAL_BUILDOUT.md` - live Discord status, roles, onboarding, bot strategy, and channel setup.
+- `docs/DISCORD_SETUP.md` - Discord setup guide, welcome copy, onboarding state, and tester formats.
+- `docs/SOCIAL_POSTING_PLAN.md` - social cadence, tag strategy, and update 001 image map.
+- `docs/REDDIT_PROFILE_AND_OUTREACH.md` - Reddit profile, outreach guardrails, and filter-safe posting plan.
 - `docs/RELEASE_CHECKLIST.md` - GitHub-ready hardening and release checklist.
 - `docs/PRIVACY.md` - local data and redaction notes.
 - `README.md` - product overview, run notes, setup flow, and testing workflow.
@@ -53,8 +59,9 @@ Read and verified for the current local release build.
 ## Verification
 
 - `npm.cmd install` completed.
-- `npm.cmd test` completed: 10 test files / 19 tests passed.
+- `npm.cmd test` completed: 14 test files / 34 tests passed.
 - `npm.cmd run build` completed.
+- `npm.cmd audit --audit-level=moderate` completed with 0 vulnerabilities.
 - Local server responded at `http://127.0.0.1:5177`.
 - Browser workflow tested: setup gate, dashboard, mic analysis with IEM/HyperX sample text, EQ studio, local source profile tabs, game profiles, hearing model hardware targets, and system info page.
 - Auto Self Test tested: browser audio APIs, device enumeration, bridge report, autotune generation, export payload generation, hearing model, storage, tone engine, and mic permission reporting.

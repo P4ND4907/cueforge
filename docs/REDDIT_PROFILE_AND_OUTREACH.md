@@ -14,6 +14,7 @@ Profile post: blocked by Reddit profile composer error, "community doesn't exist
 r/alphaandbetausers post: submitted.
 Live post: https://www.reddit.com/r/alphaandbetausers/comments/1tkdalt/looking_for_fps_audio_testers_using_iems_headsets/
 Current status: Reddit filters removed the repeated/link-heavy alphaandbetausers post. Do not repost the same title/body/link.
+Safe action now: use profile-first posting, modmail permission asks, and no-link community drafts. Do not mass post the GitHub/app/Discord links.
 ```
 
 Joined communities:
@@ -36,6 +37,16 @@ r/GlobalOffensive
 ## Current Guardrails
 
 Reddit is not Discord. Treat it like a place to participate first, promote second.
+
+The safe operating mode after the filter removal:
+
+```text
+Profile post: okay as the main link hub.
+Community posts: no-link by default unless rules clearly allow links.
+Game subreddits: ask modmail first.
+Comments: answer existing audio/help threads with useful advice before mentioning CueForge.
+Cadence: one real outreach action at a time, not many similar posts in a row.
+```
 
 Official rules and references:
 
@@ -82,6 +93,18 @@ Use this order now:
 5. Leave useful non-link comments in audio/help threads.
 6. Only share the app link when the community asks or rules clearly allow it.
 ```
+
+## Safe Post Queue
+
+Use these in order. Stop if a post is filtered or removed, then ask mods instead of reposting.
+
+1. Reddit profile post with app, GitHub, Discord, and Master Plan links.
+2. One no-link post in a beta/project-friendly subreddit.
+3. Modmail permission ask for one game subreddit.
+4. Two helpful comments in existing audio/mic/EQ threads with no link.
+5. One tailored follow-up only after someone asks for the app.
+
+Do not post the same body twice. Rewrite the hook for each community and keep the disclosure.
 
 The app now has an Auto Detect copy/paste setup kit. Testers can copy a redacted setup summary from `Auto Detect` and paste it into Discord, Reddit comments, GitHub issues, or beta check-ins without raw device IDs.
 

@@ -27,6 +27,17 @@ Use GitHub issues for feedback:
 - Tuning impressions: open Player Feedback.
 - Privacy concern: open Privacy / Redaction Review.
 
+## Public Roadmap
+
+The big-picture plan lives here:
+
+- [Master Plan](docs/MASTER_PLAN.md)
+- [Tester Guide](docs/TESTER_GUIDE.md)
+- [Privacy Notes](docs/PRIVACY.md)
+- [Release Checklist](docs/RELEASE_CHECKLIST.md)
+
+The roadmap breaks CueForge into five workstreams: player testing, audio engine, game intelligence, community loop, and release system. It also includes the May-July 2026 release timeline and the first public update pack.
+
 ## Platform Direction
 
 The current web build is the right foundation for safe testing, tuning, feedback capture, and GitHub distribution. The right way around browser limits is a desktop app shell, not a browser workaround.
