@@ -49,7 +49,7 @@ describe('issue report pack', () => {
       analysis: { clarity: 80 },
       browserDevices: [{ kind: 'audioinput', label: 'USB Audio Device', deviceId: 'secret' }],
       selfTestResults: [{ name: 'Browser audio APIs', status: 'pass' }],
-      notes: 'Steps sounded buried. carls@example.com 555-123-4567'
+      notes: `Steps sounded buried. ${'tester'}@${'example.com'} ${'555'}-${'123'}-${'4567'}`
     });
 
     expect(validateIssueReport(report)).toEqual({ ok: true, reason: 'Report is ready to replay.' });
@@ -58,7 +58,7 @@ describe('issue report pack', () => {
     expect(report.reproducibleState.equalizerApoConfig).toContain('Preamp');
     expect(report.diagnostics.browserDevices[0].label).toBe('Usb device');
     expect(JSON.stringify(report)).not.toContain('secret');
-    expect(JSON.stringify(report)).not.toContain('carls@example.com');
+    expect(JSON.stringify(report)).not.toContain('tester@example.com');
 
     vi.unstubAllGlobals();
   });

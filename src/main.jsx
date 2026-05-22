@@ -1827,7 +1827,7 @@ function AutoDetect() {
         <div className="stack device-list">
           {devices.length === 0 && <div className="data-card"><strong>No scan yet</strong><span>The app auto-scans on open. If nothing appears, click scan and allow microphone permission.</span></div>}
           {devices.map((device, index) => (
-            <div className="data-card" key={`${device.deviceId}-${index}`}>
+            <div className="data-card" key={`${device.kind}-${index}`}>
               <strong>{autoNameDevice(device, index, bridgeReport)}</strong>
               <span>{device.kind.replace('audio', 'audio ')}</span>
               <small>{device.label ? 'Real browser device name' : 'Auto-name fallback until permission or bridge report gives the real name'}</small>
