@@ -536,11 +536,10 @@ What is ready to test:
 - redacted Report Lab bug replays
 
 What I need next:
-- IEM users
-- headset users
-- HyperX/USB mic users
-- Equalizer APO / Peace / Sonar users
-- Tarkov, Siege, COD/Warzone, Apex, CS2, Valorant players
+- players to import or auto-detect their setup
+- players to run the guided checks
+- players to share redacted check-ins and reports
+- players to test one real match and say what changed
 
 Run one real match. Tell me what helped, what got worse, and whether the problem felt like tuning, the game, Discord, Windows routing, or the mic chain.
 

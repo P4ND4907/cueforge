@@ -74,7 +74,7 @@ First X post:
 ```text
 I’m building CueForge, a free FPS audio test lab for real players.
 
-It checks mic input, IEM/headset tuning, Equalizer APO exports, and before/after match notes so we can stop guessing what actually helped.
+It imports or auto-detects your setup, runs live checks, exports tuning/report data, and captures before/after match notes so we can stop guessing what actually helped.
 
 Need honest testers:
 https://p4nd4907.github.io/cueforge/
@@ -87,7 +87,7 @@ Follow-up X post:
 ```text
 FPS audio question:
 
-When you change EQ, headset/IEM, Discord settings, Sonar, or Equalizer APO, how do you test whether it actually helped?
+When you change your audio setup, how do you test whether it actually helped?
 
 One good match is not proof. I want repeatable before/after feedback.
 
@@ -99,7 +99,7 @@ Game-specific X post pattern:
 ```text
 {game} players: how do you separate game audio issues from your own setup?
 
-I’m testing CueForge with real matches: IEM/headset tuning, mic/comms checks, and before/after notes.
+I’m testing CueForge with real matches: setup import, live checks, and before/after notes.
 
 Looking for honest feedback, not hype.
 
@@ -113,7 +113,7 @@ Monday: progress update
 Show what changed, what got fixed, or what is being tested.
 
 Tuesday: tester ask  
-Ask for one specific kind of tester: IEM users, HyperX mic users, Equalizer APO users, Tarkov players, etc.
+Ask for one specific app action: import setup, run checks, play one match, share a redacted report, etc.
 
 Wednesday: audio problem question  
 Ask what players struggle with: footsteps, vertical audio, comms, explosions, fatigue, mic boom.
@@ -176,7 +176,7 @@ CueForge update:
 
 {one real progress note}
 
-Looking for testers using {gear/game/tool}. I need honest before/after feedback, not hype.
+Looking for testers who can import their setup, run one real match, and share the redacted check-in/report. I need honest before/after feedback, not hype.
 
 App: https://p4nd4907.github.io/cueforge/
 Discord: https://discord.gg/vyQwyJ49v
@@ -188,18 +188,18 @@ Discord: https://discord.gg/vyQwyJ49v
 
 ```text
 Title:
-Looking for FPS audio testers using {gear/game/tool}
+Looking for FPS audio testers who can import their setup and run one match
 
 Body:
 I am testing CueForge with a small group of real players.
 
-Today I am specifically looking for {tester type}.
+Today I am specifically looking for testers who can import or auto-detect their setup, run the guided checks, and share the redacted output.
 
-CueForge helps test mic input, tune IEM/headset EQ, export Equalizer APO config text, run match check-ins, and create redacted reports when something breaks.
+CueForge helps import setup context, run live checks, export tuning config text, run match check-ins, and create redacted reports when something breaks.
 
 What I need:
 - Game tested
-- Gear/mic/audio chain
+- Imported setup summary
 - What improved
 - What got worse
 - Whether footsteps, comms, fatigue, or mic clarity changed
