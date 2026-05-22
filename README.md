@@ -44,6 +44,7 @@ The current web build is the right foundation for safe testing, tuning, feedback
 - Gameplay Save with throttled local snapshots and a performance mode that keeps live meters lighter during matches.
 - Auto Self Test for browser audio APIs, devices, Windows bridge report, autotune, hearing model, storage, tone engine, and mic permission.
 - Auto Detect for browser audio devices plus an optional Windows bridge report.
+- Auto Detect copy/paste setup kit for Discord, Reddit, GitHub issues, and beta check-ins without raw device IDs.
 - Driver Layer for detecting trusted companion audio layers such as Equalizer APO, Peace, Sonar, VB-CABLE, and Voicemeeter without silently changing routing.
 - Live Mic Lab with level, voice presence, noise estimate, clip risk, and HyperX-oriented guidance.
 - IEM/headphone checks for left, right, center, and sweep testing.

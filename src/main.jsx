@@ -44,7 +44,9 @@ import { buildBetaTesterPacket, createBetaCheckIn, createTesterId, summarizeBeta
 import { buildAudioEvidencePacket, createAudioEvidenceSummary } from './audioEvidence.js';
 import {
   buildCommunityDraft,
+  buildRedditSafeDraft,
   buildRollCallPrompt,
+  buildSetupShareText,
   communitySources,
   createCommunityItem,
   feedbackTypes,
@@ -1271,10 +1273,11 @@ function BetaCheckInPage() {
 
 function CommunityHubPage() {
   const appUrl = 'https://p4nd4907.github.io/cueforge/';
-  const discordUrl = 'https://discord.gg/';
+  const discordUrl = 'https://discord.gg/vyQwyJ49v';
   const [items, setItems] = useState(() => getSavedJson('cueforge-community-feedback') || []);
   const [source, setSource] = useState('Discord');
   const [platform, setPlatform] = useState('Discord');
+  const [redditMode, setRedditMode] = useState('community');
   const [handle, setHandle] = useState('');
   const [game, setGame] = useState('Tarkov / Siege / COD');
   const [gear, setGear] = useState('IEM/headset + mic');
@@ -1284,7 +1287,9 @@ function CommunityHubPage() {
   const [status, setStatus] = useState('Discord is the main hub. Use this page to keep updates clean and useful.');
   const summary = summarizeCommunityFeedback(items);
   const rollCall = buildRollCallPrompt({ focus: type, game, summary });
-  const socialDraft = buildCommunityDraft({ platform, summary, appUrl, discordUrl });
+  const socialDraft = platform === 'Reddit'
+    ? buildRedditSafeDraft({ mode: redditMode, summary, appUrl, discordUrl })
+    : buildCommunityDraft({ platform, summary, appUrl, discordUrl });
 
   const addFeedback = () => {
     const item = createCommunityItem({ source, handle, game, gear, choice, type, note });
@@ -1386,6 +1391,20 @@ function CommunityHubPage() {
             </button>
           ))}
         </div>
+        {platform === 'Reddit' && (
+          <div className="source-tabs compact-tabs">
+            {[
+              ['community', 'Community no-link'],
+              ['profile', 'Profile post'],
+              ['modmail', 'Modmail ask'],
+              ['comment', 'Helpful reply']
+            ].map(([id, label]) => (
+              <button className={redditMode === id ? 'selected' : ''} key={id} onClick={() => setRedditMode(id)}>
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         <pre>{socialDraft}</pre>
         <button className="primary" onClick={() => copyText(socialDraft, `${platform} draft`)}>Copy draft</button>
       </Panel>
@@ -2438,6 +2457,16 @@ function AutoDetect() {
   const peaceInstalled = Boolean(bridgeReport?.tools?.peace?.installed);
   const sonarInstalled = Boolean(bridgeReport?.tools?.steelSeriesSonar?.installed);
   const virtualRouting = Boolean(bridgeReport?.tools?.vbCable?.installed || bridgeReport?.tools?.voicemeeter?.installed || bridgeReport?.matches?.virtualRouting);
+  const setupShareText = useMemo(() => buildSetupShareText({ devices, bridgeReport }), [devices, bridgeReport]);
+  const redditTesterAsk = useMemo(
+    () => buildRedditSafeDraft({
+      mode: 'community',
+      summary: null,
+      appUrl: 'https://p4nd4907.github.io/cueforge/',
+      discordUrl: 'https://discord.gg/vyQwyJ49v'
+    }),
+    []
+  );
 
   const importBridgeReport = async (event) => {
     const file = event.target.files?.[0];
@@ -2489,6 +2518,15 @@ function AutoDetect() {
   const openBridgeFolder = async () => {
     if (!window.cueforgeDesktop?.openBridgeFolder) return;
     await window.cueforgeDesktop.openBridgeFolder();
+  };
+
+  const copyText = async (text, label) => {
+    try {
+      await navigator.clipboard?.writeText(text);
+      setStatus(`${label} copied. Review it before posting.`);
+    } catch {
+      setStatus(`${label} is ready. Select the text and copy it manually if clipboard is blocked.`);
+    }
   };
 
   return (
@@ -2553,6 +2591,21 @@ function AutoDetect() {
           <a href="https://github.com/jaakkopasanen/AutoEq" target="_blank" rel="noreferrer">AutoEq data</a>
           <a href="https://steelseries.com/gg/sonar" target="_blank" rel="noreferrer">SteelSeries Sonar</a>
           <a href="https://vb-audio.com/Cable/" target="_blank" rel="noreferrer">VB-CABLE</a>
+        </div>
+      </Panel>
+      <Panel className="wide" title="Copy/Paste Setup Kit" icon={Save}>
+        <p>Auto-detected setup text for testers, Discord reports, Reddit replies, and bug reports. It stays redacted: no raw device IDs, group IDs, paths, phone numbers, emails, tokens, or recovery info.</p>
+        <div className="copy-grid">
+          <div className="data-card">
+            <strong>Detected setup summary</strong>
+            <pre>{setupShareText}</pre>
+            <button className="primary" onClick={() => copyText(setupShareText, 'Setup summary')}>Copy setup summary</button>
+          </div>
+          <div className="data-card">
+            <strong>Reddit-safe tester ask</strong>
+            <pre>{redditTesterAsk}</pre>
+            <button className="ghost" onClick={() => copyText(redditTesterAsk, 'Reddit tester ask')}>Copy Reddit ask</button>
+          </div>
         </div>
       </Panel>
     </section>

@@ -13,6 +13,7 @@ Banner/avatar: CueForge panda brand assets applied.
 Profile post: blocked by Reddit profile composer error, "community doesn't exist."
 r/alphaandbetausers post: submitted.
 Live post: https://www.reddit.com/r/alphaandbetausers/comments/1tkdalt/looking_for_fps_audio_testers_using_iems_headsets/
+Current status: Reddit filters removed the repeated/link-heavy alphaandbetausers post. Do not repost the same title/body/link.
 ```
 
 Joined communities:
@@ -56,6 +57,50 @@ Use your own profile first.
 Use modmail when rules are unclear.
 Do not use the same title/body across multiple communities.
 Keep most activity helpful and non-promotional.
+If Reddit filters a post, do not immediately repost it. Rewrite, reduce links, ask mods, or switch to comments/profile.
+```
+
+## Filter Recovery Plan
+
+What probably triggered removal:
+
+```text
+New account / low trust signals.
+Repeated post attempts in the same community.
+External app/GitHub/Discord links in the body.
+Beta/tester language that looks promotional to filters.
+Similar title and body reused too quickly.
+```
+
+Use this order now:
+
+```text
+1. Stop reposting the same alphaandbetausers link.
+2. Make one profile post with full links.
+3. Use no-link community posts that say links are on the profile.
+4. Ask modmail before posting in game-specific subs.
+5. Leave useful non-link comments in audio/help threads.
+6. Only share the app link when the community asks or rules clearly allow it.
+```
+
+The app now has an Auto Detect copy/paste setup kit. Testers can copy a redacted setup summary from `Auto Detect` and paste it into Discord, Reddit comments, GitHub issues, or beta check-ins without raw device IDs.
+
+## Safer No-Link Community Draft
+
+```text
+Disclosure: CueForge is my project.
+
+I am looking for a few FPS players willing to do one clean test: run a setup check, play one real match, then say what actually changed.
+
+Most useful testers:
+- IEM or headset users
+- USB mic or HyperX-style mic users
+- Equalizer APO / Peace / Sonar users
+- players who can compare footsteps, direction, comms, fatigue, and mic clarity
+
+No hype needed. If it gets worse, that is useful.
+
+I am keeping links out of this post so it does not turn into a link drop. The app, GitHub, and Discord are on my profile, and I can share them if the mods/community are okay with it.
 ```
 
 ## Profile Assets
