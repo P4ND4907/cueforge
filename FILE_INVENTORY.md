@@ -21,6 +21,8 @@ Read and verified for the current local release build.
 - `src/setupReadiness.test.js` - unit coverage for ready and blocked setup states.
 - `src/playerTrial.js` - guided player test script, feedback scoring, and tester packet builder.
 - `src/playerTrial.test.js` - unit coverage for trial steps, feedback scoring, and packet contents.
+- `src/betaCheckIn.js` - anonymous beta tester check-ins, proof codes, active-day summary, and export packet builder.
+- `src/betaCheckIn.test.js` - unit coverage for beta IDs, proofed check-ins, summaries, and privacy flags.
 - `src/blindMatch.js` - A/B preference-learning tuner that converts choices into a personal EQ curve.
 - `src/blindMatch.test.js` - unit coverage for Blind Match learned curves.
 - `src/maskingLab.js` - game-audio masking stress-test and anti-masking EQ generator.

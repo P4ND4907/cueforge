@@ -107,12 +107,68 @@ I care more about honest feedback than positive feedback. If it makes your setup
 
 ## Suggested Places To Ask
 
-- GitHub repo issues/discussions.
-- r/headphones purchase/help threads only where allowed.
-- r/EqualizerAPO if project feedback posts are allowed.
-- r/MouseReview-style peripheral Discords if they have audio channels.
-- Game-specific Discord communities with feedback/dev/self-promo channels.
+- Your own Reddit profile first: safest place to post without community rule friction.
+- r/EqualizerAPO: relevant for Equalizer APO config exports, but check posting rules first.
+- r/headphones: only in help/discussion threads where project feedback is allowed.
+- r/headphoneadvice: only if rules allow tools/help resources; do not spam.
+- r/audiophile or r/audioengineering: only if framed as a Windows local testing tool and rules allow it.
+- Game-specific subreddits such as r/EscapefromTarkov, r/Rainbow6, r/CODWarzone, r/GlobalOffensive, r/VALORANT, r/apexlegends: ask mods or use weekly/help threads because self-promotion rules are often strict.
+- Discord communities for Tarkov, Siege, COD/Warzone, Apex, Valorant, CS2, IEMs, and Equalizer APO if they have feedback/self-promo/testing channels.
 - Personal X/Twitter account.
 - Friends who play Tarkov, Siege, COD/Warzone, Apex, Battlefield, Valorant, or CS2.
 
 Always check each community's self-promotion and feedback request rules before posting.
+
+## Reddit Profile Post
+
+Title:
+
+```text
+Looking for beta testers for CueForge, a local FPS audio tuning tool
+```
+
+Body:
+
+```text
+I am looking for a small beta group for CueForge.
+
+I built it because game audio tuning felt like endless guessing: copy an EQ, play a match, wonder if footsteps or comms actually improved, repeat forever.
+
+CueForge is a local-first Windows tool for FPS players using IEMs, headsets, USB mics, HyperX-style mics, Discord, Equalizer APO, Peace, Sonar, or messy real-world audio chains.
+
+It can:
+
+- test mic input
+- run live mic feedback
+- tune IEM/headset EQ
+- export Equalizer APO config text
+- run guided match trials
+- create redacted issue reports
+- export beta check-in packets so feedback comes from real sessions, not fake one-line replies
+
+I need honest testers more than hype. If it makes your setup worse, that is useful too.
+
+Try it:
+https://p4nd4907.github.io/cueforge/
+
+Feedback:
+https://github.com/P4ND4907/cueforge/issues/1
+```
+
+## Modmail / Permission Ask
+
+```text
+Hey mods, quick permission check before I post.
+
+I built CueForge, a local-first Windows audio tuning tool for FPS players using IEMs/headsets/mics and Equalizer APO. I am looking for a small beta group to test mic feedback, footstep clarity, comms clarity, and redacted bug reports.
+
+It is free/open on GitHub and I can keep the post contained to one feedback request if allowed.
+
+Public page:
+https://p4nd4907.github.io/cueforge/
+
+Repo:
+https://github.com/P4ND4907/cueforge
+
+Would a beta tester request be allowed here, or is there a better weekly/help/self-promo thread for it?
+```

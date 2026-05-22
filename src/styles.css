@@ -186,6 +186,7 @@ p { color: #9fb1b4; line-height: 1.55; }
 .metric.red strong { color: #ff6f61; }
 
 .field { display: grid; gap: 8px; color: #b8c8cb; font-size: 13px; font-weight: 700; }
+.wide-field { grid-column: 1 / -1; }
 textarea {
   width: 100%;
   min-height: 160px;

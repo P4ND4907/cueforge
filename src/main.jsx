@@ -40,6 +40,7 @@ import { createMaskingTune, maskingScenarios } from './maskingLab.js';
 import { buildIssueReport, validateIssueReport } from './reportPack.js';
 import { computeSetupReadiness } from './setupReadiness.js';
 import { buildTesterPacket, feedbackDefaults, scoreTrialFeedback, trialSteps } from './playerTrial.js';
+import { buildBetaTesterPacket, createBetaCheckIn, createTesterId, summarizeBetaActivity } from './betaCheckIn.js';
 import './styles.css';
 
 const headsetProfiles = [
@@ -189,6 +190,7 @@ function App() {
             ['blindmatch', Radio, 'Blind Match'],
             ['masking', AudioLines, 'Masking Lab'],
             ['trial', Gamepad2, 'Player Trial'],
+            ['beta', Activity, 'Beta Check-in'],
             ['reports', Bug, 'Report Lab'],
             ['calibration', Sparkles, 'Calibration'],
             ['mic', Mic, 'Mic Lab'],
@@ -269,6 +271,8 @@ function App() {
             selectedSourceProfile={selectedSourceProfile}
           />
         )}
+
+        {active === 'beta' && <BetaCheckInPage />}
 
         {active === 'reports' && (
           <ReportLabPage
@@ -797,6 +801,121 @@ function TrialSlider({ label, value, onChange }) {
   );
 }
 
+function BetaCheckInPage() {
+  const [testerId, setTesterId] = useState(() => {
+    const saved = localStorage.getItem('cueforge-beta-tester-id');
+    if (saved) return saved;
+    const next = createTesterId();
+    localStorage.setItem('cueforge-beta-tester-id', next);
+    return next;
+  });
+  const [handle, setHandle] = useState(() => localStorage.getItem('cueforge-beta-handle') || 'P4ND4907');
+  const [game, setGame] = useState(() => localStorage.getItem('cueforge-beta-game') || 'Tarkov / Siege / COD');
+  const [gear, setGear] = useState(() => localStorage.getItem('cueforge-beta-gear') || 'IEM/headset + HyperX-style mic');
+  const [notes, setNotes] = useState('');
+  const [checkIns, setCheckIns] = useState(() => getSavedJson('cueforge-beta-checkins') || []);
+  const summary = summarizeBetaActivity(checkIns);
+
+  const saveProfileFields = () => {
+    localStorage.setItem('cueforge-beta-handle', handle);
+    localStorage.setItem('cueforge-beta-game', game);
+    localStorage.setItem('cueforge-beta-gear', gear);
+  };
+
+  const checkIn = () => {
+    saveProfileFields();
+    const nextCheckIn = createBetaCheckIn({
+      testerId,
+      handle,
+      game,
+      gear,
+      source: window.cueforgeDesktop?.isDesktop ? 'desktop-shell' : 'web'
+    });
+    const next = [...checkIns, nextCheckIn].slice(-40);
+    setCheckIns(next);
+    safeSetJson('cueforge-beta-checkins', next);
+  };
+
+  const resetTesterId = () => {
+    const next = createTesterId();
+    setTesterId(next);
+    localStorage.setItem('cueforge-beta-tester-id', next);
+    setCheckIns([]);
+    safeSetJson('cueforge-beta-checkins', []);
+  };
+
+  const exportPacket = () => {
+    const packet = buildBetaTesterPacket({ testerId, checkIns, notes });
+    downloadTextFile('cueforge-beta-tester-packet.json', JSON.stringify(packet, null, 2));
+  };
+
+  return (
+    <section className="grid two">
+      <Panel title="Real Tester Check-in" icon={Activity}>
+        <p>Use this before or after a real play session. It creates a local proof packet testers can attach to GitHub without sending passwords, phone numbers, DOB, raw device IDs, or hidden telemetry.</p>
+        <div className="data-card">
+          <strong>Anonymous tester ID</strong>
+          <span>{testerId}</span>
+          <small>Stored locally in this browser. Reset only if you want to start over.</small>
+        </div>
+        <div className="calibration-grid">
+          <label className="field">
+            <span>Tester handle</span>
+            <input value={handle} onChange={(event) => setHandle(event.target.value)} />
+          </label>
+          <label className="field">
+            <span>Game tested</span>
+            <input value={game} onChange={(event) => setGame(event.target.value)} />
+          </label>
+          <label className="field wide-field">
+            <span>Gear chain</span>
+            <input value={gear} onChange={(event) => setGear(event.target.value)} />
+          </label>
+        </div>
+        <div className="live-actions">
+          <button className="primary" onClick={checkIn}><CheckCircle2 size={18} /> Record check-in</button>
+          <button className="ghost" onClick={exportPacket} disabled={checkIns.length === 0}><Download size={18} /> Export beta packet</button>
+          <button className="ghost" onClick={resetTesterId}><RotateCcw size={18} /> Reset ID</button>
+        </div>
+      </Panel>
+      <Panel title="Active Tester Proof" icon={ShieldCheck}>
+        <div className="metric-row selftest-summary">
+          <Metric label="Check-ins" value={String(summary.totalCheckIns)} tone={summary.totalCheckIns ? 'teal' : 'amber'} />
+          <Metric label="Active days" value={String(summary.uniqueDays)} tone={summary.uniqueDays > 1 ? 'teal' : 'amber'} />
+          <Metric label="Source" value={window.cueforgeDesktop?.isDesktop ? 'Desktop' : 'Web'} tone="teal" />
+        </div>
+        <label className="field">
+          <span>Tester notes for export</span>
+          <textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
+        </label>
+        <div className="stack">
+          {checkIns.length === 0 && (
+            <div className="data-card">
+              <strong>No check-ins yet</strong>
+              <span>Record one after a real test session.</span>
+            </div>
+          )}
+          {checkIns.slice(-5).reverse().map((item) => (
+            <div className="data-card" key={`${item.checkedAt}-${item.proof}`}>
+              <strong>{new Date(item.checkedAt).toLocaleString()}</strong>
+              <span>{item.game || 'Game not specified'} - {item.gear || 'Gear not specified'}</span>
+              <small>{item.proof}</small>
+            </div>
+          ))}
+        </div>
+      </Panel>
+      <Panel className="wide" title="How This Keeps It Real" icon={Bug}>
+        <ul className="clean-list">
+          <li>Each tester gets one local anonymous ID.</li>
+          <li>Every check-in gets a date-based proof code, game, gear chain, and source.</li>
+          <li>Beta packets can be attached to GitHub issues so fake one-line feedback is easier to spot.</li>
+          <li>No background tracking, no analytics beacon, and no private recovery data.</li>
+        </ul>
+      </Panel>
+    </section>
+  );
+}
+
 async function getMicPermissionState() {
   try {
     if (!navigator.permissions?.query) return 'unknown';
@@ -816,6 +935,7 @@ function sectionTitle(id) {
     blindmatch: 'Blind Match',
     masking: 'Tactical Masking Lab',
     trial: 'Player Trial',
+    beta: 'Beta Check-in',
     reports: 'Report Lab',
     calibration: 'Auto Calibration',
     eq: 'EQ Studio',
