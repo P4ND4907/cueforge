@@ -1,22 +1,25 @@
 # Outreach Drafts
 
-These are draft posts for finding testers. Review and tailor them before posting anywhere.
+These are human-ready draft posts for finding testers. Review and tailor them before posting anywhere.
 
 ## Short Post
 
-Title: Looking for Windows FPS players to test CueForge, a local-first audio tuning tool
+Title: Looking for a few Windows FPS players to test CueForge
 
 Body:
 
-I am looking for a small group of Windows FPS players to test CueForge.
+I built CueForge because I got tired of audio tuning feeling like guesswork.
 
-CueForge is a local-first gaming audio control center for IEMs, headsets, and mics. It helps test mic input, tune EQ for competitive games, run a guided player trial, and export Equalizer APO configs. It also creates redacted reports so bugs can be reproduced without sharing raw device IDs or Windows paths.
+It is a local-first Windows app for FPS players using IEMs, headsets, mics, Discord, Equalizer APO, Peace, Sonar, or some messy combo of all of that. It helps test your mic, build game-focused EQ, run a guided match trial, export Equalizer APO configs, and send redacted feedback if something breaks.
+
+I am looking for a small group of real players to try it and tell me what actually happens in-game.
 
 Good testers:
 
 - Play tactical/FPS games.
 - Use IEMs, headsets, USB DACs, HyperX-style mics, Discord, Equalizer APO, Peace, or Sonar.
 - Can run a local web app and send a GitHub issue with the tester packet.
+- Are willing to say "this made it worse" if it did.
 
 Main things I need feedback on:
 
@@ -31,11 +34,13 @@ Repo: https://github.com/P4ND4907/cueforge
 
 ## Longer Community Post
 
-Title: CueForge needs a few real FPS audio testers
+Title: CueForge needs real FPS audio testers
 
 Body:
 
-I built CueForge for Windows players who are tired of guessing at audio settings. It is a local-first app for testing mic input, tuning IEM/headset EQ, checking hearing-aware compensation, comparing blind A/B preferences, and exporting Equalizer APO config text.
+I built CueForge for Windows players who are tired of guessing at audio settings, copying random EQ presets, and still not knowing whether footsteps, comms, or mic quality actually got better.
+
+It is a local-first app for testing mic input, tuning IEM/headset EQ, checking hearing-aware compensation, comparing blind A/B preferences, and exporting Equalizer APO config text.
 
 The part I need help with is real match feedback. CueForge has a guided Player Trial that asks testers to check:
 
@@ -46,6 +51,8 @@ The part I need help with is real match feedback. CueForge has a guided Player T
 - Comfort/fatigue after a short session.
 
 It exports a tester packet and a redacted issue report. The reports are designed to strip raw device IDs, group IDs, Windows paths, computer names, full browser user-agent strings, emails, and phone numbers.
+
+I am not looking for hype feedback. I need the useful stuff: what game you tested, what gear you used, what sounded clearer, what sounded worse, and where the app confused you.
 
 I am mainly looking for:
 
@@ -58,6 +65,35 @@ I am mainly looking for:
 Feedback can go into GitHub issues here:
 
 https://github.com/P4ND4907/cueforge
+
+## GitHub Issue / Discussion Post
+
+Title: Looking for CueForge testers: FPS audio, IEMs, headsets, mics, and Equalizer APO
+
+Body:
+
+CueForge is open for early tester feedback.
+
+This is for Windows players who care about game audio but do not want to keep guessing at random EQ presets. The app helps test mic input, tune IEM/headset EQ, run a guided match trial, export Equalizer APO configs, and create redacted reports when something breaks.
+
+I am especially looking for:
+
+- FPS players.
+- IEM users.
+- Headset users.
+- USB mic or HyperX-style mic users.
+- Equalizer APO, Peace, Sonar, or Discord users.
+
+Best feedback:
+
+- Run `Setup Gate`.
+- Run `Self Test`.
+- Generate a calibration.
+- Play one match with `Player Trial`.
+- Open a Player Feedback issue with the tester packet.
+- Open a Bug Report with the redacted Report Lab JSON if something breaks.
+
+I care more about honest feedback than positive feedback. If it makes your setup worse, that is useful too.
 
 ## Suggested Places To Ask
 

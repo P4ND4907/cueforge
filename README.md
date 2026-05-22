@@ -1,12 +1,16 @@
 # CueForge
 
+**Make your game audio less of a guessing game.**
+
 CueForge is a Windows-first gaming audio control center for IEMs, headsets, and mics. It gives players a repeatable way to test a setup, clean up a boom mic, tune IEMs for competitive games, build hearing-aware EQ, and export Equalizer APO configs.
 
 It does not silently install drivers or rewrite Windows audio routing. It makes the hidden parts visible, generates configs, and keeps the final system-level apply step explicit.
 
 ## Tester Call
 
-CueForge is ready for controlled Windows player testing. The best testers are FPS players using IEMs, gaming headsets, USB mics, Equalizer APO, Peace, SteelSeries Sonar, Discord, or similar audio chains.
+CueForge needs honest ears on real setups. If you play FPS games on Windows and have ever wondered whether your footsteps, comms, mic, or IEM EQ are helping or hurting you, you are exactly the kind of tester this needs.
+
+The best testers are players using IEMs, gaming headsets, USB mics, Equalizer APO, Peace, SteelSeries Sonar, Discord, or similar audio chains.
 
 Good feedback includes:
 
