@@ -75,29 +75,31 @@ The server should feel like a real tester clubhouse, not a sterile support desk.
 Core serious channels:
 
 ```text
-welcome-start-here
+start-here
 rules
-announcements
-beta-checkins
-bug-reports
-audio-setups
-game-feedback
-equalizer-apo
-mic-lab
-tarkov-siege-cod
-dev-forge
+lab-updates
+role-picker
+test-night
+match-checkins
+bug-replays
+signal-setups
+match-audio
+eq-forge
+mic-checks
+fps-specific
+faq-roadmap
 ```
 
 Community channels:
 
 ```text
 bamboo-lounge
-pawprint-feedback
-clips-and-replays
-setup-flex
-wild-ideas
+pawprint-ideas
+clip-evidence
+setup-showcase
+wild-lab
 wins-and-fails
-off-topic
+side-chat
 ```
 
 Voice rooms:
@@ -155,6 +157,85 @@ Best first posts:
 
 The vibe: honest, useful, a little weird, not corporate.
 If CueForge makes something worse, say it. That is how it gets better.
+```
+
+## Final Channel Rename Map
+
+Use these names to make the server feel less generic while still understandable:
+
+```text
+welcome-start-here -> start-here
+announcements -> lab-updates
+beta-checkins -> match-checkins
+bug-reports -> bug-replays
+audio-setups -> signal-setups
+game-feedback -> match-audio
+equalizer-apo -> eq-forge
+mic-lab -> mic-checks
+tarkov-siege-cod -> fps-specific
+pawprint-feedback -> pawprint-ideas
+clips-and-replays -> clip-evidence
+setup-flex -> setup-showcase
+wild-ideas -> wild-lab
+off-topic -> side-chat
+dev-forge -> dev-backroom
+```
+
+Private / dev-only:
+
+```text
+dev-backroom
+build-notes
+triage-queue
+```
+
+These should be private to the owner/dev role. Do not use an actual password in a public channel name or topic.
+
+## Polished Start-Here Post
+
+```text
+Welcome to CueForge Beta, the Panda Lab for FPS audio.
+
+This server is for players who want better game audio without guessing forever. Bring your IEMs, headset, mic, Discord chain, Equalizer APO setup, weird Windows routing, clips, and honest feedback.
+
+Fast path:
+1. Open CueForge: https://p4nd4907.github.io/cueforge/
+2. Run Setup Gate.
+3. Run Self Test.
+4. Play one real match.
+5. Post what changed in #match-checkins or what broke in #bug-replays.
+
+Where to go:
+- #signal-setups: post your gear and audio chain.
+- #eq-forge: Equalizer APO, Peace, Sonar, and tuning notes.
+- #mic-checks: mic gain, noise, clipping, Discord clarity.
+- #clip-evidence: moments where audio helped or lied to you.
+- #pawprint-ideas: ideas, rough thoughts, and useful complaints.
+- #bamboo-lounge: normal chat.
+
+The rule is simple: useful beats perfect. If CueForge makes something worse, say it.
+
+Privacy: do not post passwords, phone numbers, DOB, recovery codes, raw device IDs, or private screenshots.
+```
+
+## Channel Topic Suggestions
+
+```text
+start-here: First stop for testers. Read this before posting reports or clips.
+lab-updates: CueForge progress, daily plans, test nights, and release notes.
+match-checkins: One real match, one honest before/after report.
+bug-replays: Repro steps, redacted reports, broken flows, and recovery notes.
+signal-setups: IEMs, headsets, mics, DACs, APO, Peace, Sonar, Discord, Windows routing.
+match-audio: Footsteps, direction reads, clutter, fatigue, comms, and game-specific feedback.
+eq-forge: Equalizer APO configs, Peace imports, tuning questions, and curve comparisons.
+mic-checks: Gain, clipping, noise, boom, voice presence, and Discord mic tests.
+fps-specific: Tarkov, Siege, COD, Apex, CS2, Valorant, Battlefield, and other FPS notes.
+pawprint-ideas: Quick ideas, weird experiments, and useful complaints.
+clip-evidence: Clips or replay notes showing audio wins, fails, or confusing moments.
+setup-showcase: Show your desk, gear chain, or before/after setup.
+wild-lab: Experimental ideas that might become real CueForge features.
+wins-and-fails: What worked, what failed, and what surprised you.
+dev-backroom: Private build planning, triage, and release prep.
 ```
 
 ## Role Picker Post
