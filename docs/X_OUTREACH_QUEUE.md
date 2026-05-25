@@ -5,18 +5,18 @@ Snapshot date: May 22, 2026.
 ## Live Status
 
 ```text
-X profile updated: May 22, 2026.
+X profile target updated: May 25, 2026.
 Account: @CueForge907
-Display name: P4ND4907
-Bio: Gamer-built CueForge: local FPS audio testing, setup notes, and honest match feedback. Built by Panda + Chiefyy. Replies over hype.
+Display name target: CueForge
+Bio target: Windows-first audio chain verifier for gamers. Setup checks, mic/EQ testing, safe exports, and real match proof. Built by P4ND4907.
 Location: Alaska
-Website: not set
+Website target: https://p4nd4907.github.io/cueforge/
 Avatar: assets/discord/cueforge-server-pfp.png
 Header: assets/discord/cueforge-profile-header.png
 Latest profile check: https://x.com/CueForge907
 Following count after first signal wave: 18
 May 23 rollout result: Update 004 was previously tracked under an alternate X account; current visible CueForge account is `@CueForge907`. Rebuild follows and repost only after the profile is confirmed.
-May 24 queue: Social Command Center pack is ready in `docs/social/2026-05-24-social-command-center.md`. Update the bio/website first, then post the main X update or thread. Keep mentions out of the first post.
+May 25 queue: Professional profile kit is ready in `docs/social/PROFILE_KIT_2026-05-25.md`. Update display name, bio, website, avatar, and header first. Then post the pinned profile cleanup update. Keep mentions out of the first post.
 ```
 
 ## Posting Guardrails
@@ -67,23 +67,20 @@ Use these sparingly. A cold post should usually use hashtags only.
 
 ## Latest Ready Post
 
-### Update 005 - Social Command Center / Proof Gate
+### Pinned Profile Cleanup Post
 
 ```text
-CueForge update:
+CueForge is a Windows-first audio chain verifier for gamers.
 
-The app is becoming an audio chain verifier + personal sound engine for gamers.
+It helps test your setup, mic, EQ, Discord/Sonar/APO routing, safe exports, and real match feedback without leaking private device info.
 
-Not magic surround. Not preset hype.
-
-Setup check -> chain graph -> conflict warnings -> personal profile -> safe export -> real match proof.
-
+Looking for honest testers:
 https://p4nd4907.github.io/cueforge/
 
-#CueForge #FPSAudio #PCGaming #GamingAudio
+#CueForge #FPSAudio #PCGaming
 ```
 
-Longer thread copy, profile bio, and timeline copy live in `docs/social/2026-05-24-social-command-center.md`.
+Full profile copy lives in `docs/social/PROFILE_KIT_2026-05-25.md`.
 
 ## Post Queue
 

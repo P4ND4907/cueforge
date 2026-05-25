@@ -1,11 +1,12 @@
 # CueForge Account Launch Plan
 
-Use one consistent identity everywhere.
+Use one consistent identity everywhere. The current source of truth is
+`docs/social/PROFILE_KIT_2026-05-25.md`.
 
 ## Preferred Name
 
 - Display name: `CueForge`
-- Handle ideas: `cueforge`, `cueforgeaudio`, `cueforgeapp`, `panda907labs`
+- X handle: `@CueForge907`
 - Owner credit: `by P4ND4907`
 
 ## Public Home
@@ -16,7 +17,7 @@ Use one consistent identity everywhere.
 
 ## Account Bio
 
-CueForge helps FPS players stop guessing at audio settings. Test your mic, tune IEMs or headsets, build Equalizer APO configs, and send feedback without leaking your setup.
+Windows-first audio chain verifier for gamers. Setup checks, mic/EQ testing, safe exports, and real match proof. Built by P4ND4907.
 
 ## Short Profile Post
 

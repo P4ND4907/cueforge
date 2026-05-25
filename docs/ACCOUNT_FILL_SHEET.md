@@ -2,6 +2,12 @@
 
 Use this when creating or updating public profiles.
 
+Canonical current profile kit:
+
+```text
+docs/social/PROFILE_KIT_2026-05-25.md
+```
+
 ## Profile
 
 Display name:
@@ -10,13 +16,10 @@ Display name:
 CueForge
 ```
 
-Handle ideas:
+Current X handle:
 
 ```text
-cueforge
-cueforgeaudio
-cueforgeapp
-panda907labs
+@CueForge907
 ```
 
 Website:
@@ -28,7 +31,7 @@ https://p4nd4907.github.io/cueforge/
 Bio:
 
 ```text
-FPS audio should not feel like guesswork. CueForge helps Windows players test mics, tune IEMs/headsets, build Equalizer APO configs, and send feedback without leaking setup data.
+Windows-first audio chain verifier for gamers. Setup checks, mic/EQ testing, safe exports, and real match proof. Built by P4ND4907.
 ```
 
 ## Short Launch Post

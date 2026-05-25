@@ -2,6 +2,8 @@
 
 Use this pack for the `📣 CueForge social updates` browser group. Owned channels first, then X, then Reddit comments. Do not mass-post the same body into subreddits.
 
+Current canonical profile kit: `docs/social/PROFILE_KIT_2026-05-25.md`
+
 ## Current Story
 
 CueForge is moving from a collection of useful audio tools into one guided setup engine:
@@ -44,13 +46,13 @@ This is the realistic timeline from the current build speed. Dates are targets, 
 ### X Bio
 
 ```text
-Building CueForge: a Windows-first audio chain verifier + personal sound engine for gamers. Setup checks, mic/EQ testing, real match proof.
+Windows-first audio chain verifier for gamers. Setup checks, mic/EQ testing, safe exports, and real match proof. Built by P4ND4907.
 ```
 
 ### X Name
 
 ```text
-P4ND4907 | CueForge
+CueForge
 ```
 
 ### X Website

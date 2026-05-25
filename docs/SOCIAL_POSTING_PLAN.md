@@ -13,6 +13,7 @@ X: https://x.com/CueForge907
 ```
 
 Current rollout pack: `docs/social/2026-05-24-social-command-center.md`
+Current profile kit: `docs/social/PROFILE_KIT_2026-05-25.md`
 
 ## Hashtag Bank
 
@@ -70,6 +71,19 @@ HyperX mic/headsets: @HyperX
 ```
 
 Do not tag official accounts in generic "try my app" posts. Use them only for no-link discussion posts or specific bug/audio-method questions.
+
+Current pinned X post:
+
+```text
+CueForge is a Windows-first audio chain verifier for gamers.
+
+It helps test your setup, mic, EQ, Discord/Sonar/APO routing, safe exports, and real match feedback without leaking private device info.
+
+Looking for honest testers:
+https://p4nd4907.github.io/cueforge/
+
+#CueForge #FPSAudio #PCGaming
+```
 
 First X post:
 
