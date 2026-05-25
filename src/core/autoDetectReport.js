@@ -1,4 +1,5 @@
 import { classifyHardware } from '../data/hardwareProfiles.js';
+import { cleanAudioDeviceName } from '../deviceProfiles.js';
 
 const companionMap = {
   equalizerApo: ['equalizerApo'],
@@ -63,11 +64,19 @@ function isOutputDevice(device) {
 }
 
 function normalizeDevice(device, index, source, role) {
-  const label = deviceLabel(device, `${role === 'input' ? 'Audio input' : 'Audio output'} ${index + 1}`);
+  const rawLabel = deviceLabel(device, `${role === 'input' ? 'Audio input' : 'Audio output'} ${index + 1}`);
+  const cleanName = cleanAudioDeviceName({ ...device, label: rawLabel }, { index, role });
+  const label = cleanName.displayLabel;
   const hardware = classifyHardware(label).map((profile) => profile.id);
 
   return {
     label,
+    displayLabel: cleanName.displayLabel,
+    cleanedLabel: cleanName.cleanedLabel,
+    rawLabel: cleanName.rawLabel,
+    deviceKey: cleanName.deviceKey,
+    needsAlias: cleanName.needsAlias,
+    hints: cleanName.hints,
     role,
     source,
     kind: clean(device?.kind || device?.PNPClass || device?.Status || 'audio'),
@@ -193,8 +202,9 @@ function hasHiddenBrowserLabels({ report, outputs, inputs, hasBridge }) {
   if (!exposedDevices.length) return true;
   return exposedDevices.some((device) => (
     !device.label ||
+    device.needsAlias ||
     /^audio (input|output) \d+$/i.test(device.label) ||
-    /name hidden|default (input|output)|audioinput|audiooutput/i.test(device.label)
+    /name hidden|default (input|output)|audioinput|audiooutput|microphone input|headphone\/output/i.test(device.label)
   )) || report?.permissionState === 'blocked';
 }
 

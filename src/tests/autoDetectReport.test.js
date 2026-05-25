@@ -58,6 +58,29 @@ describe('auto detect report v2', () => {
     expect(summary.detected.join(' ')).not.toContain('Windows output');
   });
 
+  it('adds cleaned display labels and stable alias keys for weird device names', () => {
+    const report = buildAutoDetectReport({
+      browserDevices: [
+        { kind: 'audiooutput', label: '{0.0.0.00000000}.{abc} 3- Headphones (Arctis Nova Pro Wireless Game) #0009' },
+        { kind: 'audioinput', label: 'Default - 00000000' }
+      ],
+      permissionState: 'granted',
+      detectedAt: '2026-05-23T00:00:00.000Z'
+    });
+
+    expect(report.devices.browserOutputs[0]).toMatchObject({
+      label: 'Headphones / Arctis Nova Pro Wireless Game',
+      displayLabel: 'Headphones / Arctis Nova Pro Wireless Game',
+      rawLabel: expect.stringContaining('Arctis Nova Pro'),
+      needsAlias: false
+    });
+    expect(report.devices.browserOutputs[0].deviceKey).toMatch(/^cfdev_output_/);
+    expect(report.devices.browserInputs[0]).toMatchObject({
+      label: 'Microphone input 1',
+      needsAlias: true
+    });
+  });
+
   it('summarizes the report into detected, risk, and recommendation copy', () => {
     const report = buildAutoDetectReport({
       browserDevices: browserDeviceFixture,

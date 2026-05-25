@@ -122,6 +122,15 @@ import {
   createAudioProfileShare,
   parseAudioProfileShare
 } from './profileShare.js';
+import {
+  applyDeviceAliases,
+  detectActiveGameProfile,
+  DEVICE_ALIAS_KEY,
+  GAME_PROFILE_KEY,
+  mergeGameProfiles,
+  saveDeviceAlias,
+  upsertGameProfile
+} from './deviceProfiles.js';
 import { buildCueForgeState } from './core/cueforgeState.js';
 import { publishSetupAssessmentSnapshot } from './core/setupAssessmentSnapshot.js';
 import { buildAutoDetectReport, summarizeAutoDetectReport } from './core/autoDetectReport.js';
@@ -787,6 +796,15 @@ function App() {
     setActive('eq');
   };
 
+  const autoSwitchDetectedGameProfile = ({ game, sourceProfile, matchedHint }) => {
+    const safeSourceProfile = localSourceProfiles[sourceProfile] ? sourceProfile : 'competitiveFps';
+    setSelectedGame(game || selectedGame);
+    setSelectedSourceProfile(safeSourceProfile);
+    setEq((current) => buildEqFromSourceProfile(localSourceProfiles[safeSourceProfile], current));
+    setSaved(false);
+    setShareStatus(`Detected ${game}. CueForge switched to ${localSourceProfiles[safeSourceProfile].name}; review before exporting. ${matchedHint ? `Match: ${matchedHint}.` : ''}`);
+  };
+
   const applySharedAudioProfile = (profile) => {
     if (!Array.isArray(profile.eq) || profile.eq.length !== bands.length) {
       setShareStatus('That shared profile is missing the 10 CueForge EQ bands.');
@@ -1264,6 +1282,7 @@ function App() {
 
         {active === 'detect' && <AutoDetect
           onApplyProfile={applySetupIntelligenceProfile}
+          onAutoSwitchProfile={autoSwitchDetectedGameProfile}
           onUpdateChain={({ devices, bridgeReport, autoDetectReport, desktopReady }) => {
             if (devices) setChainDevices(devices);
             if (bridgeReport) setChainBridgeReport(bridgeReport);
@@ -5011,7 +5030,7 @@ function avg(values, start, end) {
   return count ? total / count : 0;
 }
 
-function AutoDetect({ onApplyProfile, onUpdateChain }) {
+function AutoDetect({ onApplyProfile, onAutoSwitchProfile, onUpdateChain }) {
   const [devices, setDevices] = useState([]);
   const [status, setStatus] = useState('Auto scan starts when this page opens.');
   const [bridgeReport, setBridgeReport] = useState(null);
@@ -5020,6 +5039,15 @@ function AutoDetect({ onApplyProfile, onUpdateChain }) {
   const [permissionState, setPermissionState] = useState('prompt');
   const [setupGame, setSetupGame] = useState('Tarkov / Siege / COD');
   const [budgetTier, setBudgetTier] = useState('no-spend');
+  const [deviceAliases, setDeviceAliases] = useState(() => getSavedJson(DEVICE_ALIAS_KEY) || {});
+  const [savedGameProfiles, setSavedGameProfiles] = useState(() => getSavedJson(GAME_PROFILE_KEY) || []);
+  const [autoSwitchEnabled, setAutoSwitchEnabled] = useState(() => localStorage.getItem('cueforge-auto-switch-game-profile') !== 'off');
+  const [gameProfileDraft, setGameProfileDraft] = useState({
+    game: 'Tarkov / Siege / COD',
+    sourceProfile: 'competitiveFps',
+    matchHints: 'tarkov, siege, cod'
+  });
+  const lastAutoSwitchRef = useRef('');
   const desktopReady = Boolean(desktopInfo || window.cueforgeDesktop?.isDesktop);
   const deviceRecovery = useMemo(() => buildPermissionRecovery({
     feature: 'device-scan',
@@ -5033,6 +5061,12 @@ function AutoDetect({ onApplyProfile, onUpdateChain }) {
     desktopReady
   }), [devices, bridgeReport, permissionState, desktopReady]);
   const autoDetectSummary = useMemo(() => summarizeAutoDetectReport(autoDetectReport), [autoDetectReport]);
+  const namedDevices = useMemo(() => applyDeviceAliases(devices, deviceAliases), [devices, deviceAliases]);
+  const gameProfileOptions = useMemo(() => mergeGameProfiles(savedGameProfiles), [savedGameProfiles]);
+  const activeGameMatch = useMemo(() => detectActiveGameProfile({
+    bridgeReport,
+    savedProfiles: savedGameProfiles
+  }), [bridgeReport, savedGameProfiles]);
 
   useEffect(() => {
     scanDevices({ auto: true });
@@ -5048,6 +5082,52 @@ function AutoDetect({ onApplyProfile, onUpdateChain }) {
         .catch(() => setDesktopInfo(null));
     }
   }, []);
+
+  useEffect(() => {
+    if (!autoSwitchEnabled || !activeGameMatch) return;
+    const switchKey = `${activeGameMatch.game}|${activeGameMatch.sourceProfile}|${activeGameMatch.matchedHint}`;
+    if (lastAutoSwitchRef.current === switchKey) return;
+    lastAutoSwitchRef.current = switchKey;
+    setSetupGame(activeGameMatch.game);
+    onAutoSwitchProfile?.(activeGameMatch);
+    setStatus(`Running game detected: ${activeGameMatch.game}. CueForge switched to ${activeGameMatch.sourceProfile}.`);
+  }, [activeGameMatch, autoSwitchEnabled, onAutoSwitchProfile]);
+
+  const updateAlias = (deviceKey, label) => {
+    setDeviceAliases((current) => {
+      const next = saveDeviceAlias(current, deviceKey, label);
+      safeSetJson(DEVICE_ALIAS_KEY, next);
+      return next;
+    });
+  };
+
+  const updateSetupGame = (nextGame) => {
+    setSetupGame(nextGame);
+    const saved = gameProfileOptions.find((profile) => profile.game === nextGame);
+    setGameProfileDraft({
+      game: nextGame,
+      sourceProfile: saved?.sourceProfile || 'competitiveFps',
+      matchHints: (saved?.matchHints || [nextGame]).join(', ')
+    });
+  };
+
+  const saveGameProfile = () => {
+    const next = upsertGameProfile(savedGameProfiles, {
+      game: gameProfileDraft.game,
+      sourceProfile: gameProfileDraft.sourceProfile,
+      matchHints: gameProfileDraft.matchHints
+    });
+    setSavedGameProfiles(next);
+    safeSetJson(GAME_PROFILE_KEY, next);
+    setSetupGame(gameProfileDraft.game);
+    setStatus(`Saved ${gameProfileDraft.game} profile. CueForge will match it from running-game or process hints.`);
+  };
+
+  const toggleAutoSwitch = (enabled) => {
+    setAutoSwitchEnabled(enabled);
+    localStorage.setItem('cueforge-auto-switch-game-profile', enabled ? 'on' : 'off');
+    setStatus(enabled ? 'Auto-switch is on. CueForge will switch profiles when the Windows scan sees a saved game.' : 'Auto-switch is off. Detected games will show as suggestions only.');
+  };
 
   const scanDevices = async ({ auto = false } = {}) => {
     if (!navigator.mediaDevices?.enumerateDevices) {
@@ -5094,7 +5174,7 @@ function AutoDetect({ onApplyProfile, onUpdateChain }) {
     }
   };
 
-  const labels = devices.map((device) => device.label.toLowerCase()).join(' ');
+  const labels = namedDevices.map((device) => device.displayLabel.toLowerCase()).join(' ');
   const hyperx = labels.includes('hyperx') || labels.includes('hyper x');
   const iem = labels.includes('iem') || labels.includes('usb-c') || labels.includes('dac') || labels.includes('headphones');
   const bridgeHyperx = Boolean(bridgeReport?.matches?.hyperx);
@@ -5103,14 +5183,14 @@ function AutoDetect({ onApplyProfile, onUpdateChain }) {
   const peaceInstalled = Boolean(bridgeReport?.tools?.peace?.installed);
   const sonarInstalled = Boolean(bridgeReport?.tools?.steelSeriesSonar?.installed);
   const virtualRouting = Boolean(bridgeReport?.tools?.vbCable?.installed || bridgeReport?.tools?.voicemeeter?.installed || bridgeReport?.matches?.virtualRouting);
-  const setupShareText = useMemo(() => buildSetupShareText({ devices, bridgeReport }), [devices, bridgeReport]);
+  const setupShareText = useMemo(() => buildSetupShareText({ devices: namedDevices, bridgeReport }), [namedDevices, bridgeReport]);
   const setupIntelligence = useMemo(() => buildSetupIntelligence({
-    devices,
+    devices: namedDevices,
     bridgeReport,
     game: setupGame,
     budgetTier,
     desktopReady
-  }), [devices, bridgeReport, setupGame, budgetTier, desktopReady]);
+  }), [namedDevices, bridgeReport, setupGame, budgetTier, desktopReady]);
   const setupIntelligenceText = useMemo(() => buildSetupIntelligenceText(setupIntelligence), [setupIntelligence]);
   const redditTesterAsk = useMemo(
     () => buildRedditSafeDraft({
@@ -5224,11 +5304,21 @@ function AutoDetect({ onApplyProfile, onUpdateChain }) {
         </div>
         <div className="stack device-list">
           {devices.length === 0 && <div className="data-card"><strong>No scan yet</strong><span>The app auto-scans on open. If nothing appears, click scan and allow microphone permission.</span></div>}
-          {devices.map((device, index) => (
-            <div className="data-card" key={`${device.kind}-${index}`}>
-              <strong>{autoNameDevice(device, index, bridgeReport)}</strong>
-              <span>{device.kind.replace('audio', 'audio ')}</span>
-              <small>{device.label ? 'Real browser device name' : 'Auto-name fallback until permission or bridge report gives the real name'}</small>
+          {namedDevices.map((device, index) => (
+            <div className="data-card device-name-card" key={device.deviceKey}>
+              <strong>{device.displayLabel}</strong>
+              <span>{String(device.kind || '').replace('audio', 'audio ')}</span>
+              <small>{device.needsAlias ? 'Browser hid the exact name. Add a friendly name so testers know which one to use.' : 'Noisy browser/Windows label cleaned locally. Edit it if this is not the right device.'}</small>
+              <label className="field compact-field">
+                <span>Friendly name</span>
+                <input
+                  value={device.alias}
+                  onChange={(event) => updateAlias(device.deviceKey, event.target.value)}
+                  placeholder={device.cleanedLabel}
+                  aria-label={`Friendly name for ${device.cleanedLabel || `device ${index + 1}`}`}
+                />
+              </label>
+              {device.hints.length > 0 && <em>{device.hints.join(' / ')}</em>}
             </div>
           ))}
         </div>
@@ -5336,8 +5426,11 @@ function AutoDetect({ onApplyProfile, onUpdateChain }) {
         <div className="setup-intel-controls">
           <label className="field">
             <span>Game focus</span>
-            <select value={setupGame} onChange={(event) => setSetupGame(event.target.value)}>
+            <select value={setupGame} onChange={(event) => updateSetupGame(event.target.value)}>
               {setupIntelligenceOptions.games.map((game) => <option key={game}>{game}</option>)}
+              {gameProfileOptions
+                .filter((profile) => !setupIntelligenceOptions.games.includes(profile.game))
+                .map((profile) => <option key={profile.id}>{profile.game}</option>)}
             </select>
           </label>
           <label className="field">
@@ -5346,6 +5439,60 @@ function AutoDetect({ onApplyProfile, onUpdateChain }) {
               {setupIntelligenceOptions.budgets.map((budget) => <option key={budget.id} value={budget.id}>{budget.label}</option>)}
             </select>
           </label>
+        </div>
+        <div className="data-card auto-switch-card">
+          <strong>{activeGameMatch ? `Detected game: ${activeGameMatch.game}` : 'Game auto-switch ready'}</strong>
+          <span>{activeGameMatch ? `Matched ${activeGameMatch.matchedHint}; profile ${activeGameMatch.sourceProfile}.` : 'Run the Windows scan while a game is open, then CueForge can switch to the saved game profile.'}</span>
+          <label>
+            <input type="checkbox" checked={autoSwitchEnabled} onChange={(event) => toggleAutoSwitch(event.target.checked)} />
+            <span>Auto-switch when a saved game is detected</span>
+          </label>
+        </div>
+        <div className="data-card game-profile-editor">
+          <strong>Saved game profile</strong>
+          <span>Map a game or process name to the CueForge profile it should use when detected.</span>
+          <div className="setup-intel-controls">
+            <label className="field">
+              <span>Game/profile name</span>
+              <input
+                value={gameProfileDraft.game}
+                onChange={(event) => setGameProfileDraft({ ...gameProfileDraft, game: event.target.value })}
+                placeholder="Example: Valorant / CS2"
+              />
+            </label>
+            <label className="field">
+              <span>CueForge profile</span>
+              <select
+                value={gameProfileDraft.sourceProfile}
+                onChange={(event) => setGameProfileDraft({ ...gameProfileDraft, sourceProfile: event.target.value })}
+              >
+                {Object.entries(localSourceProfiles).map(([id, profile]) => <option key={id} value={id}>{profile.name}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span>Game/process hints</span>
+              <input
+                value={gameProfileDraft.matchHints}
+                onChange={(event) => setGameProfileDraft({ ...gameProfileDraft, matchHints: event.target.value })}
+                placeholder="valorant, cs2, r5apex"
+              />
+            </label>
+          </div>
+          <div className="live-actions">
+            <button className="primary" onClick={saveGameProfile}><Save size={18} /> Save game profile</button>
+          </div>
+          <div className="module-list game-profile-list">
+            {gameProfileOptions.slice(0, 6).map((profile) => (
+              <div className="module-row" key={profile.id}>
+                <Gamepad2 size={17} />
+                <div>
+                  <strong>{profile.game}</strong>
+                  <span>{localSourceProfiles[profile.sourceProfile]?.name || profile.sourceProfile}</span>
+                  <small>{profile.matchHints.slice(0, 4).join(', ')}</small>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
         <div className="metric-row selftest-summary">
           <Metric label="Confidence" value={`${setupIntelligence.confidence}%`} tone={setupIntelligence.confidence >= 70 ? 'teal' : 'amber'} />
@@ -5552,25 +5699,6 @@ function DriverLayerPage({ apoConfig }) {
       ))}
     </section>
   );
-}
-
-function autoNameDevice(device, index, bridgeReport) {
-  if (device.label) {
-    if (/hyperx|hyper x/i.test(device.label)) return `${device.label} - HyperX mic candidate`;
-    if (/iem|dac|usb audio|headphone|headset/i.test(device.label)) return `${device.label} - IEM/output candidate`;
-    return device.label;
-  }
-
-  const bridgeDevices = [...(bridgeReport?.soundDevices || []), ...(bridgeReport?.mediaDevices || [])];
-  const bridgeMatch = bridgeDevices[index]?.Name || bridgeDevices.find((item) => {
-    if (device.kind === 'audioinput') return /mic|microphone|hyperx|hyper x/i.test(item.Name || '');
-    return /headphone|headset|dac|usb audio|iem|speaker/i.test(item.Name || '');
-  })?.Name;
-
-  if (bridgeMatch) return `${bridgeMatch} - from Windows bridge`;
-  if (device.kind === 'audioinput') return `Microphone input ${index + 1} - permission needed for real name`;
-  if (device.kind === 'audiooutput') return `Headphone/output ${index + 1} - permission needed for real name`;
-  return `Audio device ${index + 1} - permission needed for real name`;
 }
 
 function PandaNotesPage({ uiNotes = [], onOpen, onClearUiNotes }) {

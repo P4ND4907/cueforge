@@ -2561,6 +2561,20 @@ pre {
 .device-list {
   margin-top: 14px;
 }
+.device-name-card {
+  gap: 8px;
+}
+.device-name-card em {
+  color: #75e0c0;
+  font-size: 12px;
+  font-style: normal;
+}
+.compact-field {
+  margin-top: 4px;
+}
+.compact-field input {
+  min-height: 34px;
+}
 
 .detect-result {
   display: grid;
@@ -2608,6 +2622,20 @@ pre {
   grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: 12px;
   margin: 14px 0;
+}
+.auto-switch-card label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #d7ecec;
+  font-size: 13px;
+  font-weight: 800;
+}
+.game-profile-editor {
+  margin: 14px 0;
+}
+.game-profile-list {
+  margin-top: 10px;
 }
 
 .setup-intel-map,
