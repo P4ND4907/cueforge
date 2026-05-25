@@ -12,6 +12,138 @@ export const uiFeedbackTags = [
 
 export const uiFeedbackStatuses = ['open', 'reviewed', 'fixed', 'needs-retest', 'archived'];
 
+export const cueforgeCodeStructure = [
+  {
+    path: 'src/main.jsx',
+    role: 'React app shell, page routing, right-click Panda Note popover, export controls, and developer-facing inventory UI.',
+    audience: 'tester + developer'
+  },
+  {
+    path: 'src/uiFeedback.js',
+    role: 'Panda Notes data model, redaction, repair queue priority, target snippets, and developer repair packet generation.',
+    audience: 'developer'
+  },
+  {
+    path: 'src/reportPack.js',
+    role: 'Redacted issue report builder that attaches Panda Notes only when the tester chooses to export a report.',
+    audience: 'developer'
+  },
+  {
+    path: 'src/playerTrial.js',
+    role: 'Guided alpha/beta match trial scoring and tester packet builder.',
+    audience: 'tester'
+  },
+  {
+    path: 'src/betaCheckIn.js',
+    role: 'Anonymous tester IDs, check-ins, proof codes, and opt-in beta evidence packets.',
+    audience: 'tester'
+  },
+  {
+    path: 'src/styles.css',
+    role: 'Responsive desktop-tool styling, Panda Notes popover layout, code preview, and mobile containment rules.',
+    audience: 'developer'
+  },
+  {
+    path: 'electron/main.mjs',
+    role: 'Desktop shell, native Windows scan bridge, permission handling, and local APO draft helper.',
+    audience: 'developer'
+  },
+  {
+    path: 'docs/updates/2026-05-22-update-002.md',
+    role: 'Public Panda Notes release copy and privacy line for testers.',
+    audience: 'tester'
+  }
+];
+
+const uiFeedbackSnippets = {
+  broken: {
+    file: 'src/main.jsx',
+    language: 'jsx',
+    title: 'Right-click note save path',
+    code: `const saveUiNote = () => {
+  if (!uiNoteDraft?.note.trim()) {
+    setUiNoteStatus('Add a quick note first, then save it.');
+    return;
+  }
+
+  const nextNote = createUiFeedbackNote(uiNoteDraft);
+  const next = [...uiNotes, nextNote].slice(-80);
+  setUiNotes(next);
+  safeSetJson(UI_FEEDBACK_KEY, next);
+};`
+  },
+  'layout issue': {
+    file: 'src/styles.css',
+    language: 'css',
+    title: 'Panda Note popover and mobile containment',
+    code: `.ui-note-popover {
+  position: fixed;
+  width: min(340px, calc(100vw - 32px));
+  border-radius: 8px;
+  background: rgba(8, 17, 22, 0.98);
+}
+
+@media (max-width: 540px) {
+  .tester-note-banner { grid-template-columns: 1fr; }
+}`
+  },
+  'missing feedback': {
+    file: 'src/uiFeedback.js',
+    language: 'js',
+    title: 'Repair queue state and empty-note guidance',
+    code: `return {
+  schema: 'cueforge.ui-repair-check.v1',
+  status: safe.length ? 'repair-queue-ready' : 'no-notes-yet',
+  totalNotes: safe.length,
+  actionCount: actions.length,
+  topAction: actions[0] || null,
+  actions
+};`
+  },
+  slow: {
+    file: 'src/signalAnalyzer.js',
+    language: 'js',
+    title: 'Signal analyzer path to profile before changing UI',
+    code: `export function analyzeAudioFrame(frame = {}, options = {}) {
+  const bands = normalizeBands(frame.bands || []);
+  const metrics = scoreSignalBands(bands, options);
+  return buildSignalAnalysis(metrics, options);
+}`
+  },
+  'text issue': {
+    file: 'src/main.jsx',
+    language: 'jsx',
+    title: 'Tester-facing Panda Note copy',
+    code: `<p>
+  Tag what felt off here. This stays local until it is included
+  in a report/export you send.
+</p>`
+  },
+  confusing: {
+    file: 'src/main.jsx',
+    language: 'jsx',
+    title: 'Target description used for retrieval',
+    code: `function describeFeedbackTarget(target) {
+  const panel = target.closest('.panel')?.querySelector('.panel-title span')?.textContent || '';
+  const text = target.textContent?.replace(/\\s+/g, ' ').trim() || '';
+  return { label: text || panel || target.tagName.toLowerCase(), panel };
+}`
+  },
+  idea: {
+    file: 'docs/OPEN_TASK_QUEUE.md',
+    language: 'md',
+    title: 'Product idea triage boundary',
+    code: `- Keep alpha tester feedback local-first.
+- Promote repeated Panda Notes into planned work.
+- Reject hidden telemetry and silent Windows audio changes.`
+  }
+};
+
+export function getUiFeedbackSnippet(action = {}) {
+  const tag = uiFeedbackTags.includes(action.tag) ? action.tag : 'confusing';
+  return uiFeedbackSnippets[tag] || uiFeedbackSnippets.confusing;
+}
+
 export function createUiFeedbackNote({
   id = '',
   page = 'unknown',
@@ -112,6 +244,7 @@ export function buildUiFeedbackRepairCheck(notes = [], { now = new Date() } = {}
       count: group.notes.length,
       latestAt: group.notes.at(-1)?.createdAt || null,
       title: `${titleForTag(group.tag)}: ${group.area}`,
+      snippet: getUiFeedbackSnippet(group),
       evidence: group.notes.slice(-3).map((item) => ({
         note: item.note,
         status: item.status,
@@ -192,6 +325,10 @@ export function buildUiFeedbackRepairPacket(notes = [], options = {}) {
     lines.push(`   Evidence count: ${action.count}`);
     lines.push(`   Suggested fix: ${action.suggestedFix}`);
     lines.push(`   Test plan: ${action.testPlan}`);
+    if (action.snippet) {
+      lines.push(`   Target code: ${action.snippet.file}`);
+      lines.push(`   Target area: ${action.snippet.title}`);
+    }
     action.evidence.forEach((item, evidenceIndex) => {
       lines.push(`   Note ${evidenceIndex + 1}: ${item.note || '[empty]'}`);
       lines.push(`   Target ${evidenceIndex + 1}: ${item.target || '[unknown]'} at ${item.viewport.width}x${item.viewport.height}, ${item.viewport.xPercent}%/${item.viewport.yPercent}%`);

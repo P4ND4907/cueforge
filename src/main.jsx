@@ -80,6 +80,7 @@ import {
   buildUiFeedbackRepairCheck,
   buildUiFeedbackRepairPacket,
   cleanupUiFeedbackNotes,
+  cueforgeCodeStructure,
   createUiFeedbackNote,
   markUiFeedbackNotes,
   summarizeUiFeedback,
@@ -584,6 +585,7 @@ const EXPERT_NAV_ITEMS = [
   ['masking', AudioLines, 'Masking Lab'],
   ['trial', Gamepad2, 'Player Trial'],
   ['beta', Activity, 'Beta Check-in'],
+  ['notes', Bug, 'Panda Notes'],
   ['saves', Save, 'Gameplay Save'],
   ['reports', Bug, 'Report Lab'],
   ['calibration', Sparkles, 'Calibration'],
@@ -1112,6 +1114,17 @@ function App() {
 
         {active === 'beta' && <BetaCheckInPage />}
 
+        {active === 'notes' && (
+          <PandaNotesPage
+            uiNotes={uiNotes}
+            onOpen={setActive}
+            onClearUiNotes={() => {
+              setUiNotes([]);
+              safeSetJson(UI_FEEDBACK_KEY, []);
+              setUiNoteStatus('Panda Notes cleared from this browser.');
+            }}
+          />
+        )}
         {active === 'saves' && (
           <GameplaySavePage
             eq={eq}
@@ -3619,6 +3632,7 @@ function sectionTitle(id) {
     masking: 'Tactical Masking Lab',
     trial: 'Player Trial',
     beta: 'Beta Check-in',
+    notes: 'Panda Notes',
     saves: 'Gameplay Save',
     reports: 'Report Lab',
     calibration: 'Auto Calibration',
@@ -5558,6 +5572,165 @@ function autoNameDevice(device, index, bridgeReport) {
   if (device.kind === 'audioinput') return `Microphone input ${index + 1} - permission needed for real name`;
   if (device.kind === 'audiooutput') return `Headphone/output ${index + 1} - permission needed for real name`;
   return `Audio device ${index + 1} - permission needed for real name`;
+}
+
+function PandaNotesPage({ uiNotes = [], onOpen, onClearUiNotes }) {
+  const [mode, setMode] = useState('developer');
+  const [selectedId, setSelectedId] = useState('');
+  const [packetStatus, setPacketStatus] = useState('Developer packet is ready when notes exist.');
+  const uiSummary = summarizeUiFeedback(uiNotes);
+  const repairCheck = useMemo(() => buildUiFeedbackRepairCheck(uiNotes), [uiNotes]);
+  const repairPacket = useMemo(() => buildUiFeedbackRepairPacket(uiNotes), [uiNotes]);
+  const actions = repairCheck.actions || [];
+  const selectedAction = actions.find((action) => action.id === selectedId) || actions[0] || null;
+  const selectedSnippet = selectedAction?.snippet;
+  const audienceCards = [
+    {
+      key: 'alpha',
+      label: 'Alpha tester',
+      headline: 'Catch first-run breaks',
+      detail: 'Right-click confusing, cramped, broken, or missing-feedback areas during setup, mic, EQ, and report flows.'
+    },
+    {
+      key: 'beta',
+      label: 'Beta tester',
+      headline: 'Prove repeat issues',
+      detail: 'Pair Panda Notes with Beta Check-in, Player Trial, or Report Lab so repeated session feedback becomes reproducible.'
+    },
+    {
+      key: 'developer',
+      label: 'Developer',
+      headline: 'Turn notes into fixes',
+      detail: 'Select a target issue, inspect the attached note evidence and source snippet, then run the focused test plan.'
+    }
+  ];
+  const activeAudience = audienceCards.find((item) => item.key === mode) || audienceCards[2];
+
+  useEffect(() => {
+    if (!actions.length) {
+      setSelectedId('');
+      return;
+    }
+    if (!actions.some((action) => action.id === selectedId)) {
+      setSelectedId(actions[0].id);
+    }
+  }, [actions, selectedId]);
+
+  const copyRepairPacket = async () => {
+    try {
+      await navigator.clipboard?.writeText(repairPacket);
+      setPacketStatus('Repair packet copied. Paste it into the developer workflow, then test the fix.');
+    } catch {
+      setPacketStatus('Clipboard was blocked. Export the repair packet instead.');
+    }
+  };
+
+  return (
+    <section className="grid two panda-notes-grid">
+      <Panel className="wide panda-notes-hero" title="Panda Notes Console" icon={Bug}>
+        <div className="panda-mode-tabs source-tabs">
+          {audienceCards.map((item) => (
+            <button className={mode === item.key ? 'selected' : ''} key={item.key} onClick={() => setMode(item.key)}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <div className="panda-audience-card">
+          <strong>{activeAudience.headline}</strong>
+          <span>{activeAudience.detail}</span>
+        </div>
+        <div className="metric-row selftest-summary">
+          <Metric label="Notes" value={String(uiSummary.total)} tone={uiSummary.total ? 'teal' : 'amber'} />
+          <Metric label="Top tag" value={uiSummary.topTag} tone={uiSummary.total ? 'teal' : 'amber'} />
+          <Metric label="Repair actions" value={String(repairCheck.actionCount)} tone={repairCheck.actionCount ? 'teal' : 'amber'} />
+          <Metric label="Code map" value={String(cueforgeCodeStructure.length)} tone="teal" />
+        </div>
+        <div className="live-actions">
+          <button className="primary" onClick={() => onOpen('reports')}><Bug size={18} /> Open Report Lab</button>
+          <button className="ghost" onClick={() => onOpen('beta')}><Activity size={18} /> Open Beta Check-in</button>
+          <button className="ghost" onClick={copyRepairPacket} disabled={!uiNotes.length}><Copy size={18} /> Copy dev packet</button>
+          <button className="ghost" onClick={() => downloadTextFile('cueforge-panda-notes-repair-packet.txt', repairPacket)} disabled={!uiNotes.length}><Download size={18} /> Export dev packet</button>
+          <button className="ghost" onClick={onClearUiNotes} disabled={!uiNotes.length}><RotateCcw size={18} /> Clear notes</button>
+        </div>
+        <p className="callout">{packetStatus}</p>
+      </Panel>
+
+      <Panel title="Tester Flow" icon={ShieldCheck}>
+        <div className="mini-step-list">
+          <div><strong>1</strong><span>Right-click the exact area that felt off.</span></div>
+          <div><strong>2</strong><span>Tag the issue and write the note in plain tester language.</span></div>
+          <div><strong>3</strong><span>Export a redacted report only when you choose to send it.</span></div>
+        </div>
+        <p className="callout">No hidden upload. Panda Notes stay local unless attached to a report, setup pack, or developer packet.</p>
+      </Panel>
+
+      <Panel className="wide" title="Target Issues" icon={Bug}>
+        <div className="panda-issue-layout">
+          <div className="issue-list">
+            {!actions.length && (
+              <div className="data-card">
+                <strong>No selected issues yet</strong>
+                <span>Right-click a real app area, save a Panda Note, then return here to select the target issue and inspect the repair snippet.</span>
+              </div>
+            )}
+            {actions.map((action) => (
+              <button
+                className={`issue-button ${selectedAction?.id === action.id ? 'selected' : ''}`}
+                key={action.id}
+                onClick={() => setSelectedId(action.id)}
+              >
+                <strong>{action.title}</strong>
+                <span>{action.page} / {action.count} note{action.count === 1 ? '' : 's'} / priority {action.priority}</span>
+                <small>{action.evidence?.[0]?.note || action.suggestedFix}</small>
+              </button>
+            ))}
+          </div>
+          <div className="note-detail-popout">
+            {selectedAction ? (
+              <>
+                <strong>{selectedAction.title}</strong>
+                <span>{selectedAction.suggestedFix}</span>
+                <small>{selectedAction.testPlan}</small>
+                <div className="selected-note-evidence">
+                  {(selectedAction.evidence || []).map((item, index) => (
+                    <div className="data-card" key={`${item.createdAt}-${index}`}>
+                      <strong>Note {index + 1}</strong>
+                      <span>{item.note || 'No written note attached.'}</span>
+                      <small>{item.target || 'Unknown target'} / {item.viewport.width}x{item.viewport.height}</small>
+                    </div>
+                  ))}
+                </div>
+                {selectedSnippet && (
+                  <div className="snippet-card">
+                    <strong>{selectedSnippet.file}</strong>
+                    <span>{selectedSnippet.title}</span>
+                    <pre>{selectedSnippet.code}</pre>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <strong>Pick a note to pop the target code</strong>
+                <span>Once a Panda Note exists, the selected issue will show tester evidence, fix guidance, and a source snippet.</span>
+              </>
+            )}
+          </div>
+        </div>
+      </Panel>
+
+      <Panel className="wide" title="Code Structure Viewer" icon={BrainCircuit}>
+        <div className="code-structure-list">
+          {cueforgeCodeStructure.map((entry) => (
+            <div className="code-row" key={entry.path}>
+              <strong>{entry.path}</strong>
+              <span>{entry.role}</span>
+              <em>{entry.audience}</em>
+            </div>
+          ))}
+        </div>
+      </Panel>
+    </section>
+  );
 }
 
 function Inventory({ onOpen, onRerunSetup, uiNotes = [], shortcutVault = [], onUpdateShortcuts, onUpdateUiNotes, onClearUiNotes }) {

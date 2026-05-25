@@ -3,7 +3,9 @@ import {
   buildUiFeedbackRepairCheck,
   buildUiFeedbackRepairPacket,
   cleanupUiFeedbackNotes,
+  cueforgeCodeStructure,
   createUiFeedbackNote,
+  getUiFeedbackSnippet,
   markUiFeedbackNotes,
   sanitizeUiFeedbackNotes,
   summarizeUiFeedback
@@ -83,8 +85,11 @@ describe('ui feedback notes', () => {
     expect(check.totalNotes).toBe(3);
     expect(check.actionCount).toBe(3);
     expect(check.topAction.tag).toBe('broken');
+    expect(check.topAction.snippet.file).toBe('src/main.jsx');
+    expect(check.topAction.snippet.code).toContain('saveUiNote');
     expect(check.actions[1].tag).toBe('layout issue');
     expect(check.actions[1].suggestedFix).toContain('responsive');
+    expect(check.actions[1].snippet.file).toBe('src/styles.css');
   });
 
   it('builds a redacted developer repair packet', () => {
@@ -107,6 +112,22 @@ describe('ui feedback notes', () => {
     expect(packet).toContain('[redacted-email]');
     expect(packet).not.toContain('carls');
     expect(packet).toContain('Do not remove privacy redaction');
+    expect(packet).toContain('Target code: src/uiFeedback.js');
+  });
+
+  it('exposes a code structure map and target snippets for selected notes', () => {
+    const action = {
+      page: 'Report Lab',
+      area: 'Download report',
+      tag: 'broken'
+    };
+    const snippet = getUiFeedbackSnippet(action);
+
+    expect(cueforgeCodeStructure.length).toBeGreaterThanOrEqual(6);
+    expect(cueforgeCodeStructure.some((entry) => entry.path === 'src/main.jsx')).toBe(true);
+    expect(cueforgeCodeStructure.some((entry) => entry.path === 'src/reportPack.js')).toBe(true);
+    expect(snippet.file).toBe('src/main.jsx');
+    expect(snippet.code).toContain('saveUiNote');
   });
 
   it('marks notes through review, retest, and cleanup states', () => {

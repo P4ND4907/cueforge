@@ -3715,3 +3715,202 @@ pre {
     display: none;
   }
 }
+
+.panda-notes-grid {
+  align-items: start;
+}
+
+.panda-notes-hero {
+  background:
+    linear-gradient(135deg, rgba(18,201,154,0.12), rgba(246,177,61,0.07)),
+    rgba(13, 24, 29, 0.92);
+}
+
+.panda-mode-tabs {
+  margin-bottom: 12px;
+}
+
+.panda-audience-card {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid rgba(18,201,154,0.2);
+  border-radius: 8px;
+  background: rgba(8, 17, 22, 0.64);
+}
+
+.panda-audience-card strong,
+.panda-audience-card span {
+  overflow-wrap: anywhere;
+}
+
+.panda-audience-card span {
+  color: #b6c8cb;
+  line-height: 1.45;
+}
+
+.mini-step-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.mini-step-list div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.045);
+}
+
+.mini-step-list strong {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(18,201,154,0.16);
+  color: #12c99a;
+}
+
+.mini-step-list span {
+  color: #c9d7d9;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.panda-issue-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+  gap: 14px;
+  align-items: start;
+  margin-top: 14px;
+}
+
+.issue-list,
+.selected-note-evidence,
+.code-structure-list {
+  display: grid;
+  gap: 10px;
+}
+
+.issue-list {
+  align-content: start;
+}
+
+.issue-button {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  padding: 13px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.045);
+  color: #edf8f7;
+  cursor: pointer;
+}
+
+.issue-button.selected {
+  border-color: rgba(18,201,154,0.48);
+  background: rgba(18,201,154,0.11);
+}
+
+.issue-button strong,
+.issue-button span,
+.issue-button small {
+  overflow-wrap: anywhere;
+}
+
+.issue-button span,
+.issue-button small {
+  color: #9fb1b4;
+  line-height: 1.35;
+}
+
+.note-detail-popout {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(246,177,61,0.24);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(246,177,61,0.08), rgba(18,201,154,0.05)),
+    #081116;
+  box-shadow: 0 20px 70px rgba(0,0,0,0.24);
+}
+
+.note-detail-popout > strong {
+  font-size: 20px;
+}
+
+.note-detail-popout > span,
+.note-detail-popout > small {
+  color: #aebfc1;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.snippet-card {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.snippet-card strong,
+.snippet-card span {
+  overflow-wrap: anywhere;
+}
+
+.snippet-card span {
+  color: #f6b13d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.snippet-card pre {
+  margin: 4px 0 0;
+  max-height: 300px;
+}
+
+.code-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.44fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.045);
+}
+
+.code-row strong,
+.code-row span,
+.code-row em {
+  overflow-wrap: anywhere;
+}
+
+.code-row span {
+  color: #aebfc1;
+  line-height: 1.4;
+}
+
+.code-row em {
+  color: #f6b13d;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .panda-issue-layout,
+  .code-row { grid-template-columns: 1fr; }
+  .code-row em { text-align: left; }
+}
