@@ -5,9 +5,10 @@ Use this with the Chrome tab group: Discord, Reddit Inbox, and X / Follow.
 ## Before Posting
 
 1. Open `docs/social/PROFILE_KIT_2026-05-25.md`.
-2. Confirm the account is the correct one before changing anything.
-3. Do not paste passwords, recovery codes, private screenshots, or raw account details into any public box.
-4. Do not mass-post the same link into communities.
+2. For the current Auto Detect/device-name sprint, open `docs/social/2026-05-25-live-social-sprint.md`.
+3. Confirm the account is the correct one before changing anything.
+4. Do not paste passwords, recovery codes, private screenshots, or raw account details into any public box.
+5. Do not mass-post the same link into communities.
 
 ## X / Follow Tab
 
@@ -25,7 +26,7 @@ After saving:
 
 1. Post the pinned X copy from `PROFILE_KIT_2026-05-25.md`.
 2. Pin it.
-3. Follow only relevant accounts from the starter list.
+3. For the next follow wave, use the 10-account cap in `2026-05-25-live-social-sprint.md`.
 4. Reply helpfully to 2-3 relevant posts before posting another link.
 
 ## Reddit Inbox Tab
@@ -42,7 +43,8 @@ After saving:
 1. Check inbox replies before posting.
 2. Respond to real replies first.
 3. Use no-link helpful comments unless a thread clearly asks for a tool.
-4. If posting on profile, use the Reddit profile post from `PROFILE_KIT_2026-05-25.md`.
+4. If replying to an invited product thread, use the `r/micro_saas` reply in `2026-05-25-live-social-sprint.md`.
+5. If posting on profile, use the Reddit profile post from `PROFILE_KIT_2026-05-25.md`.
 
 ## Discord Tab
 
@@ -56,7 +58,7 @@ Server fields:
 After saving:
 
 1. Post the short welcome if the server needs a clean pinned intro.
-2. Post the lab update in `#lab-updates`.
+2. Post the May 25 Auto Detect lab update in `#lab-updates`.
 3. Invite testers to run one setup and one real match.
 4. Keep raw setup issues in the right channels so the server looks organized.
 

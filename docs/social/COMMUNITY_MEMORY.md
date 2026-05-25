@@ -1,6 +1,6 @@
 # CueForge Community Memory
 
-Last updated: 2026-05-24T11:30:00-08:00
+Last updated: 2026-05-25T13:35:00-08:00
 
 This is the GitHub-side memory for public outreach. It uses public community/thread data only; no account cookies, private messages, or personal data are collected.
 
@@ -18,7 +18,9 @@ This is the GitHub-side memory for public outreach. It uses public community/thr
 
 Reddit filtered the early tester posts in `r/alphaandbetausers`, `r/betatests`, and `r/SideProject`. Treat that as an account-trust signal. The safe path is profile completion, useful no-link comments, and slow follow-up after people reply. Do not create new subreddit posts right now.
 
-May 24 social lane: use `docs/social/2026-05-24-social-command-center.md` as the active rollout pack. Discord and X can carry the update. Reddit stays reply-only until profile posting and ordinary comments are healthy.
+May 24 social lane: use `docs/social/2026-05-24-social-command-center.md` as the baseline rollout pack. Discord and X can carry updates. Reddit stays reply-only until profile posting and ordinary comments are healthy.
+
+May 25 social lane: use `docs/social/2026-05-25-live-social-sprint.md` for the Auto Detect/device-name/game-profile story. Reddit feed showed one high-fit invited thread, `r/micro_saas - Drop your product, I'll help you find your first 100 users`; prefer that kind of invited product reply over cold launch posts.
 
 ## High-Engagement Watchlist
 
@@ -44,6 +46,25 @@ Suggested reply shape:
 
 ```text
 I would separate the problem into clean output, driver/routing stability, and software processing. For IEMs or normal headphones, a decent USB DAC/interface is usually enough if the motherboard output is already clean. A gaming sound card only really earns its spot if you use its routing or surround features. Big thing for FPS: do not stack every spatializer at once. Game HRTF plus Windows Sonic/Dolby plus device surround plus EQ can make direction worse. Fair test: same map/range, same volume, one spatial mode at a time, one EQ at a time, then one real match note for footsteps, direction, comms, and fatigue.
+```
+
+### 2. r/micro_saas - Drop your product, I'll help you find your first 100 users
+
+URL: not captured from feed screenshot; open the visible Reddit recent-post card before replying.
+Status: drafted
+Tags: first-100-users, beta-testers, product-feedback
+Next move: Reply only if the thread is still active and rules fit. Use one concise product reply, preferably with "link is on my profile" instead of a direct app link.
+
+Suggested reply shape:
+
+```text
+CueForge - a local-first web app for Windows FPS players who have messy headset/mic/audio stacks.
+
+It helps players check the real audio chain, clean up confusing device names, test mic/EQ changes, save game profiles, and export configs/reports without dumping private device IDs.
+
+The first 100 users I need are not generic gamers. I need people with SteelSeries/HyperX/Realtek/USB DAC/Discord/Sonar/APO setups who can run Auto Detect, play one real match, and say what got clearer, worse, or confusing.
+
+Link is on my profile. I am mostly trying to learn where those players already hang out.
 ```
 
 ## Conversation Flow
