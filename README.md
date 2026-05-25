@@ -42,7 +42,7 @@ Use GitHub issues for feedback:
 ## Public Alpha
 
 - Web app: https://p4nd4907.github.io/cueforge/
-- Windows alpha download: https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.2
+- Latest Windows alpha release: https://github.com/P4ND4907/cueforge/releases/latest
 - Feedback thread: https://github.com/P4ND4907/cueforge/issues/1
 
 The Windows alpha is unsigned while CueForge builds reputation, so Windows may show `Windows protected your PC`. That prompt is expected for an unsigned alpha, not proof that the app is broken. Only run builds from the official GitHub release; if you trust that download, choose `More info` and then `Run anyway`. Use the web app first if you want the lightest test.

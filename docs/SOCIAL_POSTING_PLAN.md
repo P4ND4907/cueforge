@@ -9,7 +9,7 @@ App: https://p4nd4907.github.io/cueforge/
 Discord: https://discord.gg/vyQwyJ49v
 GitHub: https://github.com/P4ND4907/cueforge
 Feedback: https://github.com/P4ND4907/cueforge/issues/1
-X: https://x.com/PAND4907
+X: https://x.com/CueForge907
 ```
 
 Current rollout pack: `docs/social/2026-05-24-social-command-center.md`

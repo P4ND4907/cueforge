@@ -33,6 +33,18 @@ export const localSourceProfiles = {
       { type: 'PK', fc: 4100, gainDb: 1.6, q: 1.2 }
     ]
   },
+  arctisNovaProOmni: {
+    name: 'SteelSeries Arctis Nova Pro Omni',
+    preampDb: -1.5,
+    source: '../autoeq/profiles/headsets/steelseries-arctis-nova-pro-omni.json',
+    description: 'Starter profile for Nova Pro Omni setups. Verify GameHub/Sonar source mix, chat/game split, and spatial layer before judging EQ.',
+    filters: [
+      { type: 'PK', fc: 120, gainDb: -0.8, q: 0.9 },
+      { type: 'PK', fc: 2800, gainDb: 0.8, q: 1.0 },
+      { type: 'PK', fc: 4200, gainDb: 1.0, q: 1.2 },
+      { type: 'PK', fc: 8200, gainDb: -0.6, q: 1.8 }
+    ]
+  },
   balanced: {
     name: 'Balanced',
     preampDb: 0,
@@ -57,6 +69,12 @@ export const hardwareTargets = [
     type: 'Microphone',
     aim: 'Reduce boom, preserve consonants, avoid aggressive noise suppression artifacts.',
     setup: 'Start at 80-90% Windows input gain, then reduce if clip risk rises above 15%.'
+  },
+  {
+    name: 'SteelSeries Arctis Nova Pro Omni',
+    type: 'Wireless headset',
+    aim: 'Prove GameHub/Sonar multi-source routing before trusting any EQ or spatial result.',
+    setup: 'Confirm Game, Chat, Bluetooth, and mic routes, use one spatial layer, then run one match A/B before changing more.'
   }
 ];
 

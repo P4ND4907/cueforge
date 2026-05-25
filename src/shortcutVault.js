@@ -10,7 +10,7 @@ export function createDefaultShortcuts({ release = {}, brand = {} } = {}) {
       id: 'download-alpha',
       label: 'Download CueForge alpha',
       kind: 'link',
-      value: release.download || 'https://github.com/P4ND4907/cueforge/releases',
+      value: release.download || 'https://github.com/P4ND4907/cueforge/releases/latest',
       scope: 'player',
       locked: false
     },

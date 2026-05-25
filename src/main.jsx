@@ -143,6 +143,7 @@ const headsetProfiles = [
   { name: 'HyperX mic cleanup', correction: 'High-pass feel, lower boom, consonant clarity', focus: 'Discord voice quality', score: 86 },
   { name: 'Generic FPS Headset', correction: '+3dB 2.5kHz, -2dB 120Hz', focus: 'Footsteps and voice clarity', score: 82 },
   { name: 'SteelSeries / Sonar Style', correction: '+2dB 4kHz, -1dB 8kHz', focus: 'Competitive imaging', score: 88 },
+  { name: 'SteelSeries Arctis Nova Pro Omni', correction: 'Verify GameHub/Sonar source mix before EQ', focus: 'OmniPlay routing and mic clarity', score: 90 },
   { name: 'Music + Media', correction: '+2dB 60Hz, +1dB 12kHz', focus: 'Warm cinematic balance', score: 74 }
 ];
 
@@ -167,10 +168,13 @@ const socialBrand = {
   ]
 };
 
+const socialLinks = Object.fromEntries(socialBrand.links);
+const latestReleaseUrl = 'https://github.com/P4ND4907/cueforge/releases/latest';
+
 const publicRelease = {
   app: 'https://p4nd4907.github.io/cueforge/',
-  download: 'https://github.com/P4ND4907/cueforge/releases/download/v0.1.0-alpha.2/CueForge-0.1.0-x64.exe',
-  notes: 'https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.2',
+  download: latestReleaseUrl,
+  notes: latestReleaseUrl,
   feedback: 'https://github.com/P4ND4907/cueforge/issues/1'
 };
 
@@ -618,7 +622,7 @@ function App() {
   const [uiNotes, setUiNotes] = useState(() => getSavedJson(UI_FEEDBACK_KEY) || []);
   const [shortcutVault, setShortcutVault] = useState(() => mergeShortcutDefaults(getSavedJson(SHORTCUT_VAULT_KEY), {
     release: publicRelease,
-    brand: { discord: socialBrand.links.find(([label]) => label === 'Discord')?.[1] }
+    brand: { discord: socialLinks.Discord }
   }));
   const [userSettings, setUserSettings] = useState(() => normalizeUserSettings(getSavedJson(USER_SETTINGS_KEY)));
   const [uiNoteDraft, setUiNoteDraft] = useState(null);
@@ -649,7 +653,7 @@ function App() {
   const appInviteText = useMemo(() => buildAppInviteText({
     appUrl: publicRelease.app,
     releaseUrl: publicRelease.download,
-    discordUrl: socialBrand.links.find(([label]) => label === 'Discord')?.[1]
+    discordUrl: socialLinks.Discord
   }), []);
 
   const latestHearingProfile = () => {
@@ -3217,8 +3221,8 @@ function BetaCheckInPage() {
 }
 
 function CommunityHubPage({ cueforgeState = null }) {
-  const appUrl = 'https://p4nd4907.github.io/cueforge/';
-  const discordUrl = 'https://discord.gg/vyQwyJ49v';
+  const appUrl = publicRelease.app;
+  const discordUrl = socialLinks.Discord;
   const [items, setItems] = useState(() => getSavedJson('cueforge-community-feedback') || []);
   const [source, setSource] = useState('Discord');
   const [platform, setPlatform] = useState('Discord');
@@ -5099,8 +5103,8 @@ function AutoDetect({ onApplyProfile, onUpdateChain }) {
     () => buildRedditSafeDraft({
       mode: 'community',
       summary: null,
-      appUrl: 'https://p4nd4907.github.io/cueforge/',
-      discordUrl: 'https://discord.gg/vyQwyJ49v'
+      appUrl: publicRelease.app,
+      discordUrl: socialLinks.Discord
     }),
     []
   );
