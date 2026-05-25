@@ -1,3 +1,5 @@
+import { attachStateAnchor, STATE_CONSUMERS } from './core/stateAdapters.js';
+
 export const communitySources = ['Discord', 'X', 'Reddit', 'In-game squad'];
 
 export const feedbackTypes = [
@@ -84,14 +86,37 @@ export function buildCommunityDraft({ platform = 'Discord', summary, appUrl, dis
     : 'We are collecting first tester notes now.';
 
   if (platform === 'X') {
-    return `${base}\n\nCueForge beta is free to test. Bring your real FPS setup: IEMs, headset, mic, Discord, APO, messy Windows routing, all of it.\n\nApp: ${appUrl}\nDiscord: ${discordUrl}\n\n#CueForge #FPSAudio #GamingAudio #IEM #EqualizerAPO`;
+    return [
+      base,
+      '',
+      'I would test one thing at a time before trusting any global preset:',
+      '',
+      '- same map or range',
+      '- same volume',
+      '- one spatial mode',
+      '- one EQ change',
+      '- one real match note for direction, footsteps, comms, fatigue, and mic clarity',
+      '',
+      'That is the loop I am building CueForge around. No link drop here unless someone asks for it.'
+    ].join('\n');
   }
 
   if (platform === 'Reddit') {
-    return buildRedditSafeDraft({ mode: 'community', summary, appUrl, discordUrl });
+    return buildRedditSafeDraft({ mode: 'comment', summary, appUrl, discordUrl });
   }
 
-  return `${base}\n\nTonight: run CueForge, play one real match, then post a clean check-in.\n\nDrop game, gear, this-or-that choice, and whether the issue feels like tuning, game/server, Discord, mic, or Windows routing.\n\nApp: ${appUrl}`;
+  return [
+    base,
+    '',
+    'Reply in the existing thread with the useful part only:',
+    '',
+    '- what changed',
+    '- what got worse',
+    '- whether it felt like tuning, game audio, server timing, Discord, mic gain, or Windows routing',
+    '',
+    `If they ask for the tool, send CueForge: ${appUrl}`,
+    `Main hub: ${discordUrl}`
+  ].join('\n');
 }
 
 export function buildRedditSafeDraft({ mode = 'community', summary, appUrl, discordUrl } = {}) {
@@ -150,23 +175,7 @@ export function buildRedditSafeDraft({ mode = 'community', summary, appUrl, disc
     ].join('\n');
   }
 
-  return [
-    'Disclosure: CueForge is my project.',
-    '',
-    signal,
-    '',
-    'I am looking for a few FPS players willing to do one clean test: run a setup check, play one real match, then say what actually changed.',
-    '',
-    'Most useful testers:',
-    '- IEM or headset users',
-    '- USB mic or HyperX-style mic users',
-    '- Equalizer APO / Peace / Sonar users',
-    '- players who can compare footsteps, direction, comms, fatigue, and mic clarity',
-    '',
-    'No hype needed. If it gets worse, that is useful.',
-    '',
-    'I am keeping links out of this post so it does not turn into a link drop. The app, GitHub, and Discord are on my profile, and I can share them if the mods/community are okay with it.'
-  ].join('\n');
+  return buildRedditSafeDraft({ mode: 'comment', summary, appUrl, discordUrl });
 }
 
 export function buildSetupShareText({ devices = [], bridgeReport = null } = {}) {
@@ -198,6 +207,26 @@ export function buildSetupShareText({ devices = [], bridgeReport = null } = {}) 
   ].join('\n');
 }
 
+export function buildCommunityFeedbackPacket({
+  summary,
+  items = [],
+  approvalQueue = [],
+  threadSummary = null,
+  threads = [],
+  cueforgeState = null,
+  now = new Date()
+} = {}) {
+  return attachStateAnchor({
+    schema: 'cueforge.community-packet.v2',
+    exportedAt: now.toISOString(),
+    summary,
+    items,
+    approvalQueue,
+    threadSummary,
+    threads
+  }, cueforgeState, STATE_CONSUMERS.discordFeedbackPack);
+}
+
 export function summarizeDetectedSetup({ devices = [], bridgeReport = null } = {}) {
   const safeDevices = devices
     .filter((device) => String(device?.kind || '').includes('audio'))
@@ -215,6 +244,16 @@ export function summarizeDetectedSetup({ devices = [], bridgeReport = null } = {
     ['Equalizer APO', bridgeReport?.tools?.equalizerApo?.installed],
     ['Peace UI', bridgeReport?.tools?.peace?.installed],
     ['SteelSeries Sonar', bridgeReport?.tools?.steelSeriesSonar?.installed],
+    ['FxSound', bridgeReport?.tools?.fxSound?.installed],
+    ['Razer THX / Synapse', bridgeReport?.tools?.razerThx?.installed],
+    ['Dolby Access / Atmos', bridgeReport?.tools?.dolbyAccess?.installed],
+    ['DTS Sound Unbound', bridgeReport?.tools?.dtsSoundUnbound?.installed],
+    ['Nahimic', bridgeReport?.tools?.nahimic?.installed],
+    ['NVIDIA Broadcast', bridgeReport?.tools?.nvidiaBroadcast?.installed],
+    ['Elgato Wave Link', bridgeReport?.tools?.elgatoWaveLink?.installed],
+    ['Logitech G HUB', bridgeReport?.tools?.logitechGHub?.installed],
+    ['Corsair iCUE', bridgeReport?.tools?.corsairIcue?.installed],
+    ['Voicemod', bridgeReport?.tools?.voicemod?.installed],
     ['VB-CABLE', bridgeReport?.tools?.vbCable?.installed],
     ['Voicemeeter', bridgeReport?.tools?.voicemeeter?.installed]
   ].map(([name, installed]) => ({ name, status: installed ? 'detected' : 'not detected yet' }));

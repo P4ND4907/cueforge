@@ -1,0 +1,62 @@
+{
+  "schema": "cueforge.swarm-route.v1",
+  "routeId": "auto-detect",
+  "label": "Auto Detect evidence and chain graph flow",
+  "entrySurface": "/?qa=swarm-auto-detect",
+  "personaFocus": ["desktop release engineer", "audio science reviewer", "stress breaker"],
+  "requiredSelectors": [
+    ".auto-detect-page",
+    ".chain-graph",
+    ".confidence-card",
+    ".risk-list",
+    ".copy-paste-setup-kit"
+  ],
+  "expectedStateTransitions": [
+    {
+      "from": "browser-only evidence",
+      "action": "mock permission denied scan",
+      "to": "partial confidence",
+      "expected": "App explains hidden labels and asks for explicit desktop scan/import instead of pretending full detection."
+    },
+    {
+      "from": "desktop bridge evidence",
+      "action": "import bridge report",
+      "to": "chain graph",
+      "expected": "Windows endpoints, companion layers, virtual routes, and next fix are summarized."
+    }
+  ],
+  "requiredNativeApis": [
+    "window.cueforgeDesktop.info:optional",
+    "window.cueforgeDesktop.readAudioReport:optional",
+    "window.cueforgeDesktop.runAudioScan:future-explicit"
+  ],
+  "fixtureIds": [
+    "browser-permission-denied",
+    "win-usb-dac-apo",
+    "sonar-plus-apo",
+    "voicemeeter-vbcable-route",
+    "wireless-chat-game-split"
+  ],
+  "analyzerThresholds": {
+    "maxConsoleErrors": 0,
+    "maxHorizontalOverflowPx": 0,
+    "maxRawLeakCount": 0,
+    "maxHarmRate": 0,
+    "minDiagnosisAccuracy": 92
+  },
+  "privacy": {
+    "allowRawAudioExport": false,
+    "allowCloudUpload": false,
+    "redactDeviceIds": true,
+    "redactUserPaths": true,
+    "summaryOnlyReports": true
+  },
+  "failureOwner": "assessment-core",
+  "safeAutoRepairActions": [
+    "add-chain-graph-fixture",
+    "add-route-warning-regression",
+    "tighten-copy-only",
+    "create-repair-ticket"
+  ],
+  "escalationLevel": "release-blocker"
+}

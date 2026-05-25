@@ -1,0 +1,37 @@
+{
+  "schema": "cueforge.feedback-contract-run.v1",
+  "generatedAt": "2026-05-24T09:53:18.433Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "player-trial-schema",
+      "status": "PASS",
+      "detail": "testable / 70"
+    },
+    {
+      "id": "player-trial-redaction",
+      "status": "PASS",
+      "detail": "Trial notes redact local paths and emails."
+    },
+    {
+      "id": "beta-packet-schema",
+      "status": "PASS",
+      "detail": "1 check-in accepted."
+    },
+    {
+      "id": "community-packet-schema",
+      "status": "PASS",
+      "detail": "Direction from Discord."
+    },
+    {
+      "id": "feedback-privacy-flags",
+      "status": "PASS",
+      "detail": "Feedback packets declare no raw IDs, phone numbers, DOB, or passwords."
+    }
+  ],
+  "acceptedSchemas": [
+    "cueforge.player-trial.v1",
+    "cueforge.beta-tester-packet.v1",
+    "cueforge.community-packet.v2"
+  ]
+}

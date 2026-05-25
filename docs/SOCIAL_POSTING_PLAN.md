@@ -9,8 +9,10 @@ App: https://p4nd4907.github.io/cueforge/
 Discord: https://discord.gg/vyQwyJ49v
 GitHub: https://github.com/P4ND4907/cueforge
 Feedback: https://github.com/P4ND4907/cueforge/issues/1
-X: https://x.com/CueForge907
+X: https://x.com/PAND4907
 ```
+
+Current rollout pack: `docs/social/2026-05-24-social-command-center.md`
 
 ## Hashtag Bank
 
@@ -129,6 +131,15 @@ Ask for moments where audio helped or failed.
 
 Sunday: roadmap / behind the scenes  
 Share what is coming next and ask what should be prioritized.
+
+## May 24 Rollout Focus
+
+```text
+Theme: CueForge is becoming an audio chain verifier + personal sound engine.
+Proof: 289 tests passed, redaction/preflight/audit checks clean, release gate blocks hype until real Windows loopback proof.
+Main ask: run one setup, play one real match, and report what changed.
+Safe order: Discord #lab-updates, X main post or thread, Reddit profile-safe post only if healthy, then no-link Reddit comments.
+```
 
 ## Update 001 Posting Pack
 

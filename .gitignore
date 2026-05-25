@@ -7,6 +7,9 @@ cueforge-*.txt
 .env
 .env.*
 *.log
+test-results/
+playwright-report/
+qa/playwright/report/
 .DS_Store
 Thumbs.db
 tools/audio-setup-report.json

@@ -1,0 +1,38 @@
+{
+  "schema": "cueforge.audio-regression-policy.v1",
+  "id": "eq-render-a-b",
+  "test": "eq-render-a-b",
+  "fixture": "cue_steps_reference.wav",
+  "capture": {
+    "method": "wasapi-loopback",
+    "endpoint": "active-default-render",
+    "description": "Capture WASAPI loopback from the active default render endpoint.",
+    "allowSystemMutation": false
+  },
+  "expected": {
+    "integratedLoudnessDeltaLufs": {
+      "maxAbs": 1.0,
+      "baseline": "fixture-baseline"
+    },
+    "phaseAverage": {
+      "minExclusive": 0.95
+    },
+    "cueBandGainIncreaseDb": {
+      "minInclusive": 1.5,
+      "maxInclusive": 3.0
+    },
+    "noDcOffsetWarning": true,
+    "noClippingEvent": true
+  },
+  "failIf": [
+    "outputDeviceChangedMidTest",
+    "communicationsEndpointHijacksRenderPath",
+    "doubleProcessingSignatureDetected"
+  ],
+  "privacy": {
+    "rawAudioExportAllowed": false,
+    "summaryOnlyReports": true,
+    "redactDeviceIds": true,
+    "redactUserPaths": true
+  }
+}

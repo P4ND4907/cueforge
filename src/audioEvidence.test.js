@@ -41,6 +41,12 @@ describe('audio evidence', () => {
     expect(packet.schema).toBe('cueforge.audio-evidence-packet.v1');
     expect(packet.evidence).toHaveLength(20);
     expect(packet.privacy.rawAudioIncluded).toBe(false);
+    expect(packet.privacy.uploadsOptInOnly).toBe(true);
+    expect(packet.privacy.publicPacketsUseSummariesOnly).toBe(true);
+    expect(packet.privacy.protectedPlaybackUniversalCapture).toBe(false);
+    expect(packet.testerId).toMatch(/^cfp_[a-f0-9]{20}$/);
+    expect(packet.handle).toBe('[redacted-username]');
     expect(JSON.stringify(packet)).not.toMatch(/blob:|data:audio|5551234567|20000101/i);
+    expect(JSON.stringify(packet)).not.toContain('P4ND4907');
   });
 });

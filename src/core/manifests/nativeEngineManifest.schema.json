@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://p4nd4907.github.io/cueforge/schemas/native-engine-manifest.schema.json",
+  "title": "CueForge Native Engine Manifest",
+  "type": "object",
+  "required": ["schema", "version", "sampleRate", "blockSizeTarget", "channels", "modules", "safety"],
+  "properties": {
+    "schema": { "const": "cueforge.native-engine-manifest.v1" },
+    "version": { "type": "string" },
+    "sampleRate": { "type": "number", "minimum": 8000, "maximum": 384000 },
+    "blockSizeTarget": { "type": "number", "minimum": 32, "maximum": 4096 },
+    "channels": { "type": "number", "minimum": 1, "maximum": 8 },
+    "ready": { "type": "boolean" },
+    "boundary": { "type": "string" },
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "enabled"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string" },
+          "enabled": { "type": "boolean" }
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "required": ["limiterRequired", "clippingGuard"]
+    }
+  }
+}

@@ -1,0 +1,374 @@
+{
+  "schema": "cueforge.community-watchlist.v1",
+  "updatedAt": "2026-05-22T22:31:41.991Z",
+  "policy": {
+    "postingMode": "reply-only trust-building",
+    "maxCommentsPerSession": 3,
+    "allowRepeatedPromoPosts": false,
+    "allowLinkDropWithoutRulesFit": false,
+    "notes": [
+      "Use high-engagement communities only when the thread is directly relevant.",
+      "Save the thread before replying.",
+      "Prefer no-link comments until Reddit account trust improves.",
+      "Do not use assisted posting in communities that explicitly prohibit it."
+    ]
+  },
+  "communities": [
+    {
+      "name": "r/buildapc",
+      "url": "https://www.reddit.com/r/buildapc/",
+      "lane": "PC hardware / audio routing",
+      "engagement": "high",
+      "fit": "DACs, sound cards, IEM/headset output, streaming setup questions",
+      "risk": "medium",
+      "nextMove": "Helpful no-link comments in active hardware/audio threads.",
+      "observed": {
+        "fetchedAt": "2026-05-22T22:31:41.991Z",
+        "source": "reddit-public-json",
+        "status": "ok",
+        "subscribers": 8455508,
+        "activeUsers": null,
+        "title": "/r/buildapc - Planning on building a computer but need some advice? This is the place to ask!",
+        "publicDescription": "Planning on building a computer but need some advice? This is the place to ask! /r/buildapc is a community-driven subreddit dedicated to custom PC assembly. Anyone is welcome to seek the input of our helpful community as",
+        "hotPostsChecked": 5,
+        "hotCommentVolume": 474,
+        "topHotThreads": [
+          {
+            "title": "The 8GB VRAM version of the 5060Ti outperforms the 9060XT 16GB in almost every benchmark that I see. Yet this subreddit insists that the 906",
+            "url": "https://www.reddit.com/r/buildapc/comments/1tks0nv/the_8gb_vram_version_of_the_5060ti_outperforms/",
+            "score": 247,
+            "comments": 333,
+            "createdUtc": 1779475501
+          },
+          {
+            "title": "Best budget option for a 10-year-old wanting to play Forza 6?",
+            "url": "https://www.reddit.com/r/buildapc/comments/1tknwom/best_budget_option_for_a_10yearold_wanting_to/",
+            "score": 70,
+            "comments": 70,
+            "createdUtc": 1779467001
+          },
+          {
+            "title": "What's the better choice: a 9060xt on an oled 1440p monitor or 9070xt on a 4K ips monitor?",
+            "url": "https://www.reddit.com/r/buildapc/comments/1tknnsb/whats_the_better_choice_a_9060xt_on_an_oled_1440p/",
+            "score": 29,
+            "comments": 37,
+            "createdUtc": 1779466481
+          },
+          {
+            "title": "I'm planning to buy this mainly for 1440p/4K gaming. Anything you would change?",
+            "url": "https://www.reddit.com/r/buildapc/comments/1tkrsnl/im_planning_to_buy_this_mainly_for_1440p4k_gaming/",
+            "score": 11,
+            "comments": 19,
+            "createdUtc": 1779475038
+          },
+          {
+            "title": "New PC for 1440p gaming",
+            "url": "https://www.reddit.com/r/buildapc/comments/1tkj02v/new_pc_for_1440p_gaming/",
+            "score": 18,
+            "comments": 15,
+            "createdUtc": 1779456444
+          }
+        ]
+      }
+    },
+    {
+      "name": "r/pcgaming",
+      "url": "https://www.reddit.com/r/pcgaming/",
+      "lane": "PC gaming discussion",
+      "engagement": "very high",
+      "fit": "Game audio, PC platform settings, competitive discussions",
+      "risk": "high",
+      "nextMove": "Read first. Comment only when thread asks about audio, not as app promotion.",
+      "observed": {
+        "fetchedAt": "2026-05-22T22:31:41.991Z",
+        "source": "reddit-public-json",
+        "status": "ok",
+        "subscribers": 3954119,
+        "activeUsers": null,
+        "title": "PC Gaming",
+        "publicDescription": "PC Gaming: Reddit's top community for PC news and discussion.",
+        "hotPostsChecked": 5,
+        "hotCommentVolume": 1746,
+        "topHotThreads": [
+          {
+            "title": "Valorant's new Vanguard update seems to be bricking cheaters' PCs. Riot's response? \"Congrats on your $6k paperweights\"",
+            "url": "https://www.reddit.com/r/pcgaming/comments/1tkik53/valorants_new_vanguard_update_seems_to_be/",
+            "score": 4082,
+            "comments": 1374,
+            "createdUtc": 1779455435
+          },
+          {
+            "title": "EU Parliament Member Rants About How 'Woke Ideology' Is 'Destroying Video Games' During Stop Killing Games Debate",
+            "url": "https://www.reddit.com/r/pcgaming/comments/1tkt0ps/eu_parliament_member_rants_about_how_woke/",
+            "score": 551,
+            "comments": 185,
+            "createdUtc": 1779477590
+          },
+          {
+            "title": "Destiny developers reflect on the end of an era: 'We all worked so hard to maintain the quality bar under unrealistic constraints'",
+            "url": "https://www.reddit.com/r/pcgaming/comments/1tkk6co/destiny_developers_reflect_on_the_end_of_an_era/",
+            "score": 333,
+            "comments": 101,
+            "createdUtc": 1779459105
+          },
+          {
+            "title": "LEGO Batman: Legacy of the Dark Knight is now available on Steam",
+            "url": "https://www.reddit.com/r/pcgaming/comments/1tkp2ca/lego_batman_legacy_of_the_dark_knight_is_now/",
+            "score": 196,
+            "comments": 61,
+            "createdUtc": 1779469428
+          },
+          {
+            "title": "Dawn of War IV Dev Doesn't See Total War: Warhammer 40,000 as Direct Competition, Reckons Fans Will Play Both Games",
+            "url": "https://www.reddit.com/r/pcgaming/comments/1tkxb8z/dawn_of_war_iv_dev_doesnt_see_total_war_warhammer/",
+            "score": 71,
+            "comments": 25,
+            "createdUtc": 1779487059
+          }
+        ]
+      }
+    },
+    {
+      "name": "r/Gaming_Headsets",
+      "url": "https://www.reddit.com/r/Gaming_Headsets/",
+      "lane": "Headset advice",
+      "engagement": "medium",
+      "fit": "Headset/IEM setup and comfort advice",
+      "risk": "medium",
+      "nextMove": "Give practical test steps and ask what platform/game they use.",
+      "observed": {
+        "fetchedAt": "2026-05-22T22:31:41.991Z",
+        "source": "reddit-public-json",
+        "status": "ok",
+        "subscribers": 34745,
+        "activeUsers": null,
+        "title": "Gaming_Headsets",
+        "publicDescription": "This subreddit's purpose is to help people choose the best headset for their budget and that best suits their individual needs. You can also discuss headset features and upcoming headsets. This is also the place to ask f",
+        "hotPostsChecked": 5,
+        "hotCommentVolume": 6,
+        "topHotThreads": [
+          {
+            "title": "[LFH] [PC] Wireless Headset Suggestion",
+            "url": "https://www.reddit.com/r/Gaming_Headsets/comments/1tkwekf/lfh_pc_wireless_headset_suggestion/",
+            "score": 1,
+            "comments": 0,
+            "createdUtc": 1779484951
+          },
+          {
+            "title": "[LFH] [PC] Need help choosing a new headset",
+            "url": "https://www.reddit.com/r/Gaming_Headsets/comments/1tkfk14/lfh_pc_need_help_choosing_a_new_headset/",
+            "score": 1,
+            "comments": 0,
+            "createdUtc": 1779447544
+          },
+          {
+            "title": "[LFH] [PC] Recommendations on a headset ~160$ USD",
+            "url": "https://www.reddit.com/r/Gaming_Headsets/comments/1tjgsi6/lfh_pc_recommendations_on_a_headset_160_usd/",
+            "score": 1,
+            "comments": 2,
+            "createdUtc": 1779360594
+          },
+          {
+            "title": "[LFH] [PS5] wireless headset if you do not care about mic quality only durability and sound performance include the pros and cons and prices",
+            "url": "https://www.reddit.com/r/Gaming_Headsets/comments/1tjavh2/lfh_ps5_wireless_headset_if_you_do_not_care_about/",
+            "score": 1,
+            "comments": 3,
+            "createdUtc": 1779341424
+          },
+          {
+            "title": "[LFH][PC][30 - 50][Libya]Any recommendations for a durable comfortable headset and affordable",
+            "url": "https://www.reddit.com/r/Gaming_Headsets/comments/1tij4ny/lfhpc30_50libyaany_recommendations_for_a_durable/",
+            "score": 1,
+            "comments": 1,
+            "createdUtc": 1779277381
+          }
+        ]
+      }
+    },
+    {
+      "name": "r/EqualizerAPO",
+      "url": "https://www.reddit.com/r/EqualizerAPO/",
+      "lane": "EQ troubleshooting",
+      "engagement": "low",
+      "fit": "APO device routing, config text, Peace UI, Windows endpoint issues",
+      "risk": "low",
+      "nextMove": "Help users verify the correct playback endpoint and avoid stacked filters.",
+      "observed": {
+        "fetchedAt": "2026-05-22T22:31:41.991Z",
+        "source": "reddit-public-json",
+        "status": "ok",
+        "subscribers": 808,
+        "activeUsers": null,
+        "title": "EqualizerAPO",
+        "publicDescription": "Discussion related to the EqualizerAPO program",
+        "hotPostsChecked": 5,
+        "hotCommentVolume": 21,
+        "topHotThreads": [
+          {
+            "title": "(help) Equalizer effects applied to discord screen share and nvidia clips",
+            "url": "https://www.reddit.com/r/EqualizerAPO/comments/1jrqyn7/help_equalizer_effects_applied_to_discord_screen/",
+            "score": 3,
+            "comments": 10,
+            "createdUtc": 1743812677
+          },
+          {
+            "title": "New to audio",
+            "url": "https://www.reddit.com/r/EqualizerAPO/comments/1jopers/new_to_audio/",
+            "score": 4,
+            "comments": 2,
+            "createdUtc": 1743490529
+          },
+          {
+            "title": "EqualizerAPO not working with Discord",
+            "url": "https://www.reddit.com/r/EqualizerAPO/comments/1jocdey/equalizerapo_not_working_with_discord/",
+            "score": 4,
+            "comments": 6,
+            "createdUtc": 1743450769
+          },
+          {
+            "title": "Loudness Correction Help",
+            "url": "https://www.reddit.com/r/EqualizerAPO/comments/1jn7jaz/loudness_correction_help/",
+            "score": 2,
+            "comments": 2,
+            "createdUtc": 1743320936
+          },
+          {
+            "title": "Equalizer Not Working With Current Headset",
+            "url": "https://www.reddit.com/r/EqualizerAPO/comments/1jmeox8/equalizer_not_working_with_current_headset/",
+            "score": 2,
+            "comments": 1,
+            "createdUtc": 1743223383
+          }
+        ]
+      }
+    },
+    {
+      "name": "r/audioengineering",
+      "url": "https://www.reddit.com/r/audioengineering/",
+      "lane": "Audio knowledge",
+      "engagement": "high",
+      "fit": "Measurement/process questions only",
+      "risk": "high",
+      "nextMove": "Ask careful measurement questions. Do not pitch CueForge.",
+      "observed": {
+        "fetchedAt": "2026-05-22T22:31:41.991Z",
+        "source": "reddit-public-json",
+        "status": "ok",
+        "subscribers": 643411,
+        "activeUsers": null,
+        "title": "Profession of audio recording, editing, and producing",
+        "publicDescription": "Products, practices, and stories about the profession or hobby of recording, editing, and producing audio.",
+        "hotPostsChecked": 5,
+        "hotCommentVolume": 86,
+        "topHotThreads": [
+          {
+            "title": "I know vintage Gefell is often discussed and beloved, but how come you almost never hear about modern Gefell?",
+            "url": "https://www.reddit.com/r/audioengineering/comments/1tko07l/i_know_vintage_gefell_is_often_discussed_and/",
+            "score": 16,
+            "comments": 20,
+            "createdUtc": 1779467203
+          },
+          {
+            "title": "EQ Cutting and Boosting?",
+            "url": "https://www.reddit.com/r/audioengineering/comments/1tkn1vm/eq_cutting_and_boosting/",
+            "score": 10,
+            "comments": 42,
+            "createdUtc": 1779465211
+          },
+          {
+            "title": "My only two mics are an OC-818 and M160- would it be crazy to add a 441 next?",
+            "url": "https://www.reddit.com/r/audioengineering/comments/1tkoq1l/my_only_two_mics_are_an_oc818_and_m160_would_it/",
+            "score": 7,
+            "comments": 14,
+            "createdUtc": 1779468721
+          },
+          {
+            "title": "Confusion surrounding broadcast audio quality vs 32 bit float recordings",
+            "url": "https://www.reddit.com/r/audioengineering/comments/1tkspsp/confusion_surrounding_broadcast_audio_quality_vs/",
+            "score": 4,
+            "comments": 5,
+            "createdUtc": 1779476968
+          },
+          {
+            "title": "Mastering The Corals new album '388'",
+            "url": "https://www.reddit.com/r/audioengineering/comments/1tk9d9r/mastering_the_corals_new_album_388/",
+            "score": 30,
+            "comments": 5,
+            "createdUtc": 1779427520
+          }
+        ]
+      }
+    },
+    {
+      "name": "r/iems",
+      "url": "https://www.reddit.com/r/iems/",
+      "lane": "IEM buying and fit",
+      "engagement": "medium",
+      "fit": "Very relevant but visible rules include No AI",
+      "risk": "manual-only",
+      "nextMove": "Read only unless the owner writes manually.",
+      "observed": {
+        "fetchedAt": "2026-05-22T22:31:41.991Z",
+        "source": "reddit-public-json",
+        "status": "ok",
+        "subscribers": 125117,
+        "activeUsers": null,
+        "title": "r/iems",
+        "publicDescription": "Welcome to r/iems, the best place to talk about in ear monitors on the internet. IEMs / Earphones, DIY IEMs, DAPs, DACs, reviews and community news are all welcome here. Please read the sidebar.",
+        "hotPostsChecked": 5,
+        "hotCommentVolume": 137,
+        "topHotThreads": [
+          {
+            "title": "Holy shit this might be it for me",
+            "url": "https://www.reddit.com/r/iems/comments/1tkoemg/holy_shit_this_might_be_it_for_me/",
+            "score": 198,
+            "comments": 33,
+            "createdUtc": 1779468057
+          },
+          {
+            "title": "My jewel box (fatfreq GMA, AME Mousa, Sony Z1R, UM MM)",
+            "url": "https://www.reddit.com/r/iems/comments/1tkuool/my_jewel_box_fatfreq_gma_ame_mousa_sony_z1r_um_mm/",
+            "score": 20,
+            "comments": 4,
+            "createdUtc": 1779481149
+          },
+          {
+            "title": "I didn't think they would make so much of a difference.",
+            "url": "https://www.reddit.com/r/iems/comments/1tkigx3/i_didnt_think_they_would_make_so_much_of_a/",
+            "score": 74,
+            "comments": 28,
+            "createdUtc": 1779455225
+          },
+          {
+            "title": "Lord, please forgive me.",
+            "url": "https://www.reddit.com/r/iems/comments/1tkexhc/lord_please_forgive_me/",
+            "score": 117,
+            "comments": 26,
+            "createdUtc": 1779445617
+          },
+          {
+            "title": "After countless hours, I've found my endgame.",
+            "url": "https://www.reddit.com/r/iems/comments/1tjttaa/after_countless_hours_ive_found_my_endgame/",
+            "score": 1530,
+            "comments": 46,
+            "createdUtc": 1779388957
+          }
+        ]
+      }
+    }
+  ],
+  "threads": [
+    {
+      "community": "r/buildapc",
+      "title": "Are gaming sound cards actually a thing anymore?",
+      "url": "https://www.reddit.com/r/buildapc/comments/1tjgc1a/are_gaming_sound_cards_actually_a_thing_anymore/",
+      "status": "drafted",
+      "tags": [
+        "sound-card",
+        "dac",
+        "fps-audio"
+      ],
+      "nextMove": "Post one no-link practical answer if the account can comment cleanly."
+    }
+  ]
+}

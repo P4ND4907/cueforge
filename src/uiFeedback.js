@@ -10,20 +10,30 @@ export const uiFeedbackTags = [
   'idea'
 ];
 
+export const uiFeedbackStatuses = ['open', 'reviewed', 'fixed', 'needs-retest', 'archived'];
+
 export function createUiFeedbackNote({
+  id = '',
   page = 'unknown',
   tag = 'confusing',
   note = '',
   target = {},
   viewport = {},
+  status = 'open',
+  reviewedAt = null,
+  resolvedAt = null,
   now = new Date()
 } = {}) {
+  const createdAt = safeDate(now);
   return {
     schema: 'cueforge.ui-feedback-note.v1',
-    id: `ui-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
-    createdAt: now.toISOString(),
+    id: sanitizeId(id) || `ui-${createdAt.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: createdAt.toISOString(),
     page: sanitizeShortText(page, 80),
     tag: uiFeedbackTags.includes(tag) ? tag : 'confusing',
+    status: uiFeedbackStatuses.includes(status) ? status : 'open',
+    reviewedAt: nullableIsoDate(reviewedAt),
+    resolvedAt: nullableIsoDate(resolvedAt),
     note: sanitizeLongText(note),
     target: sanitizeTarget(target),
     viewport: {
@@ -38,11 +48,15 @@ export function createUiFeedbackNote({
 export function sanitizeUiFeedbackNotes(notes = []) {
   if (!Array.isArray(notes)) return [];
   return notes.slice(-80).map((item) => createUiFeedbackNote({
+    id: item.id,
     page: item.page,
     tag: item.tag,
     note: item.note,
     target: item.target,
     viewport: item.viewport,
+    status: item.status,
+    reviewedAt: item.reviewedAt,
+    resolvedAt: item.resolvedAt,
     now: safeDate(item.createdAt)
   }));
 }
@@ -50,22 +64,31 @@ export function sanitizeUiFeedbackNotes(notes = []) {
 export function summarizeUiFeedback(notes = []) {
   const safe = sanitizeUiFeedbackNotes(notes);
   const byTag = Object.fromEntries(uiFeedbackTags.map((tag) => [tag, 0]));
+  const byStatus = Object.fromEntries(uiFeedbackStatuses.map((status) => [status, 0]));
   for (const item of safe) byTag[item.tag] = (byTag[item.tag] || 0) + 1;
+  for (const item of safe) byStatus[item.status] = (byStatus[item.status] || 0) + 1;
   const topTag = Object.entries(byTag).sort((a, b) => b[1] - a[1])[0];
 
   return {
     total: safe.length,
+    open: (byStatus.open || 0) + (byStatus['needs-retest'] || 0),
+    reviewed: byStatus.reviewed || 0,
+    fixed: byStatus.fixed || 0,
+    needsRetest: byStatus['needs-retest'] || 0,
+    archived: byStatus.archived || 0,
     topTag: topTag?.[1] ? topTag[0] : 'none yet',
     latest: safe.at(-1) || null,
-    byTag
+    byTag,
+    byStatus
   };
 }
 
 export function buildUiFeedbackRepairCheck(notes = [], { now = new Date() } = {}) {
   const safe = sanitizeUiFeedbackNotes(notes);
+  const actionable = safe.filter((item) => !['fixed', 'archived'].includes(item.status));
   const groups = new Map();
 
-  for (const item of safe) {
+  for (const item of actionable) {
     const area = item.target.panel || item.target.label || 'Unknown area';
     const key = [item.page, area, item.tag].join('::');
     if (!groups.has(key)) {
@@ -91,6 +114,7 @@ export function buildUiFeedbackRepairCheck(notes = [], { now = new Date() } = {}
       title: `${titleForTag(group.tag)}: ${group.area}`,
       evidence: group.notes.slice(-3).map((item) => ({
         note: item.note,
+        status: item.status,
         target: item.target.label,
         viewport: item.viewport,
         createdAt: item.createdAt
@@ -102,13 +126,40 @@ export function buildUiFeedbackRepairCheck(notes = [], { now = new Date() } = {}
   return {
     schema: 'cueforge.ui-repair-check.v1',
     generatedAt: safeDate(now).toISOString(),
-    status: safe.length ? 'repair-queue-ready' : 'no-notes-yet',
+    status: actionable.length ? 'repair-queue-ready' : safe.length ? 'notes-reviewed' : 'no-notes-yet',
     totalNotes: safe.length,
+    actionableNotes: actionable.length,
     actionCount: actions.length,
     topAction: actions[0] || null,
     actions,
     boundary: 'CueForge can auto-triage local notes and generate a repair packet. Source edits still need a developer or explicit desktop automation review.'
   };
+}
+
+export function markUiFeedbackNotes(notes = [], ids = [], status = 'reviewed', { now = new Date() } = {}) {
+  if (!uiFeedbackStatuses.includes(status)) return sanitizeUiFeedbackNotes(notes);
+  const safe = sanitizeUiFeedbackNotes(notes);
+  const targetIds = new Set(Array.isArray(ids) ? ids : [ids]);
+  const stamp = safeDate(now).toISOString();
+
+  return safe.map((item) => {
+    if (!targetIds.has(item.id) && !targetIds.has('all')) return item;
+    return {
+      ...item,
+      status,
+      reviewedAt: ['reviewed', 'fixed', 'needs-retest', 'archived'].includes(status)
+        ? item.reviewedAt || stamp
+        : item.reviewedAt,
+      resolvedAt: ['fixed', 'archived'].includes(status) ? stamp : item.resolvedAt
+    };
+  });
+}
+
+export function cleanupUiFeedbackNotes(notes = [], { mode = 'fixed' } = {}) {
+  const safe = sanitizeUiFeedbackNotes(notes);
+  if (mode === 'all') return [];
+  if (mode === 'reviewed') return safe.filter((item) => !['reviewed', 'fixed', 'archived'].includes(item.status));
+  return safe.filter((item) => !['fixed', 'archived'].includes(item.status));
 }
 
 export function buildUiFeedbackRepairPacket(notes = [], options = {}) {
@@ -178,6 +229,16 @@ function sanitizeLongText(value) {
 function safeDate(value) {
   const date = value ? new Date(value) : new Date();
   return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
+function nullableIsoDate(value) {
+  if (!value) return null;
+  const date = safeDate(value);
+  return date.toISOString();
+}
+
+function sanitizeId(value) {
+  return String(value || '').replace(/[^a-z0-9_-]/gi, '').slice(0, 80);
 }
 
 function clampNumber(value, min, max) {

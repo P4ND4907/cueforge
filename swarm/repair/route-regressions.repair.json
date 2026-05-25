@@ -1,0 +1,28 @@
+{
+  "schema": "cueforge.swarm-repair.v1",
+  "repairId": "route-regressions",
+  "source": "swarm route manifests, Playwright smoke, and Machine Play Lab reports",
+  "failureOwner": "qa-release",
+  "queueOutput": "docs/repair/ROUTE_REGRESSION_REPAIR_QUEUE.md",
+  "allowedActions": [
+    "add missing route selector to a checked-in swarm route",
+    "add route fixture or canned bridge manifest",
+    "add Playwright regression for the broken transition",
+    "open release-blocker task for unsafe route failures"
+  ],
+  "blockedActions": [
+    "auto-post route failure publicly",
+    "change Windows default device",
+    "write APO configs",
+    "upload raw audio or raw device IDs",
+    "store passwords, tokens, phone numbers, or DOB"
+  ],
+  "privacy": {
+    "allowRawAudioExport": false,
+    "allowCloudUpload": false,
+    "redactDeviceIds": true,
+    "redactUserPaths": true,
+    "summaryOnlyReports": true
+  },
+  "escalationLevel": "release-blocker"
+}

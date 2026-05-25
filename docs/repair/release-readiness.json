@@ -1,0 +1,174 @@
+{
+  "schema": "cueforge.release-readiness.v1",
+  "generatedAt": "2026-05-24T11:13:18.001Z",
+  "version": "0.2.0-alpha.3",
+  "ref": "local",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "package-version-present",
+      "status": "PASS",
+      "detail": "package.json version 0.2.0-alpha.3."
+    },
+    {
+      "id": "state-version-match",
+      "status": "PASS",
+      "detail": "Core state files reference 0.2.0-alpha.3."
+    },
+    {
+      "id": "release-pack-version-match",
+      "status": "PASS",
+      "detail": "Release pack/app copy references 0.2.0-alpha.3."
+    },
+    {
+      "id": "acceptance-doc-version-match",
+      "status": "PASS",
+      "detail": "Acceptance checklist references 0.2.0-alpha.3."
+    },
+    {
+      "id": "docs-bundle-present",
+      "status": "PASS",
+      "detail": "GitHub Pages entrypoint exists."
+    },
+    {
+      "id": "workflow-needs-green",
+      "status": "PASS",
+      "detail": "No GitHub Actions dependency context was provided; local metadata checks only."
+    },
+    {
+      "id": "release-candidate-acceptance",
+      "status": "PASS",
+      "detail": "Not enforcing for local metadata run. Candidate status: BLOCKED; blockers: 1."
+    },
+    {
+      "id": "tag-version-match",
+      "status": "PASS",
+      "detail": "Not a tag-triggered release."
+    }
+  ],
+  "releaseAcceptance": {
+    "schema": "cueforge.release-candidate-acceptance.v1",
+    "ready": false,
+    "status": "BLOCKED",
+    "generatedAt": "2026-05-24T11:13:17.998Z",
+    "checks": [
+      {
+        "id": "setup-command-center-default",
+        "label": "Setup Command Center is the default guided entry point.",
+        "evidenceKey": "setupCommandCenterDefault",
+        "proof": "Playwright web/Electron smoke lands first-run users in the guided command center.",
+        "status": "PASS",
+        "detail": "Playwright web/Electron smoke lands first-run users in the guided command center."
+      },
+      {
+        "id": "autodetect-presence-active-conflicts",
+        "label": "Auto Detect tells the user what is present, what is active, and what is conflicting.",
+        "evidenceKey": "autoDetectExplainsPresenceActiveConflicts",
+        "proof": "Normalized report, chain graph, confidence, risks, and next actions render from browser plus bridge evidence.",
+        "status": "PASS",
+        "detail": "Normalized report, chain graph, confidence, risks, and next actions render from browser plus bridge evidence."
+      },
+      {
+        "id": "desktop-native-scan-bridge-report",
+        "label": "Windows desktop shell can run a native scan and safely read the bridge report.",
+        "evidenceKey": "desktopNativeScanReadsBridge",
+        "proof": "Electron preload exposes only approved helper APIs and reads reports without changing system state.",
+        "status": "PASS",
+        "detail": "Electron preload exposes only approved helper APIs and reads reports without changing system state."
+      },
+      {
+        "id": "web-electron-smoke",
+        "label": "Web build and Electron build both pass smoke automation.",
+        "evidenceKey": "webAndElectronSmokeAutomationPassed",
+        "proof": "Playwright web smoke, Playwright Electron smoke, and packaged desktop smoke pass.",
+        "status": "PASS",
+        "detail": "Playwright web smoke, Playwright Electron smoke, and packaged desktop smoke pass."
+      },
+      {
+        "id": "real-windows-loopback-regression",
+        "label": "At least one real Windows loopback regression run passes.",
+        "evidenceKey": "realWindowsLoopbackRegressionPassed",
+        "proof": "A Windows endpoint loopback run, not only the deterministic fixture policy, proves cue lift, loudness, phase, and no clipping on real hardware.",
+        "hardBlocker": true,
+        "status": "BLOCKED",
+        "detail": "At least one real Windows loopback regression run passes. Missing proof key: realWindowsLoopbackRegressionPassed."
+      },
+      {
+        "id": "redacted-reports-no-private-data",
+        "label": "Redacted reports contain no raw device IDs, usernames, local paths, emails, or phone numbers.",
+        "evidenceKey": "redactedReportsNoRawPrivateData",
+        "proof": "Privacy audit, export redaction checks, report packs, setup packs, and evidence packets stay sanitized.",
+        "status": "PASS",
+        "detail": "Privacy audit, export redaction checks, report packs, setup packs, and evidence packets stay sanitized."
+      },
+      {
+        "id": "apo-draft-explicit-reversible",
+        "label": "APO draft export is explicit and reversible.",
+        "evidenceKey": "apoDraftExplicitReversible",
+        "proof": "CueForge saves reviewed APO drafts only after user action and keeps real APO/system writes out of automatic flows.",
+        "status": "PASS",
+        "detail": "CueForge saves reviewed APO drafts only after user action and keeps real APO/system writes out of automatic flows."
+      },
+      {
+        "id": "common-conflict-rules-covered",
+        "label": "Conflict rules catch the common messy Windows stacks.",
+        "evidenceKey": "commonConflictRulesCovered",
+        "requiredRules": [
+          "apo_plus_sonar",
+          "sonar_plus_discord_effects",
+          "voicemeeter_loop_echo_risk",
+          "wrong_default_comms_endpoint"
+        ],
+        "proof": "Rules cover APO + Sonar, Sonar + Discord effects, Voicemeeter loop/echo risk, and wrong default communications endpoint.",
+        "status": "PASS",
+        "detail": "Rules cover APO + Sonar, Sonar + Discord effects, Voicemeeter loop/echo risk, and wrong default communications endpoint."
+      },
+      {
+        "id": "player-evidence-local-default",
+        "label": "Player-trial and audio-evidence packets stay local by default.",
+        "evidenceKey": "playerEvidenceLocalByDefault",
+        "proof": "Packets export locally with opt-in sharing and summary metrics by default.",
+        "status": "PASS",
+        "detail": "Packets export locally with opt-in sharing and summary metrics by default."
+      },
+      {
+        "id": "build-metadata-visible",
+        "label": "Build metadata is visible enough to detect stale deploys.",
+        "evidenceKey": "buildMetadataVisible",
+        "proof": "Version metadata is checked in release readiness, release packs, and acceptance docs.",
+        "status": "PASS",
+        "detail": "Version metadata is checked in release readiness, release packs, and acceptance docs."
+      },
+      {
+        "id": "release-notes-honest-boundary",
+        "label": "Release notes explain the Windows-first boundary and avoid arbitrary-game occlusion promises.",
+        "evidenceKey": "releaseNotesHonestWindowsBoundary",
+        "proof": "Release copy states the Windows-first chain-verification boundary and does not promise engine-level occlusion for arbitrary games.",
+        "status": "PASS",
+        "detail": "Release copy states the Windows-first chain-verification boundary and does not promise engine-level occlusion for arbitrary games."
+      }
+    ],
+    "blockers": [
+      {
+        "id": "real-windows-loopback-regression",
+        "label": "At least one real Windows loopback regression run passes.",
+        "evidenceKey": "realWindowsLoopbackRegressionPassed",
+        "proof": "A Windows endpoint loopback run, not only the deterministic fixture policy, proves cue lift, loudness, phase, and no clipping on real hardware.",
+        "hardBlocker": true,
+        "status": "BLOCKED",
+        "detail": "At least one real Windows loopback regression run passes. Missing proof key: realWindowsLoopbackRegressionPassed."
+      }
+    ],
+    "hardBlockers": [
+      {
+        "id": "real-windows-loopback-regression",
+        "label": "At least one real Windows loopback regression run passes.",
+        "evidenceKey": "realWindowsLoopbackRegressionPassed",
+        "proof": "A Windows endpoint loopback run, not only the deterministic fixture policy, proves cue lift, loudness, phase, and no clipping on real hardware.",
+        "hardBlocker": true,
+        "status": "BLOCKED",
+        "detail": "At least one real Windows loopback regression run passes. Missing proof key: realWindowsLoopbackRegressionPassed."
+      }
+    ]
+  }
+}

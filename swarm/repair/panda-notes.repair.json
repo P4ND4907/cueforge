@@ -1,0 +1,28 @@
+{
+  "schema": "cueforge.swarm-repair.v1",
+  "repairId": "panda-notes",
+  "source": "System Info > Panda Notes Inbox and exported redacted issue reports",
+  "failureOwner": "ui-and-flow",
+  "queueOutput": "docs/repair/PANDA_NOTES_REPAIR_QUEUE.md",
+  "allowedActions": [
+    "triage note into copy/layout/flow/privacy/performance bucket",
+    "add narrowly scoped unit or Playwright regression",
+    "make copy-only or style-only app fixes after review",
+    "mark note reviewed, needs-retest, or fixed"
+  ],
+  "blockedActions": [
+    "post notes publicly",
+    "change Windows audio settings",
+    "write APO configs",
+    "upload raw audio",
+    "store passwords, tokens, phone numbers, or DOB"
+  ],
+  "privacy": {
+    "allowRawAudioExport": false,
+    "allowCloudUpload": false,
+    "redactDeviceIds": true,
+    "redactUserPaths": true,
+    "summaryOnlyReports": true
+  },
+  "escalationLevel": "high"
+}

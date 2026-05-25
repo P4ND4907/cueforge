@@ -1,0 +1,13 @@
+CueForge Panda Notes repair packet
+Generated: 2026-05-25T08:04:54.126Z
+Status: no-notes-yet
+Notes scanned: 0
+Repair actions: 0
+
+Boundary:
+CueForge can auto-triage local notes and generate a repair packet. Source edits still need a developer or explicit desktop automation review.
+
+Instruction:
+Use these notes to make targeted code/UI fixes, then run tests, build, and browser QA. Do not remove privacy redaction, do not add hidden telemetry, and do not silently change Windows audio settings.
+
+No developer notes were found. Right-click an app area, tag the issue, save a note, then rerun this packet.

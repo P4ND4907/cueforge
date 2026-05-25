@@ -1,0 +1,29 @@
+{
+  "schema": "cueforge.lab-manifest.v1",
+  "manifestId": "clean-apo-audio-regression",
+  "profileId": "win-usb-dac-apo-clean",
+  "tests": [
+    { "id": "device-scan", "type": "integration" },
+    { "id": "route-graph", "type": "chain-graph" },
+    { "id": "apo-export-redaction", "type": "privacy" },
+    {
+      "id": "eq-render-a-b",
+      "type": "audio-regression",
+      "fixture": "cue_steps_reference.wav",
+      "policy": "qa/audio/policies/eq-render-a-b.json",
+      "capture": {
+        "method": "wasapi-loopback",
+        "endpoint": "active-default-render",
+        "allowSystemMutation": false
+      }
+    },
+    { "id": "desktop-package-smoke", "type": "desktop-smoke" }
+  ],
+  "privacy": {
+    "allowRawAudioExport": false,
+    "redactDeviceIds": true,
+    "redactUserPaths": true,
+    "allowCloudUpload": false,
+    "summaryOnlyReports": true
+  }
+}

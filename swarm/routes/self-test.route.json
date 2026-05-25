@@ -1,0 +1,60 @@
+{
+  "schema": "cueforge.swarm-route.v1",
+  "routeId": "self-test",
+  "label": "Self Test proof gate",
+  "entrySurface": "/?qa=swarm-self-test",
+  "personaFocus": ["alpha beta hunter", "privacy guardian", "logic council"],
+  "requiredSelectors": [
+    ".self-test-page",
+    ".selftest-summary",
+    ".selftest-results",
+    ".privacy-export-audit",
+    ".desktop-bridge-warning"
+  ],
+  "expectedStateTransitions": [
+    {
+      "from": "not-run",
+      "action": "run full auto test",
+      "to": "results list",
+      "expected": "Pass/warn/fail counts are visible and browser-mode native limits are explained."
+    },
+    {
+      "from": "results list",
+      "action": "copy desktop fix plan",
+      "to": "clipboard-safe fix text",
+      "expected": "Text contains commands and boundaries without private paths or raw IDs."
+    }
+  ],
+  "requiredNativeApis": [
+    "AudioContext:browser",
+    "navigator.mediaDevices.enumerateDevices:browser",
+    "window.cueforgeDesktop.info:optional"
+  ],
+  "fixtureIds": [
+    "self-test-browser-denied",
+    "self-test-desktop-ready",
+    "privacy-export-audit"
+  ],
+  "analyzerThresholds": {
+    "maxConsoleErrors": 0,
+    "maxHorizontalOverflowPx": 0,
+    "maxRawLeakCount": 0,
+    "maxHarmRate": 0,
+    "minDiagnosisAccuracy": 90
+  },
+  "privacy": {
+    "allowRawAudioExport": false,
+    "allowCloudUpload": false,
+    "redactDeviceIds": true,
+    "redactUserPaths": true,
+    "summaryOnlyReports": true
+  },
+  "failureOwner": "release-gate",
+  "safeAutoRepairActions": [
+    "add-selftest-fixture",
+    "add-redaction-regression",
+    "copy-only-repair",
+    "mark-needs-retest"
+  ],
+  "escalationLevel": "high"
+}

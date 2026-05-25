@@ -6,6 +6,7 @@ import {
   EmbedBuilder,
   Events,
   GatewayIntentBits,
+  Partials,
   PermissionFlagsBits,
   REST,
   Routes,
@@ -22,17 +23,26 @@ const {
   WELCOME_CHANNEL_ID,
   START_CHANNEL_ID,
   BUG_CHANNEL_ID,
-  CHECKIN_CHANNEL_ID
+  CHECKIN_CHANNEL_ID,
+  CUEFORGE_WEB_URL,
+  CUEFORGE_DOWNLOAD_URL,
+  CUEFORGE_RELEASE_URL,
+  CUEFORGE_FEEDBACK_URL,
+  WELCOME_DM_ENABLED
 } = process.env;
 
 const links = {
-  app: 'https://p4nd4907.github.io/cueforge/',
+  app: CUEFORGE_WEB_URL || 'https://p4nd4907.github.io/cueforge/',
+  download: CUEFORGE_DOWNLOAD_URL || 'https://github.com/P4ND4907/cueforge/releases/download/v0.1.0-alpha.2/CueForge-0.1.0-x64.exe',
+  release: CUEFORGE_RELEASE_URL || 'https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.2',
   discord: 'https://discord.gg/vyQwyJ49v',
-  feedback: 'https://github.com/P4ND4907/cueforge/issues/1'
+  feedback: CUEFORGE_FEEDBACK_URL || 'https://github.com/P4ND4907/cueforge/issues/1'
 };
+const welcomeDmEnabled = WELCOME_DM_ENABLED !== 'false';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rewardStorePath = path.resolve(__dirname, '..', 'data', 'rewards.json');
+const rolePickerStorePath = path.resolve(__dirname, '..', 'data', 'role-picker.json');
 const dailyClaimLimit = 3;
 const rewardPoints = {
   'watch-party': 6,
@@ -44,21 +54,21 @@ const rewardPoints = {
 };
 
 const selfAssignRoles = [
-  { name: 'Panda Pilot', label: 'Panda Pilot', style: ButtonStyle.Primary },
-  { name: 'IEM Listener', label: 'IEM Listener', style: ButtonStyle.Secondary },
-  { name: 'Headset Grinder', label: 'Headset Grinder', style: ButtonStyle.Secondary },
-  { name: 'Mic Checker', label: 'Mic Checker', style: ButtonStyle.Secondary },
-  { name: 'EQ Forger', label: 'EQ Forger', style: ButtonStyle.Secondary },
-  { name: 'Clip Hunter', label: 'Clip Hunter', style: ButtonStyle.Secondary },
-  { name: 'Bug Tracker', label: 'Bug Tracker', style: ButtonStyle.Secondary },
-  { name: 'Build Tester', label: 'Build Tester', style: ButtonStyle.Secondary },
-  { name: 'Casual Tester', label: 'Casual Tester', style: ButtonStyle.Secondary },
-  { name: 'Sweat Stack', label: 'Sweat Stack', style: ButtonStyle.Secondary },
-  { name: 'Tarkov Ears', label: 'Tarkov', style: ButtonStyle.Secondary },
-  { name: 'Siege Sound', label: 'Siege', style: ButtonStyle.Secondary },
-  { name: 'COD / Warzone', label: 'COD / Warzone', style: ButtonStyle.Secondary },
-  { name: 'Apex Audio', label: 'Apex', style: ButtonStyle.Secondary },
-  { name: 'CS2 / Valorant', label: 'CS2 / Valorant', style: ButtonStyle.Secondary }
+  { name: 'Panda Pilot', label: 'Panda Pilot', emoji: '🐼', style: ButtonStyle.Primary },
+  { name: 'IEM Listener', label: 'IEM Listener', emoji: '🎧', style: ButtonStyle.Secondary },
+  { name: 'Headset Grinder', label: 'Headset Grinder', emoji: '🎮', style: ButtonStyle.Secondary },
+  { name: 'Mic Checker', label: 'Mic Checker', emoji: '🎙️', style: ButtonStyle.Secondary },
+  { name: 'EQ Forger', label: 'EQ Forger', emoji: '🎚️', style: ButtonStyle.Secondary },
+  { name: 'Clip Hunter', label: 'Clip Hunter', emoji: '🎬', style: ButtonStyle.Secondary },
+  { name: 'Bug Tracker', label: 'Bug Tracker', emoji: '🐞', style: ButtonStyle.Secondary },
+  { name: 'Build Tester', label: 'Build Tester', emoji: '🧪', style: ButtonStyle.Secondary },
+  { name: 'Casual Tester', label: 'Casual Tester', emoji: '🌿', style: ButtonStyle.Secondary },
+  { name: 'Sweat Stack', label: 'Sweat Stack', emoji: '🔥', style: ButtonStyle.Secondary },
+  { name: 'Tarkov Ears', label: 'Tarkov', emoji: '🌲', style: ButtonStyle.Secondary },
+  { name: 'Siege Sound', label: 'Siege', emoji: '🛡️', style: ButtonStyle.Secondary },
+  { name: 'COD / Warzone', label: 'COD / Warzone', emoji: '🎯', style: ButtonStyle.Secondary },
+  { name: 'Apex Audio', label: 'Apex', emoji: '⚡', style: ButtonStyle.Secondary },
+  { name: 'CS2 / Valorant', label: 'CS2 / Valorant', emoji: '🔊', style: ButtonStyle.Secondary }
 ];
 
 const welcomeMessages = [
@@ -72,6 +82,13 @@ const commands = [
   new SlashCommandBuilder()
     .setName('start')
     .setDescription('Get the fast CueForge beta testing path.'),
+  new SlashCommandBuilder()
+    .setName('download')
+    .setDescription('Get the CueForge download and first-run path.'),
+  new SlashCommandBuilder()
+    .setName('downloadpanel')
+    .setDescription('Post a public CueForge download/start panel for existing members.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
   new SlashCommandBuilder()
     .setName('checkin')
     .setDescription('Get the match check-in format.'),
@@ -162,7 +179,8 @@ const commands = [
     .setDescription('Post the polished new-member guide for Discord Server Guide or start-here.'),
   new SlashCommandBuilder()
     .setName('roles')
-    .setDescription('Post click-to-pick tester and game roles.'),
+    .setDescription('Post click/react-to-pick tester and game roles.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
   new SlashCommandBuilder()
     .setName('modroles')
     .setDescription('Show the private staff role map.')
@@ -237,7 +255,15 @@ const commands = [
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessageReactions
+  ],
+  partials: [
+    Partials.Message,
+    Partials.Channel,
+    Partials.Reaction,
+    Partials.GuildMember,
+    Partials.User
   ]
 });
 
@@ -255,15 +281,26 @@ client.once(Events.ClientReady, async (readyClient) => {
 });
 
 client.on(Events.GuildMemberAdd, async (member) => {
-  if (!WELCOME_CHANNEL_ID) return;
-  const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID).catch(() => null);
-  if (!channel) return;
+  const channel = WELCOME_CHANNEL_ID
+    ? await member.guild.channels.fetch(WELCOME_CHANNEL_ID).catch(() => null)
+    : null;
 
-  await channel.send({
-    content: pickWelcomeMessage(member),
-    embeds: [buildWelcomeEmbed()],
-    components: [buildLinkRow()]
-  }).catch(() => {});
+  if (channel) {
+    await channel.send({
+      content: pickWelcomeMessage(member),
+      embeds: [buildWelcomeEmbed()],
+      components: [buildLinkRow()]
+    }).catch(() => {});
+  }
+  await sendNewMemberDownloadDm(member);
+});
+
+client.on(Events.MessageReactionAdd, async (reaction, user) => {
+  await handleRoleReaction(reaction, user, true);
+});
+
+client.on(Events.MessageReactionRemove, async (reaction, user) => {
+  await handleRoleReaction(reaction, user, false);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -274,11 +311,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.commandName === 'score') return replyScore(interaction);
   if (interaction.commandName === 'leaderboard') return replyLeaderboard(interaction);
   if (interaction.commandName === 'award') return replyAward(interaction);
+  if (interaction.commandName === 'roles') return replyRolePanel(interaction);
+  if (interaction.commandName === 'downloadpanel') return replyDownloadPanel(interaction);
 
   const payload = {
     start: {
       embeds: [buildWelcomeEmbed()],
       components: [buildLinkRow()]
+    },
+    download: {
+      embeds: [buildDownloadEmbed(interaction.member || interaction.user)],
+      components: [buildLinkRow()],
+      ephemeral: true
     },
     checkin: {
       content: formatBlock(`Game:
@@ -388,11 +432,6 @@ Final verdict:`)
       components: [buildLinkRow()],
       ephemeral: false
     },
-    roles: {
-      embeds: [buildRolePickerEmbed()],
-      components: buildRoleRows(),
-      ephemeral: false
-    },
     modroles: {
       embeds: [buildModRoleEmbed()],
       ephemeral: true
@@ -417,18 +456,73 @@ function buildWelcomeEmbed() {
     .setDescription('FPS audio testing for players who want real before/after feedback, not random EQ guessing.')
     .setColor(0x12c99a)
     .addFields(
-      { name: 'Fast path', value: 'Run Setup Gate, run Self Test, play one real match, then post a check-in.' },
+      { name: 'Fast path', value: 'Download the Windows alpha or open the web app, run Auto Detect, run Self Test, play one real match, then post a check-in.' },
+      { name: 'Download', value: `[Windows alpha](${links.download}) or [release notes](${links.release}). The build is unsigned during alpha, so Windows may show SmartScreen. Use only the GitHub release; if you trust it, open More info > Run anyway.` },
       { name: 'Post here', value: channelList() },
       { name: 'Privacy', value: 'Do not post passwords, phone numbers, DOB, raw device IDs, recovery codes, or private screenshots.' }
     );
 }
 
+function buildDownloadEmbed(memberOrUser) {
+  const name = memberOrUser?.displayName || memberOrUser?.username || 'tester';
+  return new EmbedBuilder()
+    .setTitle('Your CueForge download path')
+    .setDescription(`Welcome ${name}. Start here, keep it simple, and post what actually changed after one match.`)
+    .setColor(0xf6b13d)
+    .addFields(
+      { name: '1. Download or open', value: `[Download Windows alpha](${links.download}) or use the [web app](${links.app}) if you want the lightest first test. SmartScreen can appear because the alpha is unsigned; only continue from the official GitHub release.` },
+      { name: '2. First run', value: 'Open Auto Detect, run the Windows scan in the desktop build, then run Self Test.' },
+      { name: '3. Match proof', value: 'Play one real match and post whether footsteps, direction, comms, mic clarity, comfort, or game/server timing changed.' },
+      { name: 'Safety', value: 'CueForge exports settings and setup plans. It does not silently install drivers or change Windows routing.' }
+    );
+}
+
+function buildDownloadPanelEmbed() {
+  return new EmbedBuilder()
+    .setTitle('Download CueForge Anytime')
+    .setDescription('Already in the server and need the app link again? Start here. Download, run the setup checks, play one match, then post what changed.')
+    .setColor(0x12c99a)
+    .addFields(
+      { name: 'Download', value: `[Windows alpha](${links.download}) or [release notes](${links.release}). The alpha build is unsigned, so Windows may show SmartScreen. Use only the GitHub release; if you trust it, choose More info > Run anyway.` },
+      { name: 'Light test', value: `[Open the web app](${links.app}) if you want to preview CueForge before downloading.` },
+      { name: 'First run', value: 'Desktop build: Auto Detect > Run Windows scan > Self Test > Setup Intelligence > one real match.' },
+      { name: 'Need the private card?', value: 'Use `/download` anywhere in the server and the bot will show you the same links privately.' },
+      { name: 'Feedback loop', value: channelList() }
+    );
+}
+
 function buildLinkRow() {
-  return new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Open CueForge').setURL(links.app),
+  const buttons = [
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Download Windows Alpha').setURL(links.download),
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Open Web App').setURL(links.app),
     new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Feedback').setURL(links.feedback),
     new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Invite').setURL(links.discord)
-  );
+  ];
+
+  if (DISCORD_GUILD_ID && START_CHANNEL_ID) {
+    buttons.splice(
+      2,
+      0,
+      new ButtonBuilder()
+        .setStyle(ButtonStyle.Link)
+        .setLabel('Start Here')
+        .setURL(`https://discord.com/channels/${DISCORD_GUILD_ID}/${START_CHANNEL_ID}`)
+    );
+  }
+
+  return new ActionRowBuilder().addComponents(...buttons.slice(0, 5));
+}
+
+async function replyDownloadPanel(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+    return interaction.reply({ ephemeral: true, content: 'Only mods can post the public download panel.' });
+  }
+
+  await interaction.reply({
+    embeds: [buildDownloadPanelEmbed()],
+    components: [buildLinkRow()],
+    ephemeral: false
+  });
 }
 
 function buildRollCallEmbed(focus) {
@@ -513,6 +607,17 @@ function pickWelcomeMessage(member) {
   return welcome(member);
 }
 
+async function sendNewMemberDownloadDm(member) {
+  if (!welcomeDmEnabled || member.user?.bot) return;
+
+  await member.send({
+    embeds: [buildDownloadEmbed(member)],
+    components: [buildLinkRow()]
+  }).catch(() => {
+    // Many users block server DMs. The public welcome message already has the same links.
+  });
+}
+
 function buildRewardRulesEmbed() {
   return new EmbedBuilder()
     .setTitle('Panda Lab Rewards')
@@ -566,13 +671,18 @@ function buildServerGuideEmbed() {
 }
 
 function buildRolePickerEmbed() {
+  const roleLegend = selfAssignRoles
+    .map((role) => `${role.emoji} ${role.name}`)
+    .join('\n');
+
   return new EmbedBuilder()
     .setTitle('Pick Your Panda Lab Roles')
-    .setDescription('Click what fits your setup. Click again to remove a role. Staff roles are not self-assignable.')
+    .setDescription('Click a button or react with the matching emoji. Use the same button/reaction again to remove a role. Staff roles are not self-assignable.')
     .setColor(0x12c99a)
     .addFields(
       { name: 'Tester tags', value: 'IEMs, headsets, mics, EQ, clips, bugs, build testing, casual/sweat testing.' },
       { name: 'Game tags', value: 'Tarkov, Siege, COD / Warzone, Apex, CS2 / Valorant.' },
+      { name: 'Reaction map', value: roleLegend },
       { name: 'Staff', value: '`Chiefyy Forge Queen` and `Bamboo Mod` are assigned manually by Panda.' }
     );
 }
@@ -585,6 +695,7 @@ function buildRoleRows() {
       row.addComponents(
         new ButtonBuilder()
           .setCustomId(`cf-role:${role.name}`)
+          .setEmoji(role.emoji)
           .setLabel(role.label)
           .setStyle(role.style)
       );
@@ -592,6 +703,21 @@ function buildRoleRows() {
     rows.push(row);
   }
   return rows;
+}
+
+async function replyRolePanel(interaction) {
+  const message = await interaction.reply({
+    embeds: [buildRolePickerEmbed()],
+    components: buildRoleRows(),
+    ephemeral: false,
+    fetchReply: true
+  });
+
+  await rememberRolePickerMessage(message);
+
+  for (const role of selfAssignRoles) {
+    await message.react(role.emoji).catch(() => null);
+  }
 }
 
 function buildModRoleEmbed() {
@@ -618,28 +744,114 @@ async function replyRoleButton(interaction) {
     return interaction.reply({ ephemeral: true, content: 'That role is not self-assignable.' });
   }
 
-  const role = interaction.guild.roles.cache.find((candidate) => candidate.name === roleName);
-  if (!role) {
-    return interaction.reply({ ephemeral: true, content: `I cannot find the ${roleName} role yet.` });
-  }
+  const result = await setSelfAssignRole({
+    guild: interaction.guild,
+    userId: interaction.user.id,
+    roleName,
+    mode: 'toggle',
+    reason: 'CueForge self-assign role button'
+  });
 
-  const member = await interaction.guild.members.fetch(interaction.user.id);
-  const hasRole = member.roles.cache.has(role.id);
+  return interaction.reply({
+    ephemeral: true,
+    content: result.message
+  });
+}
+
+async function handleRoleReaction(reaction, user, shouldAdd) {
+  if (user?.bot) return;
 
   try {
-    if (hasRole) {
-      await member.roles.remove(role, 'CueForge self-assign role button');
-      return interaction.reply({ ephemeral: true, content: `Removed ${roleName}.` });
+    if (reaction.partial) {
+      reaction = await reaction.fetch();
     }
 
-    await member.roles.add(role, 'CueForge self-assign role button');
-    return interaction.reply({ ephemeral: true, content: `Added ${roleName}.` });
-  } catch {
-    return interaction.reply({
-      ephemeral: true,
-      content: `I found ${roleName}, but Discord blocked the role change. Move the bot role above tester roles and give it Manage Roles.`
+    const state = await loadRolePickerState();
+    if (!state.messageIds.includes(reaction.message.id)) return;
+
+    const reactionEmoji = normalizeEmoji(reaction.emoji.name);
+    const role = selfAssignRoles.find((candidate) => normalizeEmoji(candidate.emoji) === reactionEmoji);
+    if (!role || !reaction.message.guild) return;
+
+    await setSelfAssignRole({
+      guild: reaction.message.guild,
+      userId: user.id,
+      roleName: role.name,
+      mode: shouldAdd ? 'add' : 'remove',
+      reason: 'CueForge self-assign role reaction'
     });
+  } catch {
+    // Ignore reaction-role failures so one bad role does not take the bot down.
   }
+}
+
+async function setSelfAssignRole({ guild, userId, roleName, mode, reason }) {
+  const role = guild.roles.cache.find((candidate) => candidate.name === roleName);
+  if (!role) {
+    return { ok: false, message: `I cannot find the ${roleName} role yet.` };
+  }
+
+  try {
+    const member = await guild.members.fetch(userId);
+    const hasRole = member.roles.cache.has(role.id);
+
+    if (mode === 'toggle') {
+      if (hasRole) {
+        await member.roles.remove(role, reason);
+        return { ok: true, message: `Removed ${roleName}.` };
+      }
+      await member.roles.add(role, reason);
+      return { ok: true, message: `Added ${roleName}.` };
+    }
+
+    if (mode === 'add' && !hasRole) {
+      await member.roles.add(role, reason);
+    }
+    if (mode === 'remove' && hasRole) {
+      await member.roles.remove(role, reason);
+    }
+
+    return { ok: true, message: `${mode === 'add' ? 'Added' : 'Removed'} ${roleName}.` };
+  } catch {
+    return {
+      ok: false,
+      message: `I found ${roleName}, but Discord blocked the role change. Move the bot role above tester roles and give it Manage Roles.`
+    };
+  }
+}
+
+async function rememberRolePickerMessage(message) {
+  const state = await loadRolePickerState();
+  state.messageIds = [message.id, ...state.messageIds.filter((id) => id !== message.id)].slice(0, 20);
+  state.messages = [
+    {
+      id: message.id,
+      channelId: message.channelId,
+      guildId: message.guildId,
+      createdAt: new Date().toISOString()
+    },
+    ...state.messages.filter((item) => item.id !== message.id)
+  ].slice(0, 20);
+  await saveRolePickerState(state);
+}
+
+async function loadRolePickerState() {
+  try {
+    const text = await readFile(rolePickerStorePath, 'utf8');
+    const parsed = JSON.parse(text);
+    const messages = Array.isArray(parsed.messages) ? parsed.messages : [];
+    const messageIds = Array.isArray(parsed.messageIds)
+      ? parsed.messageIds
+      : messages.map((item) => item.id).filter(Boolean);
+    return { messages, messageIds };
+  } catch {
+    return { messages: [], messageIds: [] };
+  }
+}
+
+async function saveRolePickerState(state) {
+  await mkdir(path.dirname(rolePickerStorePath), { recursive: true });
+  await writeFile(rolePickerStorePath, JSON.stringify(state, null, 2));
 }
 
 async function replyClaim(interaction) {
@@ -845,6 +1057,10 @@ function sanitizeText(text, limit) {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, limit);
+}
+
+function normalizeEmoji(emoji) {
+  return String(emoji || '').replace(/\uFE0F/g, '');
 }
 
 function channelList() {

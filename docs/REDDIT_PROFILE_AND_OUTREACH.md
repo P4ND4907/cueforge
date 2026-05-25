@@ -11,10 +11,32 @@ Display name: Panda | CueForge
 About: Panda behind CueForge. Building a free FPS audio lab for mic checks, IEM/headset EQ, Discord, Equalizer APO, and real match feedback. Honest tests > hype.
 Banner/avatar: CueForge panda brand assets applied.
 Profile post: blocked by Reddit profile composer error, "community doesn't exist."
+Update 003 profile post attempt: blocked by the same Reddit profile composer error on May 22, 2026.
+Do not keep retrying the profile composer until the profile/community route is healthy again.
 r/alphaandbetausers post: submitted.
 Live post: https://www.reddit.com/r/alphaandbetausers/comments/1tkdalt/looking_for_fps_audio_testers_using_iems_headsets/
 Current status: Reddit filters removed the repeated/link-heavy alphaandbetausers post. Do not repost the same title/body/link.
 Safe action now: use the GitHub release/issue as the owned link hub, then do modmail permission asks and no-link helpful comments. Do not mass post the GitHub/app/Discord links.
+r/betatests Update 003 post attempt: submitted May 22, 2026 with one app link and required feedback questions; removed immediately by Reddit filters.
+r/SideProject no-link discussion attempt: submitted May 22, 2026 with no app/GitHub/Discord link; removed immediately by Reddit filters.
+Current Reddit diagnosis: account-level trust/filter issue. Stop new subreddit post attempts for now. Build trust with normal non-link comments, profile completion, and modmail permission asks before trying another launch-style post.
+May 22 update: outreach mode is now reply-only. Do not create new Reddit promo posts; save active threads, answer the existing question, and leave app links out unless someone asks.
+May 23 update: Update 004 copy is safe for the Reddit profile or relevant replies only. Do not repost into communities that already filtered launch posts.
+May 23 rollout result: Update 004 profile-safe post was staged, but Reddit returned "Hmm, that community doesn't exist. Try checking the spelling." after submit. A no-link helpful comment was drafted in `r/Gaming_Headsets`, but it did not publish visibly after submit. Keep Reddit in manual-confirmation mode until comments are proven healthy.
+May 23 evening result: X and Discord lab update posted with the v0.2.0-alpha.3 foundation/proof-loop copy. Reddit profile submit still returns "community doesn't exist." A tailored `r/betatests` post briefly submitted, then Reddit filters removed it. Two no-link comments did publish visibly: one tester-feedback-process comment in `r/betatests`, and one headset/mic recommendation comment in `r/Gaming_Headsets`.
+Current karma recovery mode: comments only, no app links, no GitHub links, no repeated beta posts. Focus on helpful replies in headset, EQ, mic, Discord, and tester-feedback threads until comment karma is established.
+Clean comment queue saved at `docs/social/REDDIT_COMMENT_QUEUE_2026-05-23.md`. Use it as a human reply queue, not a bulk-post checklist.
+May 24 queue: Use the Reddit profile-safe post and no-link comment bank in `docs/social/2026-05-24-social-command-center.md`. Do not create new subreddit promo posts until the profile composer and ordinary comments are proven healthy.
+```
+
+Community memory:
+
+```text
+Use the in-app Community Hub -> Thread Memory workflow before replying.
+GitHub memory file: docs/social/COMMUNITY_MEMORY.md
+Watchlist data: docs/social/community-watchlist.json
+Save thread URL, title, visible comments/votes, useful context, and the next human reply draft.
+Only engage in high-fit, active threads. Avoid communities that visibly prohibit assisted/generated comments.
 ```
 
 Joined communities:
@@ -46,6 +68,7 @@ Community posts: no-link by default unless rules clearly allow links.
 Game subreddits: ask modmail first.
 Comments: answer existing audio/help threads with useful advice before mentioning CueForge.
 Cadence: one real outreach action at a time, not many similar posts in a row.
+Karma mode: helpful comments only, no repeated app links.
 ```
 
 Official rules and references:
@@ -104,6 +127,37 @@ Use these in order. Stop if a post is filtered or removed, then ask mods instead
 4. One tailored follow-up only after someone asks for the app.
 
 Do not post the same body twice. Rewrite the hook for each community and keep the disclosure.
+
+## Update 004 Profile-Safe Copy
+
+Use on the profile only, or rewrite as a relevant reply when someone is already talking about audio chains, EQ, Sonar/APO routing, Discord mic issues, or headset/IEM testing.
+
+```text
+Disclosure: CueForge is my project.
+
+Small update for anyone following the build: CueForge now has what I am calling the CueForge Brain.
+
+I do not want this to be just another EQ preset app. The goal is more practical:
+
+Can the app prove what is actually happening in the player's audio chain?
+Can it warn when Sonar, APO, Discord, Voicemeeter, VB-CABLE, or spatial layers are making the setup harder to trust?
+Can it learn what the player actually prefers instead of forcing one "best" sound?
+Can it map the profile to the game intent and keep the export/apply step safe?
+
+That is the lane now: audio chain verifier + personal sound engine.
+
+Latest local proof:
+- 53 test files / 182 tests passed
+- build passed
+- dependency audit clean
+- pre-release QA passed
+- browser smoke passed
+- 70 route checks with 0 notes
+
+I am still looking for real player feedback. The useful test is simple: run setup, play one real match, and say what actually changed. Better, worse, or weird all helps.
+
+App and GitHub are on my profile.
+```
 
 The app now has an Auto Detect copy/paste setup kit. Testers can copy a redacted setup summary from `Auto Detect` and paste it into Discord, Reddit comments, GitHub issues, or beta check-ins without raw device IDs.
 

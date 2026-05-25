@@ -10,5 +10,7 @@ describe('blind match tuner', () => {
     expect(result.eq).toHaveLength(10);
     expect(result.confidence).toBeGreaterThan(80);
     expect(result.summary).toContain('Learned from');
+    expect(result.preferenceModel.roundsCompleted).toBe(blindMatchRounds.length);
+    expect(result.preferenceSummary).toMatch(/footstep|balanced|wide|center|comfort|detail/);
   });
 });

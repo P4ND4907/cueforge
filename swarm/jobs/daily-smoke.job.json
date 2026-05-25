@@ -1,0 +1,33 @@
+{
+  "schema": "cueforge.swarm-job.v1",
+  "jobId": "daily-smoke",
+  "label": "Daily human-style smoke",
+  "trigger": "daily local or manual",
+  "command": "npm.cmd run qa:swarm -- --duration=120000 --repeat=1",
+  "seed": "daily-date-seed",
+  "routes": [
+    "setup-command-center",
+    "auto-detect",
+    "self-test",
+    "report-lab"
+  ],
+  "outputs": [
+    "docs/repair/HUMAN_SWARM_CDP_QA_RUN.md",
+    "docs/repair/cueforge-human-swarm-cdp-results.json",
+    "docs/repair/cueforge-human-swarm-cdp-ui-feedback-notes.json"
+  ],
+  "gates": {
+    "canModifySystemState": false,
+    "canPostPublicly": false,
+    "maxNotesBeforeFail": 3,
+    "maxConsoleErrors": 0,
+    "maxRawLeakCount": 0
+  },
+  "privacy": {
+    "allowRawAudioExport": false,
+    "allowCloudUpload": false,
+    "redactDeviceIds": true,
+    "redactUserPaths": true,
+    "summaryOnlyReports": true
+  }
+}

@@ -46,7 +46,8 @@ describe('community hub', () => {
     ]);
 
     expect(buildRollCallPrompt({ focus: 'IEMs', game: 'Tarkov', summary })).toContain('Top issue: Game/server issue');
-    expect(buildCommunityDraft({ platform: 'Reddit', summary, appUrl: 'https://app.test', discordUrl: 'https://discord.test' })).toContain('keeping links out');
+    expect(buildCommunityDraft({ platform: 'Reddit', summary, appUrl: 'https://app.test', discordUrl: 'https://discord.test' })).toContain('split the audio problem');
+    expect(buildCommunityDraft({ platform: 'X', summary, appUrl: 'https://app.test', discordUrl: 'https://discord.test' })).not.toContain('https://app.test');
   });
 
   it('builds Reddit drafts for profile, modmail, and community posts', () => {

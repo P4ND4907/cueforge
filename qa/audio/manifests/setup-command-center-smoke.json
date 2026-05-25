@@ -1,0 +1,28 @@
+{
+  "schema": "cueforge.lab-manifest.v1",
+  "manifestId": "setup-command-center-smoke",
+  "profileId": "win-realtek-hyperx-sonar",
+  "tests": [
+    { "id": "device-scan", "type": "integration" },
+    { "id": "route-graph", "type": "chain-graph" },
+    { "id": "output-loopback-impulse", "type": "latency" },
+    {
+      "id": "eq-render-a-b",
+      "type": "audio-regression",
+      "fixture": "cue_steps_reference.wav",
+      "policy": "qa/audio/policies/eq-render-a-b.json",
+      "capture": {
+        "method": "wasapi-loopback",
+        "endpoint": "active-default-render",
+        "allowSystemMutation": false
+      }
+    },
+    { "id": "mic-cleanliness", "type": "mic-pipeline" },
+    { "id": "electron-onboarding", "type": "e2e" }
+  ],
+  "privacy": {
+    "allowRawAudioExport": false,
+    "redactDeviceIds": true,
+    "redactUserPaths": true
+  }
+}

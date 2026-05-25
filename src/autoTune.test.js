@@ -12,7 +12,7 @@ describe('autotune calibration', () => {
 
     expect(eq).toHaveLength(10);
     expect(eq[6]).toBeGreaterThan(1.5);
-    expect(eq[7]).toBeGreaterThan(2);
+    expect(eq[7]).toBe(2);
     expect(Math.max(...eq)).toBeLessThanOrEqual(6);
     expect(Math.min(...eq)).toBeGreaterThanOrEqual(-6);
   });

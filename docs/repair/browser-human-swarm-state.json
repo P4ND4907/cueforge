@@ -1,0 +1,56 @@
+{
+  "schema": "cueforge.browser-human-swarm-state.v1",
+  "startedAt": "2026-05-23T07:16:17.856Z",
+  "waves": [
+    {
+      "wave": 1,
+      "startedAt": "2026-05-23T07:16:18.647Z",
+      "personas": [
+        {
+          "id": "simple-new-player",
+          "name": "Mika",
+          "focus": "simple onboarding and first match path",
+          "routesRun": 17,
+          "failures": 0,
+          "notesSavedViaUi": 0
+        },
+        {
+          "id": "expert-lab",
+          "name": "Rowan",
+          "focus": "expert lab pages and raw tool clarity",
+          "routesRun": 17,
+          "failures": 0,
+          "notesSavedViaUi": 0
+        },
+        {
+          "id": "mic-report",
+          "name": "Chiefy",
+          "focus": "mic analyzer, permissions, reports, replay readiness",
+          "routesRun": 17,
+          "failures": 0,
+          "notesSavedViaUi": 0
+        },
+        {
+          "id": "tuning-hearing",
+          "name": "Panda",
+          "focus": "Sound Match, hearing model, masking, calibration",
+          "routesRun": 17,
+          "failures": 0,
+          "notesSavedViaUi": 0
+        },
+        {
+          "id": "responsive-privacy",
+          "name": "Nova",
+          "focus": "mobile-style overflow, quiet mode, exports, privacy wording",
+          "routesRun": 17,
+          "failures": 0,
+          "notesSavedViaUi": 0
+        }
+      ],
+      "notes": [],
+      "completedAt": "2026-05-23T07:18:01.193Z",
+      "elapsedMs": 102546
+    }
+  ],
+  "notes": []
+}

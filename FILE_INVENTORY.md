@@ -4,49 +4,193 @@ Read and verified for the current local release build.
 
 ## Source files
 
-- `package.json` - Vite/React/Electron project metadata, test/build scripts, and desktop packaging config.
+- `package.json` - Vite/React/Electron project metadata, layered CI scripts, test/build scripts, and desktop packaging config.
+- `vite.config.js` - Vite/React build config with Vitest excluding Playwright-owned specs from the unit-test runner.
+- `playwright.config.mjs` - Playwright web smoke config that starts/reuses the Vite dev server, runs desktop and compact Chrome projects, and keeps traces/screenshots local.
+- `.github/workflows/release-gate.yml` - GitHub Actions CI gates for lint/unit, web build, Playwright web smoke, Windows desktop smoke, redaction contract, feedback contract, swarm contract, audio fixture regression, optional self-hosted route graph lab, and release readiness.
 - `index.html` - browser entry document with CueForge favicon.
 - `public/favicon.svg` - small CueForge wave favicon used by Vite and GitHub Pages.
-- `src/main.jsx` - full CueForge application: immersive setup journey, player trial, report lab, mic analyzer, EQ studio, game profiles, hearing model, system info, and Equalizer APO export logic.
+- `src/main.jsx` - full CueForge application: immersive setup journey, player trial, report lab, mic analyzer, EQ studio, game profiles, hearing model, settings, shortcut vault, system info, and Equalizer APO export logic.
+- `src/app/routes/*` - route-level wrappers for Command Center, Auto Detect, Self Test, Hearing, Blind Match, Masking Lab, Report Lab, and Player Trial so future UI work can leave the monolithic app shell cleanly.
+- `src/app/hooks/useCueForgeState.ts` - React hook for reading a merged CueForge state object from the shared state contract.
+- `src/features/*` - product-facing migration barrels for Setup Command Center, Auto Detect, Self Test, Blind Match, Hearing, Report Lab, Player Trial, and Machine Play Lab UI.
+- `src/shared/*` - shared schema, privacy, audio, and state adapter barrels used to keep feature extraction from duplicating core logic.
+- `src/shared/schemas/hardwareProfile.js` - versioned hardware-profile schema validator and evidence matcher for QA hardware profiles, companion expectations, endpoint split checks, loopback proof requirements, and latency expectations.
+- `src/shared/schemas/labManifest.js` - versioned Machine Play Lab manifest validator, privacy gate, and run-plan builder for exact fixture/harness runs.
+- `src/shared/schemas/swarmManifest.js` - versioned swarm route/job/repair manifest validator, coverage summary builder, privacy lock, and unsafe-action guard for persona QA.
+- `src/shared/schemas/index.js` - shared schema barrel exports.
 - `src/audioData.js` - local IEM, Valorant, competitive FPS, balanced, and HyperX target data pulled from accessible workspace profiles.
 - `src/audioData.test.js` - unit coverage for Equalizer APO export text and Valorant process metadata.
 - `src/autoTune.js` - calibration curve generator for IEM/headset/game/mic preferences.
 - `src/autoTune.test.js` - unit coverage for the generated 10-band autotune curve.
 - `src/audioDna.js` - personal audio fingerprint generator.
 - `src/audioDna.test.js` - unit coverage for Audio DNA confidence and identity output.
-- `src/exportPack.js` - setup pack and text export helpers.
-- `src/exportPack.test.js` - unit coverage for generated setup pack payloads.
-- `src/reportPack.js` - redacted issue report builder, device summary redaction, and replay validation helpers.
-- `src/reportPack.test.js` - unit coverage for report redaction, reproducible state, and validation.
+- `src/exportPack.js` - setup pack and text export helpers, including safe shortcut export with locked code redaction, hashed export fingerprints, privacy flags, and redacted CueForge State v2 export.
+- `src/exportPack.test.js` - unit coverage for generated setup pack payloads, shortcut redaction, export fingerprints, privacy flags, and redacted state export.
+- `src/exportFingerprints.js` - stable SHA-256 export fingerprint helpers for correlating devices and routes without storing raw labels, IDs, paths, or machine-specific values.
+- `src/exportFingerprints.test.js` - unit coverage for stable hashed fingerprints, device/route namespace separation, and raw ID leak prevention.
+- `src/shortcutVault.js` - local shortcut vault helpers for saved player shortcuts, locked code shortcuts, redacted public copy, and export summaries.
+- `src/shortcutVault.test.js` - unit coverage for exportable shortcuts, auto-locking code-like values, and preserving locked entries.
+- `src/appSettings.js` - app settings helpers for quiet mode, background soundwalk audio, cinematic video audio, Panda Notes, and desktop hint defaults.
+- `src/appSettings.test.js` - unit coverage for quiet defaults, audio policy gates, and bad-storage recovery.
+- `src/reportPack.js` - redacted issue report builder, device summary redaction, hashed export fingerprints, local-first privacy flags, and replay validation helpers.
+- `src/reportPack.test.js` - unit coverage for report redaction, reproducible state, validation, privacy flags, and export fingerprint schema.
 - `src/setupReadiness.js` - player-test readiness scoring and blocker detection.
 - `src/setupReadiness.test.js` - unit coverage for ready and blocked setup states.
 - `src/playerTrial.js` - guided player test script, feedback scoring, and tester packet builder.
 - `src/playerTrial.test.js` - unit coverage for trial steps, feedback scoring, and packet contents.
 - `src/betaCheckIn.js` - anonymous beta tester check-ins, proof codes, active-day summary, and export packet builder.
 - `src/betaCheckIn.test.js` - unit coverage for beta IDs, proofed check-ins, summaries, and privacy flags.
-- `src/audioEvidence.js` - local opt-in audio evidence summary and export packet builder.
-- `src/audioEvidence.test.js` - unit coverage for audio evidence summaries, caps, and raw-audio privacy flags.
+- `src/audioEvidence.js` - local opt-in audio evidence summary and export packet builder with summary-only metrics, hashed tester fingerprints, raw-handle redaction, opt-in upload flags, and protected playback boundary metadata.
+- `src/audioEvidence.test.js` - unit coverage for audio evidence summaries, caps, raw-audio privacy flags, public packet redaction, and protected playback boundary defaults.
 - `src/communityHub.js` - Discord-first community signal summaries, roll calls, Reddit-safe drafts, setup share text, and redaction.
 - `src/communityHub.test.js` - unit coverage for community feedback redaction, summaries, and outreach copy.
 - `src/gameplaySave.js` - throttled gameplay save snapshots and lightweight performance-save settings.
 - `src/gameplaySave.test.js` - unit coverage for snapshot bounds, trimming, and write throttling.
-- `src/uiFeedback.js` - right-click developer UI notes with retrieval tags, area metadata, redaction, and summary helpers.
-- `src/uiFeedback.test.js` - unit coverage for UI note redaction, caps, and summaries.
-- `src/blindMatch.js` - A/B preference-learning tuner that converts choices into a personal EQ curve.
-- `src/blindMatch.test.js` - unit coverage for Blind Match learned curves.
+- `src/uiFeedback.js` - right-click developer UI notes with retrieval tags, area metadata, review/fixed/needs-retest states, cleanup helpers, redaction, and summary helpers.
+- `src/uiFeedback.test.js` - unit coverage for UI note redaction, caps, summaries, review state changes, and cleanup.
+- `src/uiNotePosition.js` - viewport-aware Panda Note popover placement helper that keeps the note box inside window bounds.
+- `src/uiNotePosition.test.js` - unit coverage for low-page clicks, top-page clicks, and mobile viewport clamping.
+- `src/pandaNotesRepairRunner.js` - exported Panda Notes/redacted report extraction, repair run assembly, and markdown repair queue formatting.
+- `src/pandaNotesRepairRunner.test.js` - unit coverage for extracting notes from reports/setup packs and formatting the developer repair queue.
+- `src/permissionRecovery.js` - permission-state recovery copy and steps for blocked, skipped, granted, and unsupported mic/device flows.
+- `src/permissionRecovery.test.js` - unit coverage for permission-state normalization and recovery instructions.
+- `src/privacyAudit.js` - export/report/privacy scanner for raw emails, phones, paths, device IDs, group IDs, tokens, passwords, and recovery codes, while allowing explicit privacy-policy flags such as `redactDeviceIds`.
+- `src/privacyAudit.test.js` - unit coverage for detecting raw private data and passing sanitized reports, setup summaries, and export packs.
+- `src/securityPrivacyGate.js` - release-blocking security/privacy gate for local-first defaults, redaction posture, summary-only evidence packets, protected playback boundaries, hashed fingerprints, no-silent-driver rules, Electron hardening, native manifest capability contracts, and non-medical hearing copy.
+- `src/securityPrivacyGate.test.js` - unit coverage for the security/privacy gate, native manifest capability failures, protected playback boundary, hearing safety copy, Electron policy, safe URLs, and IPC sender validation.
+- `src/core/evidencePrivacyPolicy.js` - shared evidence privacy contract for local-first defaults, opt-in uploads, summary-only public packets, private text redaction, privacy leak detection, and DRM/protected-playback capture boundaries.
+- `src/tests/evidencePrivacyPolicy.test.js` - unit coverage for public evidence text redaction, privacy posture validation, raw-audio rejection, opt-in upload enforcement, and protected playback boundary enforcement.
+- `src/security/electronPolicy.js` - shared Electron security policy for sandboxed web preferences, content security policy, trusted app URL checks, safe external URL checks, and IPC sender validation.
+- `src/electronHardening.test.js` - static coverage that the desktop shell wires the shared policy, sandbox, CSP, navigation guard, permission guard, and trusted IPC wrapper.
+- `src/tests/releaseScenarios.test.js` - release gate coverage for clean beginner setup, proven APO setup, Sonar + APO endpoint risk, Voicemeeter + VB-CABLE routing risk, treble-sensitive competitive tuning, night mode, incomplete hearing-model safety, and privacy-safe export payloads.
+- `src/tests/releaseReadinessMatrix.test.js` - release readiness matrix covering browser-denied auto detect, APO-only chains, Sonar/APO stacking, Voicemeeter/VB-CABLE routing, wireless chat/game split, mic-permission blocking, risky-layer readiness reduction, hearing consistency, threshold ladders, Blind Match, Masking Lab, signal analyzer fixtures, redacted exports, preload API exposure, guided UI contracts, report replay, visual page contract, and manifest rejection.
+- `src/issuePatternMemory.js` - local learned-pattern layer that clusters recurring setup, mic, routing, game/session, masking, IEM fatigue, UI, privacy, and performance signals into debug playbooks.
+- `src/issuePatternMemory.test.js` - unit coverage for mic/Discord pattern learning, routing vs game/server separation, and private-data redaction in pattern evidence.
+- `src/desktopBridgePlan.js` - desktop bridge fix plan helper that explains browser/native boundaries, developer commands, proof checks, and player desktop steps.
+- `src/desktopBridgePlan.test.js` - unit coverage for browser-mode warning, desktop-needs-scan, and desktop-ready states.
+- `src/setupIntelligence.js` - setup intelligence layer that turns browser devices plus desktop bridge data into chain stages, game focus, budget-lane guidance, companion-layer warnings, proof gates, proof labels, and copyable setup plans.
+- `src/setupIntelligence.test.js` - unit coverage for bridge/tool detection, running-game hints, browser-mode boundaries, double-processing warnings, proof gates, and redacted setup intelligence text.
+- `src/blindMatch.js` - This-or-that Sound Match tuner that converts choices into a personal EQ curve and preference model.
+- `src/blindMatch.test.js` - unit coverage for Sound Match learned curves and saved preference identity.
+- `src/core/cueforgeBrain.js` - product proof layer for the audio chain verifier + personal sound engine differentiator: chain verification, personal sound identity, conflict doctor, game intent, safe export/apply, local evidence, and native-engine readiness.
+- `src/tests/cueforgeBrain.test.js` - unit coverage for CueForge Brain scoring, proof pillars, conflict-doctor behavior, release pack inclusion, and honest no-magic/no-hidden-driver boundaries.
+- `src/core/setupAssessmentSnapshot.js` - versioned local setup-assessment snapshot contract that publishes readiness, chain, conflict, CueForge Brain, export, and state-anchor summaries to localStorage, a window key, and a namespaced event without raw audio, raw device IDs, raw paths, or account data.
+- `src/tests/setupAssessmentSnapshot.test.js` - unit coverage for building, validating, publishing, reading, and rejecting unsafe setup-assessment snapshots.
+- `src/data/companionRepoIntegration.js` - safe integration map for Autobot scheduled maintenance, Kalshi Scout readiness smoke, Feedback Automation triage, and Crypto Intelligence-style local snapshot contracts.
+- `src/tests/companionRepoIntegration.test.js` - unit coverage for companion integration plans, nightly/release maintenance commands, local snapshot artifacts, and unsafe command rejection.
+- `src/core/preferenceModel.js` - hidden player preference weights for footsteps, comfort, bass, comms, width, center, detail, fatigue, and their EQ/dynamics/spatial adapters.
+- `src/tests/preferenceModel.test.js` - unit coverage for preference weight updates, clamping, replay, and tuning adapters.
+- `src/core/personalizationLabInputs.js` - formal lab-input adapter that turns Hearing Model, Sound Match / Blind Match, Masking Lab, and Player Trial evidence into conservative profile/readiness inputs with capped influence weights, repeated-threshold consistency checks, quiet click-to-play safety, and a hard non-medical claim boundary.
+- `src/tests/personalizationLabInputs.test.js` - unit coverage for the combined personalization lab contract, inconsistent hearing-answer retest behavior, cautious preference-only learning, and medical/audiometry claim rejection.
+- `src/core/safetyRules.js` - shared audio safety contract for boost caps, treble/hearing limits, required preamp headroom, click-to-play tone rules, player warnings, and conflict-rule IDs.
+- `src/tests/safetyRules.test.js` - unit coverage for safety caps, preamp headroom, EQ clamping, player warnings, and UI/export summary boundaries.
+- `src/core/scopeGuard.js` - v0.2.0 trust boundary that blocks kernel drivers, custom APO installers, silent routing, always-on services, cloud personalization, paid unlocks, game memory reads, anti-cheat-adjacent hooks, and exact-enemy-position claims.
+- `src/tests/scopeGuard.test.js` - unit coverage for the blocked scope list, risky feature/claim detection, and the allowed local-first v0.2.0 lane.
+- `src/data/nativeEngineRoadmap.js` - post-v0.2 native engine release ladder from v0.3 Native DSP Sandbox through v1.0 Signed Public Beta, including deliverables, proof gates, and blocked scope.
+- `src/tests/nativeEngineRoadmap.test.js` - unit coverage for native engine milestone order, v0.3 sandbox scope, v0.4 no-driver preview, v0.5 user-mode research guardrails, v0.6 RNNoise mic pack, v0.7 spatial honesty, and v1.0 signed beta gates.
+- `src/data/openSourceStack.js` - open-source integration registry for Equalizer APO, AutoEq, Playwright, OfflineAudioContext, AudioWorklet, NAudio, miniaudio, RNNoise, and Steam Audio, including tiers, proof gates, guardrails, and source links.
+- `src/tests/openSourceStack.test.js` - unit coverage for the open-source stack tiers, use-now handoffs, browser DSP boundaries, native candidate guardrails, RNNoise opt-in behavior, Steam Audio honesty, and source/proof completeness.
+- `src/data/releaseToolBacklog.js` - release-path candidate registry for WASAPI loopback, miniaudio, PortAudio, RtAudio, RNNoise, FFmpeg/libebur128, Playwright, Puppeteer, and Steam Audio with recommendations, proof gates, blocked uses, and release stages.
+- `src/tests/releaseToolBacklog.test.js` - unit coverage for required candidate tools, miniaudio primary status, fallback engine boundaries, RNNoise opt-in behavior, Steam Audio scene-lab limits, and release-stage mapping.
+- `src/data/implementationBacklog.js` - current release-path engineering backlog with task, why, effort, status, stage, lane, proof gates, and next actions.
+- `src/tests/implementationBacklog.test.js` - unit coverage for backlog task count, effort mix, high-effort boundaries, live foundations, stage/lane grouping, next-task ordering, and validation.
+- `src/data/releaseShipBars.js` - version-name ship bar contract for v0.2.0 Foundations, v0.3.0 Proof, and v0.4.0 Production readiness.
+- `src/tests/releaseShipBars.test.js` - unit coverage for release ship-bar order, minimum bars, proof-gate summary, and validation.
+- `src/data/releaseAcceptanceChecklist.js` - release-candidate acceptance contract with the real Windows loopback regression as a hard blocker, honest Windows-first release-note rules, and open limitations for public copy.
+- `src/tests/releaseAcceptanceChecklist.test.js` - unit coverage for RC checklist order, loopback blocker behavior, common conflict-rule coverage, open limitations, and release-note boundary validation.
+- `src/native/harness/nativeCaptureHarness.js` - miniaudio-first native capture/render harness contract for offline render, explicit WASAPI loopback, explicit mic capture, full-duplex preview, latency probes, backend fallbacks, protected playback boundary copy, and safe request validation.
+- `src/tests/nativeCaptureHarness.test.js` - unit coverage for miniaudio backend capabilities, Windows loopback availability, explicit user-action requirements, bounded local capture, protected playback boundary, unsafe helper rejection, and non-Windows offline fallback behavior.
+- `src/tests/v020Acceptance.test.js` - v0.2.0 acceptance gate covering Setup Command Center, CueForge Brain, CueForge State v2, Chain Graph, Conflict Detector, Readiness Score v2, Profile Engine v2, Hearing Model v2 plus legacy migration, This-or-That preferences, native manifest export, native roadmap next step, APO export, report redaction, explicit native-action boundaries, and blocked-scope guardrails.
+- `src/tests/architectureScaffold.test.js` - smoke coverage proving the new v0.2.0 architecture scaffold routes through the existing chain, readiness, native manifest, detection, and lab fixture helpers.
+- `src/tests/repoLayout.test.js` - production-layout guard that verifies feature/shared/native/QA/swarm/tool/doc lanes exist, feature barrels import, and the monolith extraction plan is documented.
+- `src/tests/hardwareProfiles.test.js` - fixture coverage for `cueforge.hardware-profile.v1` manifests, HyperX/Sonar matching, forbidden companion detection, missing loopback proof, and malformed profile rejection.
+- `src/tests/labManifests.test.js` - fixture coverage for `cueforge.lab-manifest.v1` manifests, privacy locks, runner mapping, and malformed manifest rejection.
+- `src/tests/swarmManifests.test.js` - fixture coverage for `cueforge.swarm-route.v1`, `cueforge.swarm-job.v1`, and `cueforge.swarm-repair.v1` route coverage, privacy locks, no-public-post/no-system-mutation gates, and safe repair boundaries.
+- `src/core/chain/*` - typed architecture adapters for chain graph building, route-warning inference, readiness inference, and evidence packet merging.
+- `src/core/chain/evidenceGraph.ts` - graph-first machine topology builder with typed nodes, route/processing/default/corroboration edges, confidence scoring, and topology warnings for missing endpoints, duplicate processors, virtual mixers, and Sonar/APO/DAC stacks.
+- `src/core/scoring/*` - readiness v2 and confidence scoring exports for future app/native consumers.
+- `src/core/manifests/*` - native engine manifest schema and validation helpers.
+- `src/native/helper/manifest-schema.json` - strict CueForge native helper manifest contract for Windows endpoints, helper-tool detection, safe capabilities, and `canModifySystemState: false`.
+- `src/core/exports/*` - report/export pack adapters and privacy-safe export policy helpers.
+- `src/detection/browser/*` - browser-safe device and audio capability collection helpers.
+- `src/detection/assessMachine.ts` - layered machine assessment entry point that merges browser hints with native evidence, then returns chain graph, route warnings, readiness, normalized auto-detect report, evidence packet, and confidence.
+- `src/detection/native/*` - desktop bridge evidence merge, equalizer-layer detection, and virtual-route detection helpers.
+- `src/detection/heuristics/*` - simple route-risk heuristics for double EQ, wrong default device, and chat/game split setups.
+- `src/lab/harness/*` - offline fixture render and analysis harness helpers for signal, Blind Match, and Masking Lab tests, including deterministic OfflineAudioContext/JS masking regression runs.
+- `src/lab/generators/*` - deterministic test signal generators for footsteps, seeded pink noise, comms beds, and seeded explosion maskers.
+- `src/native/electron/*` - reserved Electron bridge entry/preload adapters for the future split desktop layer.
+- `src/native/helper/*` - helper manifest schema and native collection contract stubs for WASAPI, sessions, default endpoints, and enhancements.
+- `src/native/harness/*` - native capture/render harness contracts for future miniaudio/PortAudio/RtAudio helpers; all live capture stays explicit, bounded, local, and read-only.
+- `native/windows/*` - root native Windows lanes for bridge, WASAPI harness, probes, and Equalizer APO work that should not stay buried in web-app source.
+- `qa/*` - root QA lanes for Playwright, Electron, audio fixtures, manifests, analyzers, baselines, reports, and hardware-profile scenarios.
+- `qa/playwright/web/command-center-smoke.spec.mjs` - Playwright browser smoke for Command Center, Auto Detect, Mic Lab, Player Trial, Report Lab, Settings, runtime errors, and horizontal overflow.
+- `qa/hardware-profiles/*.json` - explicit Windows player-chain manifests for HyperX/Sonar, clean USB DAC + APO, Voicemeeter/VB-CABLE complex routing, and wireless chat/game split setups.
+- `qa/audio/manifests/*.json` - explicit Machine Play Lab run manifests for setup smoke, clean APO regression, and complex virtual routing proof.
+- `qa/audio/manifests/machine-play-lab-full-coverage.json` - full lab-class coverage manifest for unit, integration, e2e, A/B audio render, Blind Match, Hearing Model, Chain Graph, Conflict Detector, latency, bit-exact DSP, and mic pipeline tests.
+- `swarm/README.md` - swarm QA contract, safety boundary, validation command, and folder map.
+- `swarm/routes/*.route.json` - checked-in human-style QA route contracts for Setup Command Center, Auto Detect, Self Test, and Report Lab, including selectors, transitions, native API expectations, fixtures, thresholds, owners, and safe repair actions.
+- `swarm/jobs/*.job.json` - reproducible daily smoke, nightly audio regression, and release-candidate swarm job manifests with seeds, route coverage, outputs, and public/system mutation gates.
+- `swarm/repair/*.repair.json` - reviewed repair queue manifests for Panda Notes and route regressions with narrow allowed fixes and blocked Windows/APO/raw/private-data actions.
+- `tools/ffmpeg/*` and `tools/scripts/*` - local helper tooling lanes for FFmpeg reference work and script utilities.
+- `docs/architecture/REPO_LAYOUT.md` - production repo layout and safe `src/main.jsx` extraction plan.
+- `docs/IMPLEMENTATION_BACKLOG.md` - human-readable version of the current implementation backlog and next practical build order.
 - `src/maskingLab.js` - game-audio masking stress-test and anti-masking EQ generator.
 - `src/maskingLab.test.js` - unit coverage for masking score and tuning improvement.
 - `src/signalAnalyzer.js` - CueForge signal analyzer for live mic buffers: spectral bands, clipping, noise, FPS clarity, comms readiness, likely-source diagnosis, and EQ nudges.
 - `src/signalAnalyzer.test.js` - unit coverage for clipping, masking, usable signal, and empty analyzer output.
+- `src/engine/audioMetricsEngine.js` - four-bucket Audio Metrics Engine for chain integrity, loudness/dynamics, spectral/EQ behavior, and spatial/stereo health, with FFmpeg/libebur128 reference plans and deterministic JS fallback metrics.
+- `src/engine/audioMetricsEngine.test.js` - unit coverage for bucket definitions, FFmpeg filter plans, silence/mute detection, clipping/headroom detection, before/after spectral deltas, mono collapse, and polarity inversion.
+- `src/wavFeatureExtractor.js` - WAV parser, PCM decoder, STFT/FFT analyzer, band/transient/stereo feature extractor, scene graph builder, and coach output.
+- `src/wavFeatureExtractor.test.js` - unit coverage for WAV metadata, PCM decode, STFT features, transient scoring, stereo pan/width, and inference boundaries.
+- `src/echoSceneInference.js` - post-mix echo-scene inference layer with explicit boundaries around what CueForge can and cannot know.
+- `src/engine/temporalEvidenceAccumulator.js` - temporal confidence helper that turns repeated weak cues into a track without overreacting to one frame.
+- `src/engine/stateOfArtEvaluator.js` - honest SOTA readiness scoring for current capability claims and blockers.
+- `src/engine/stateOfArtEvaluator.test.js` - unit coverage for SOTA scoring, temporal evidence, engine maps, problem maps, and benchmark helpers.
+- `src/engine/benchmarkMetrics.js` - precision, recall, false-positive, F1, and latency summary helpers.
+- `src/audio-science/gameEngineMap.js` - engine/routing capability map for Wwise, FMOD, Unreal, Unity, Steam Audio, Windows Spatial Sound, Atmos, Sonar, THX, WASAPI, and APO.
+- `src/audio-science/gameAudioProblems.js` - common FPS audio problem map with root causes, measurable signals, modules, and tests.
+- `src/hardwareProof.js` - Windows bridge summary and mic-capture proof helpers for tester-ready hardware checks.
+- `src/hardwareProof.test.js` - unit coverage for bridge summaries and mic proof states.
+- `src/releaseQueue.js` - target-gated release queue, proof-state mapping, and milestone update draft builder.
+- `src/releaseQueue.test.js` - unit coverage for tester targets, proof gates, and release update draft output.
 - `src/hearingModel.js` - personal hearing model helpers for tone results, compensation, scoring, and APO overlay generation.
 - `src/hearingModel.test.js` - unit coverage for hearing model scoring and APO overlay generation.
 - `src/styles.css` - complete responsive dark desktop-tool styling.
-- `electron/main.mjs` - Electron desktop shell, permission handler, native Windows scan IPC, and safe APO draft IPC.
+- `electron/main.mjs` - Electron desktop shell with sandboxed web preferences, app-local permission handling, CSP headers, safe navigation/external URL guards, validated IPC senders, native Windows scan IPC, and safe APO draft IPC.
 - `electron/preload.cjs` - locked-down desktop API exposed to the React app.
-- `tools/Scan-AudioSetup.ps1` - optional user-run Windows audio setup scanner that writes a JSON report for import.
+- `tools/Scan-AudioSetup.ps1` - optional user-run Windows audio setup scanner that writes a JSON report for import, including endpoints, running game hints, and common companion layers such as APO, Peace, Sonar, FxSound, Dolby/DTS/THX, Nahimic, Realtek, NVIDIA Broadcast, Wave Link, G HUB, iCUE, Voicemod, VB-CABLE, and Voicemeeter.
+- `tools/Run-PandaNotesRepair.mjs` - command runner for exported Panda Notes and redacted reports; writes `docs/repair` repair queue and packet artifacts.
+- `tools/Run-PreReleaseQa.mjs` - pre-release gate for the security/privacy blocker suite, release readiness matrix, full tests, build, Panda Notes repair state, dependency audit, privacy checks, and live-browser checklist output.
+- `tools/Run-ScreenshotUpdate.mjs` - Chrome/Edge CDP screenshot smoke runner for Command Center, Auto Detect, Hearing, Blind Match, Masking Lab, Report Lab, and compact/mobile Command Center, with expected acceptance-text, blank-page, runtime-error, and horizontal-overflow checks plus process-tree cleanup.
+- `tools/Run-AudioFixtureRegression.mjs` - deterministic audio fixture regression gate for cue-region improvement, clipping, phase inversion, usable-signal, and FFmpeg/libebur128 reference coverage.
+- `tools/Run-FeedbackContract.mjs` - tester feedback packet contract gate for player-trial, beta check-in, community-feedback, and privacy/redaction guarantees.
+- `tools/Run-RouteGraphLab.mjs` - Windows-only route graph lab gate that runs the local scan, builds a redacted chain-graph summary, and proves the helper remains read-only.
+- `tools/Run-ReleaseReadiness.mjs` - release metadata gate that checks package version alignment, docs bundle presence, upstream GitHub job status, tag/version consistency, and release-candidate acceptance when a tag/release/RC run is active.
+- `tools/Run-WorktreeAudit.mjs` - dirty worktree lane auditor that writes `docs/repair/WORKTREE_CLEANUP_PLAN.md` and JSON without reverting or cleaning sprint files.
+- `tools/run-checks.ps1` and `tools/run-checks.sh` - one-command layered release gate wrappers for clean install, tests, build, manifest/fixture/swarm validation, harness/UI tests, screenshot smoke, audit, redaction, pre-release QA, and Windows desktop smoke where supported.
+- `discord-bot/src/index.js` - CueForge Panda Guide bot with welcome/download flow, existing-member download panel, slash commands, role picker, reward loop, and server prompts.
+- `discord-bot/.env.example` - Discord bot environment template, including CueForge public/download URLs and optional welcome DM toggle.
+- `discord-bot/README.md` - Discord bot setup, command list, download welcome flow, existing-member access, role picker, and reward rules.
 - `docs/ARCHITECTURE.md` - platform decision notes for web build and desktop shell.
+- `docs/AGENTS.md` - contributor/automation rules for safe CueForge work.
+- `docs/RUNBOOK.md` - local run, test, desktop, release, and recovery checklist.
+- `docs/TEST_MATRIX.md` - scenario matrix for clean setups, APO, Sonar, Voicemeeter/VB-CABLE, treble sensitivity, night mode, hearing-model gaps, privacy exports, desktop shell, and human-swarm UI passes.
+- `docs/QA_EVIDENCE_PIPELINE.md` - Mermaid release-proof pipeline tying real machines and fixtures to browser/native evidence, chain graph, route warnings, readiness, lab harness checks, guided UI, redacted replay reports, CI/browser/desktop artifacts, and honest product limitations around incomplete upstream repo visibility and scene-aware spatial boundaries.
+- `docs/CUEFORGE_DIFFERENTIATOR.md` - concise product positioning for CueForge as the audio chain verifier + personal sound engine and the seven proof pillars each feature should improve.
 - `docs/DRIVER_LAYER.md` - trusted companion driver/audio-layer strategy and rules.
 - `docs/HIGH_END_ANALYZER_PLAN.md` - analyzer architecture, open-source audio stack options, and next build targets.
+- `docs/OPEN_SOURCE_STACK.md` - product-facing open-source stack contract that separates use-now tools, browser DSP infrastructure, native-stage candidates, and future spatial/game-middleware research tiers.
+- `docs/NATIVE_ENGINE_ROADMAP.md` - post-v0.2 native engine roadmap for v0.3 native DSP sandbox, v0.4 desktop preview, v0.5 Windows user-mode path, v0.6 mic pack, v0.7 spatial research, and v1.0 signed public beta.
+- `docs/BUILD_QOL_AUTOMATION_RELEASE_QUEUE.md` - target-gated build, QOL, automation, and future release ladder.
+- `docs/ACCEPTANCE_CHECKLIST_v0.2.0.md` - checked v0.2.0 release acceptance gate and command proof checklist.
+- `docs/research/STATE_OF_ART_GAP_ANALYSIS.md` - current SOTA gap, DCASE 2026 direction, blockers, and honesty rule.
+- `docs/research/GAME_AUDIO_ENGINE_DEEP_DIVE.md` - engine/middleware boundary notes and metadata asks.
+- `docs/research/COMMON_PROBLEMS_AND_BETTER_SOLUTIONS.md` - problem-first FPS audio map for masking, spatial layers, occlusion, and game/server issues.
+- `docs/prompts/CODEX_NEXT_STEPS.md` - v0.2 to v0.3 WAV feature extraction plan and next UI prompt.
+- `.github/copilot-instructions.md` - GitHub Copilot repo instructions for CueForge privacy, desktop bridge, native action, and proof-gate rules.
+- `.github/workflows/release-gate.yml` - layered GitHub Actions release gate with cross-platform fast path, swarm manifest validation, Windows browser/harness screenshots, Windows desktop shell smoke, audit, redaction, and preflight QA artifacts.
+- `docs/prompts/GITHUB_COPILOT_DESKTOP_FOUNDATION.md` - short, specific GitHub Copilot prompts for building the solo desktop foundation safely.
 - `docs/MASTER_PLAN.md` - public roadmap, master map, workstreams, release timeline, and update 001 posting plan.
 - `docs/SETUP_JOURNEY_DIRECTOR_SCRIPT.md` - cinematic direction, text-to-video prompt, negative prompt, and app integration notes for the panda bamboo soundwalk.
 - `docs/PROMPT_BACKLOG_AUDIT.md` - checkpoint of covered, partially covered, and open requests from the build session.
@@ -54,12 +198,20 @@ Read and verified for the current local release build.
 - `docs/CHAT_SWEEP_AUDIT.md` - chat-derived request sweep for items that were not obvious from repo docs alone.
 - `docs/updates/2026-05-22-update-001.md` - first public update copy for Discord, X, and Reddit-safe profile posting.
 - `docs/updates/2026-05-22-update-002.md` - Panda Notes update copy for the right-click UI debugger.
+- `docs/updates/2026-05-22-alpha-2-hardening.md` - staged tester update for setup summary, permission recovery, Panda Notes states, privacy audit, and proof results.
+- `docs/updates/2026-05-23-update-004-cueforge-brain.md` - current rollout copy for Discord, X, Reddit profile-safe posting, and GitHub update comments around the CueForge Brain release.
+- `docs/updates/2026-05-24-update-005-chain-graph-proof.md` - Update 005 public narrative for Chain Graph, release proof, timeline, and the next tester ask.
+- `docs/social/2026-05-23-update-004-rollout-log.md` - live rollout record for the Discord, GitHub, X, and Reddit Update 004 posting pass.
+- `docs/social/2026-05-24-social-command-center.md` - current social rollout pack with Discord, X, Reddit, bio/link, timeline, follow/watch, and safe posting guardrails for the chain-graph/release-proof update.
+- `docs/social/REDDIT_PCGAMING_DEVELOPER_VERIFICATION.md` - r/pcgaming developer-verification rule notes, fit check, and filled CueForge modmail template for a rule-safe request.
 - `docs/DISCORD_FINAL_BUILDOUT.md` - live Discord status, roles, onboarding, bot strategy, and channel setup.
+- `docs/DISCORD_ROLE_PICKER_AND_NITRO_BACK_POCKET.md` - saved role-picker setup, bot permissions, Nitro/Boost decision notes, and official Discord references.
 - `docs/DISCORD_SETUP.md` - Discord setup guide, welcome copy, onboarding state, and tester formats.
 - `docs/SOCIAL_POSTING_PLAN.md` - social cadence, tag strategy, and update 001 image map.
 - `docs/REDDIT_PROFILE_AND_OUTREACH.md` - Reddit profile, outreach guardrails, and filter-safe posting plan.
 - `docs/RELEASE_CHECKLIST.md` - GitHub-ready hardening and release checklist.
 - `docs/PRIVACY.md` - local data and redaction notes.
+- `docs/SECURITY_PRIVACY_RELEASE_GATE.md` - enforceable security/privacy release criteria, Electron hardening notes, hashed fingerprint policy, native manifest rules, and CI commands.
 - `README.md` - product overview, run notes, setup flow, and testing workflow.
 
 ## Generated files
@@ -69,21 +221,134 @@ Read and verified for the current local release build.
 - `dist/assets/index-*.js` - production JavaScript bundle.
 - `dist/assets/index-*.css` - production CSS bundle.
 - `docs/index.html`, `docs/assets/*`, and `docs/favicon.svg` - refreshed GitHub Pages build copied from `dist`.
-- `tools/cueforge-audio-setup-report.json` - generated local Windows scan output. This is intentionally not included in the refreshed ZIP because it can contain local device IDs.
+- `tools/cueforge-audio-setup-report.json` - generated local Windows scan output when the manual scanner is run. This is ignored, local-only, and intentionally excluded from release packages because it can contain local device data.
 - `%APPDATA%/CueForge/cueforge-audio-setup-report.json` - desktop shell Windows scan output. This is local app data and not committed.
 - `%APPDATA%/CueForge/apo-drafts/*.txt` - desktop shell APO draft exports. These are local app data and not committed.
 
 ## Verification
 
 - `npm.cmd install` completed.
-- `npm.cmd test` completed: 16 test files / 40 tests passed.
-- `npm.cmd run build` completed.
+- `npm.cmd test -- src/tests/releaseScenarios.test.js src/tests/profileEngine.test.js src/tests/readinessScore.test.js src/tests/conflictDetector.test.js src/tests/exportSchema.test.js src/privacyAudit.test.js src/exportPack.test.js` completed: 7 test files / 26 tests passed.
+- `npm.cmd test -- src/tests/scopeGuard.test.js src/tests/v020Acceptance.test.js` completed: 2 test files / 6 tests passed.
+- `npm.cmd test -- src/tests/nativeEngineRoadmap.test.js src/tests/nativeEngineManifest.test.js src/tests/v020Acceptance.test.js` completed: 3 test files / 12 tests passed.
+- `npm.cmd test -- src/tests/openSourceStack.test.js src/tests/nativeEngineRoadmap.test.js` completed: 2 test files / 10 tests passed.
+- `npm.cmd test -- src/tests/nativeCaptureHarness.test.js src/tests/nativeEngineManifest.test.js src/tests/nativeEngineRoadmap.test.js src/tests/openSourceStack.test.js` completed: 4 test files / 18 tests passed.
+- `npm.cmd run validate:manifest` completed: 3 test files / 14 tests passed, including native capture harness contract validation.
+- `npm.cmd run test:harness` completed: 5 test files / 32 tests passed, including native capture harness, architecture scaffold, release matrix, signal analyzer, and masking lab.
+- `npm.cmd test -- src/engine/audioMetricsEngine.test.js` completed: 1 test file / 5 tests passed.
+- `npm.cmd run test:harness` completed after adding Audio Metrics Engine coverage: 6 test files / 37 tests passed.
+- `npm.cmd test -- src/tests/personalizationLabInputs.test.js src/tests/cueforgeState.test.js src/tests/v020Acceptance.test.js src/tests/cueforgeBrain.test.js` completed after formalizing lab inputs: 4 test files / 13 tests passed.
+- `npm.cmd run test:harness` completed after adding personalization lab input coverage: 7 test files / 41 tests passed.
+- `npm.cmd test` completed after adding personalization lab inputs: 63 test files / 238 tests passed.
+- `npm.cmd run build` completed after adding personalization lab inputs.
+- `npm.cmd test -- src/tests/personalizationLabInputs.test.js` completed after the final playback-safety field cleanup: 1 test file / 4 tests passed.
+- `npm.cmd run build` completed again after the final playback-safety field cleanup.
+- GitHub Pages bundle refreshed from `dist` after the personalization lab input build.
+- `npm.cmd run notes:repair` completed with no exported Panda Notes and 0 repair actions.
+- `npm.cmd test -- src/tests/evidencePrivacyPolicy.test.js src/audioEvidence.test.js src/reportPack.test.js src/securityPrivacyGate.test.js src/tests/nativeCaptureHarness.test.js` completed after tightening the privacy and evidence layer: 5 test files / 16 tests passed.
+- `npm.cmd run export:redaction-check` completed after adding evidence privacy coverage: 7 test files / 20 tests passed.
+- `npm.cmd test` completed after tightening the privacy and evidence layer: 64 test files / 240 tests passed.
+- `npm.cmd run build` completed after tightening the privacy and evidence layer.
+- `npm.cmd test -- src/tests/evidencePrivacyPolicy.test.js src/audioEvidence.test.js src/securityPrivacyGate.test.js` completed after adding raw audio URL redaction coverage: 3 test files / 8 tests passed.
+- `npm.cmd run export:redaction-check` completed after adding raw audio URL redaction coverage: 7 test files / 20 tests passed.
+- `npm.cmd test` completed again after raw audio URL redaction coverage: 64 test files / 240 tests passed.
+- `npm.cmd run build` completed again after raw audio URL redaction coverage.
+- GitHub Pages bundle refreshed from `dist` after the privacy/evidence build.
+- `npm.cmd run notes:repair` completed with no exported Panda Notes and 0 repair actions after the privacy/evidence build.
+- `npm.cmd test -- src/tests/repoLayout.test.js` completed after adding production repo layout scaffolding: 1 test file / 3 tests passed.
+- `npm.cmd test` completed after adding production repo layout scaffolding: 65 test files / 243 tests passed.
+- `npm.cmd run build` completed after adding production repo layout scaffolding.
+- GitHub Pages bundle refreshed from `dist` after the repo layout build.
+- `npm.cmd run notes:repair` completed with no exported Panda Notes and 0 repair actions after the repo layout build.
+- `npm.cmd test -- src/tests/hardwareProfiles.test.js src/tests/repoLayout.test.js` completed after adding hardware profile manifests: 2 test files / 7 tests passed.
+- `npm.cmd run validate:fixtures` completed after adding hardware profile manifests: 4 test files / 29 tests passed.
+- `npm.cmd test` completed after adding hardware profile manifests: 66 test files / 247 tests passed.
+- `npm.cmd run build` completed after adding hardware profile manifests.
+- GitHub Pages bundle refreshed from `dist` after the hardware profile manifest build.
+- `npm.cmd run notes:repair` completed with no exported Panda Notes and 0 repair actions after the hardware profile manifest build.
+- `npm.cmd test -- src/tests/labManifests.test.js src/tests/hardwareProfiles.test.js` completed after adding lab manifests: 2 test files / 8 tests passed.
+- `npm.cmd run validate:fixtures` completed after adding lab manifests: 5 test files / 33 tests passed.
+- `npm.cmd test` completed after adding lab manifests: 67 test files / 251 tests passed.
+- `npm.cmd run build` completed after adding lab manifests.
+- GitHub Pages bundle refreshed from `dist` after the lab manifest build.
+- `npm.cmd run notes:repair` completed with no exported Panda Notes and 0 repair actions after the lab manifest build.
+- `npm.cmd run validate:manifest` completed after adding lab manifests: 3 test files / 14 tests passed.
+- `npm.cmd run test:harness` completed after adding lab manifests: 7 test files / 41 tests passed.
+- `npm.cmd run test:ui` completed after adding lab manifests: 3 test files / 26 tests passed.
+- `npm.cmd run export:redaction-check` completed after adding lab manifests: 7 test files / 20 tests passed.
+- `npm.cmd audit --audit-level=moderate` completed after adding lab manifests: 0 vulnerabilities.
+- `npm.cmd test -- src/tests/releaseToolBacklog.test.js src/tests/openSourceStack.test.js src/tests/nativeCaptureHarness.test.js` completed after adding release tool backlog: 3 test files / 14 tests passed.
+- `npm.cmd run validate:manifest` completed after adding release tool backlog: 4 test files / 19 tests passed.
+- `npm.cmd run validate:fixtures` completed after adding release tool backlog: 5 test files / 33 tests passed.
+- `npm.cmd run test:harness` completed after adding release tool backlog: 7 test files / 41 tests passed.
+- `npm.cmd test` completed after adding release tool backlog: 68 test files / 256 tests passed.
+- `npm.cmd run build` completed after adding release tool backlog.
+- GitHub Pages bundle refreshed from `dist` after the release tool backlog build.
+- `npm.cmd run notes:repair` completed with no exported Panda Notes and 0 repair actions after the release tool backlog build.
+- `npm.cmd run export:redaction-check` completed after adding release tool backlog: 7 test files / 20 tests passed.
+- `npm.cmd audit --audit-level=moderate` completed after adding release tool backlog: 0 vulnerabilities.
+- `npm.cmd test -- src/tests/labManifests.test.js` completed after adding full lab test classes: 1 test file / 6 tests passed.
+- `npm.cmd run validate:fixtures` completed after adding full lab test classes: 5 test files / 35 tests passed.
+- `npm.cmd run test:harness` completed after adding full lab test classes: 7 test files / 41 tests passed.
+- `npm.cmd run test:ui` completed after adding full lab test classes: 3 test files / 26 tests passed.
+- `npm.cmd test` completed after adding full lab test classes: 68 test files / 258 tests passed.
+- `npm.cmd run build` completed after adding full lab test classes.
+- GitHub Pages bundle refreshed from `dist` after the full lab test class build.
+- `npm.cmd run notes:repair` completed with no exported Panda Notes and 0 repair actions after the full lab test class build.
+- `npm.cmd run export:redaction-check` completed after adding full lab test classes: 7 test files / 20 tests passed.
+- `npm.cmd audit --audit-level=moderate` completed after adding full lab test classes: 0 vulnerabilities.
+- `npm.cmd install` repaired missing local npm binary shims before backlog validation and reported 0 vulnerabilities.
+- `npm.cmd test -- src/tests/implementationBacklog.test.js src/tests/releaseToolBacklog.test.js` completed after adding implementation backlog: 2 test files / 11 tests passed.
+- `npm.cmd run validate:manifest` completed after adding implementation backlog: 5 test files / 25 tests passed.
+- `npm.cmd run validate:fixtures` completed after adding implementation backlog: 5 test files / 35 tests passed.
+- `npm.cmd run test:harness` completed after adding implementation backlog: 7 test files / 41 tests passed.
+- `npm.cmd run test:ui` completed after adding implementation backlog: 3 test files / 26 tests passed.
+- `npm.cmd test` completed after adding implementation backlog and restoring `docs/release`: 69 test files / 264 tests passed.
+- `npm.cmd run build` completed after adding implementation backlog.
+- GitHub Pages bundle refreshed from `dist` after the implementation backlog build.
+- `npm.cmd run export:redaction-check` completed after adding implementation backlog: 7 test files / 20 tests passed.
+- `npm.cmd audit --audit-level=moderate` completed after adding implementation backlog: 0 vulnerabilities.
+- `npm.cmd run notes:repair` completed with no exported Panda Notes and 0 repair actions after the implementation backlog build.
+- `npm.cmd install -D @playwright/test` completed and reported 0 vulnerabilities.
+- `npm.cmd run test:playwright:web` first caught stale Settings-copy coverage, then passed after updating the assertion: 2 Chromium projects / 2 tests passed.
+- `npm.cmd test` completed after excluding Playwright-owned specs from Vitest: 69 test files / 264 tests passed.
+- `npm.cmd run build` completed after adding Playwright web smoke.
+- GitHub Pages bundle refreshed from `dist` after the Playwright web smoke build.
+- `npm.cmd run export:redaction-check` completed after Playwright web smoke: 7 test files / 20 tests passed.
+- `npm.cmd audit --audit-level=moderate` completed after Playwright web smoke: 0 vulnerabilities.
+- `npm.cmd run notes:repair` completed after Playwright web smoke with no exported Panda Notes and 0 repair actions.
+- `npm.cmd test -- src/engine/audioMetricsEngine.test.js src/signalAnalyzer.test.js src/wavFeatureExtractor.test.js src/tests/nativeCaptureHarness.test.js` completed: 4 test files / 16 tests passed.
+- `npm.cmd test` completed after adding Audio Metrics Engine: 62 test files / 234 tests passed.
+- `npm.cmd run build` completed after adding Audio Metrics Engine.
+- `npm.cmd run build` completed after adding the native capture/render harness contract.
+- Local server smoke at `http://127.0.0.1:5177/?qa=native-harness-contract` returned HTTP 200.
+- `npm.cmd test -- src/tests/cueforgeBrain.test.js src/tests/cueforgeState.test.js src/tests/exportSchema.test.js src/tests/v020Acceptance.test.js` completed: 4 test files / 10 tests passed.
+- `npm.cmd test -- src/tests/v020Acceptance.test.js` completed: 1 test file / 3 tests passed.
+- `npm.cmd test -- src/securityPrivacyGate.test.js src/exportFingerprints.test.js src/privacyAudit.test.js src/electronHardening.test.js src/reportPack.test.js src/exportPack.test.js` completed: 6 test files / 18 tests passed.
+- `npm.cmd test -- src/tests/releaseReadinessMatrix.test.js` completed: 1 test file / 17 tests passed.
+- `npm.cmd test -- src/tests/releaseReadinessMatrix.test.js src/tests/autoDetectReport.test.js src/tests/chainGraph.test.js src/tests/readinessScore.test.js src/tests/hearingModelV2.test.js src/tests/architectureScaffold.test.js src/reportPack.test.js src/exportPack.test.js src/signalAnalyzer.test.js` completed: 9 test files / 46 tests passed.
+- `npm.cmd test` completed: 60 test files / 225 tests passed.
+- `npm.cmd run notes:repair` completed with no exported Panda Notes and wrote `docs/repair/PANDA_NOTES_REPAIR_QUEUE.md`, `docs/repair/PANDA_NOTES_REPAIR_PACKET.txt`, `docs/repair/panda-notes-repair-check.json`, and `docs/repair/panda-notes-repair-run.json`.
+- `npm.cmd run qa:preflight` completed: PASS, 6/6 command checks, 3/3 privacy checks, 0 repair actions.
+- `powershell -ExecutionPolicy Bypass -File .\tools\run-checks.ps1` completed: clean `npm ci`, 59 test files / 220 tests passed, production build passed, manifest validation passed, fixture validation passed, harness tests passed, UI contract tests passed, Windows desktop directory build passed, desktop smoke passed, audit found 0 vulnerabilities, export redaction check passed, screenshot smoke passed, and pre-release QA passed.
+- `npm.cmd run screenshots:update -- --if-needed` completed: PASS, 7/7 pages captured or verified, expected acceptance text present, no runtime errors, no horizontal overflow, and no leftover preview server.
+- Live Browser check completed at `http://127.0.0.1:5177/?qa=ui-acceptance-final`: default Command Center rendered the guided flow, evidence card, and readiness next step; Auto Detect interaction rendered confidence, risk, and recommendations; console logs stayed clean.
+- `npm.cmd run qa:vm-lab -- --count 5 --featureDepth 6` completed with packaged desktop smoke: 53 steps, 49 pass / 4 warn / 0 fail, 0 Panda Notes, 100.0% diagnosis accuracy, 100.0% improvement rate, 0.00% harm rate, and 0.00% privacy failure rate.
+- `npm.cmd run qa:vm-lab -- --count 25 --featureDepth 9` completed: 25 clean-machine players, 339 steps, 307 pass / 32 warn / 0 fail, 0 Panda Notes, 92.0% diagnosis accuracy, 92.0% improvement rate, and 0.00% harm rate.
+- `npm.cmd --prefix discord-bot run check` completed with valid Discord bot syntax.
+- `npm.cmd run build` completed, including Alpha 2 permission recovery, Panda Notes cleanup, privacy audit, issue pattern memory, desktop bridge fix path, and target-gated release queue.
 - `npm.cmd run desktop:dir` completed and produced `release/win-unpacked/CueForge.exe`.
 - `npm.cmd run desktop:package` completed and produced `release/CueForge-0.1.0-x64.exe`.
-- Packaged desktop launch smoke completed: `CueForge.exe` started and stayed alive for 5 seconds, then was stopped.
+- GitHub release asset `v0.1.0-alpha.2/CueForge-0.1.0-x64.exe` was replaced with SHA256 `8371FD9FF12AB795157302F681177D1BEDD214A967E1D5812F5CF010D84A2621`.
+- Desktop asset smoke completed through Chromium remote debugging: packaged CueForge loaded from `app.asar/dist/index.html`, rendered `Audio Command Center`, loaded 1 script and 1 stylesheet, and had no runtime errors.
+- Packaged desktop render smoke completed through Electron DevTools: `CueForge.exe` loaded from `app.asar/dist/index.html`, rendered the Settings page, loaded 1 script and 1 stylesheet, and had no horizontal overflow.
+- Packaged privacy smoke completed: `release/win-unpacked/resources/app.asar` does not contain any generated `cueforge-audio-setup-report.json`; `resources/tools` contains only `Scan-AudioSetup.ps1`.
 - Electron bridge smoke completed: `window.cueforgeDesktop.info()` returned desktop metadata and `saveApoDraft()` wrote a timestamped APO draft in local app data.
 - `npm.cmd audit --audit-level=moderate` completed with 0 vulnerabilities.
 - Local server responded at `http://127.0.0.1:5177`.
+- Production bundle contains the System Info release queue text: `Target-Gated Release Queue`, `Alpha 2 hardening`, and `Copy update draft`.
+- Production bundle contains the Alpha 2 hardening text: `Privacy Export Audit`, `Panda Notes Inbox`, `Target-Gated Release Queue`, and permission recovery cards.
+- GitHub Pages bundle refreshed from `dist`: `docs/index.html`, `docs/assets/index-cMafSHsk.js`, `docs/assets/index-DU5iWuql.css`, and `docs/assets/three-BTt32e3U.js`.
 - Browser workflow tested: setup journey, dashboard, mic analysis with IEM/HyperX sample text, EQ studio, local source profile tabs, game profiles, hearing model hardware targets, and system info page.
 - Responsive overflow sweep tested Community Hub, Beta Check-in, Mic Lab, Driver Layer, and System Info at mobile, tablet, and desktop widths with no horizontal overflow offenders.
 - Community Hub tested: draft staging, approval state, posted state, and clearing posted drafts through the UI.
@@ -101,8 +366,49 @@ Read and verified for the current local release build.
 - Player Trial tested: five-step match script, step completion, feedback scoring, next-fix output, and tester packet export.
 - Privacy hardening tested: report exports redact raw device IDs, group IDs, config paths, Windows paths, computer names, full user-agent strings, emails, and phone numbers.
 - Optional Windows scanner ran and found Equalizer APO, SteelSeries GG/Sonar, and USB audio devices.
+- Optional Windows scanner running-game hint check completed and returned Call of Duty / Valorant processes on the local machine.
 - Desktop EQ overflow issue found and fixed.
 - Mobile viewport check completed at 390x844 with no horizontal overflow.
+- Alpha 2 live smoke completed in the in-app browser at `http://127.0.0.1:5177/?qa=alpha-2-hardening`: System Info, Privacy Export Audit, Auto Detect recovery, and Self Test rendered with no console errors and no horizontal overflow.
+- In-browser Self Test completed: 11 pass, 2 expected browser-mode warnings, 0 failures. Privacy export audit passed; mic capture warning remained expected because browser mic permission was blocked/skipped.
+- Issue Pattern Memory live smoke completed at `http://127.0.0.1:5177/?qa=pattern-memory`: System Info rendered the motto, pattern playbook, export memory controls, no horizontal overflow, and no console errors.
+- Desktop Bridge Fix Path live smoke completed at `http://127.0.0.1:5177/?qa=desktop-bridge-foundation-final`: Self Test rendered the copyable desktop fix plan, System Info rendered Desktop Bridge Fix Path, no horizontal overflow, and no console errors.
+- Setup Intelligence live smoke completed at `http://127.0.0.1:5177/?qa=setup-intelligence-detail-check`: chain stages, proof gates, risk flags, recommendation cards, and apply-to-EQ action rendered with no console errors and no horizontal overflow.
+- Shortcut Vault live smoke completed at `http://127.0.0.1:5177/?qa=shortcut-console-health`: safe shortcuts saved, code shortcut locked/redacted, safe shortcut copy did not leak the raw code, desktop/mobile System Info rendered with no new console errors and no horizontal overflow.
+- Setup Intelligence mobile smoke completed at `http://127.0.0.1:5177/?qa=setup-intelligence-deep-mobile`: 6 chain stages, 6 proof gates, apply action, no clipping offenders, no console errors, and no horizontal overflow.
+- Settings smoke completed in the built Electron app: Settings nav rendered, Quiet mode defaulted on, background soundwalk and cinematic video audio defaulted off, toggles persisted, and no horizontal overflow was detected.
+- Release scenario live swarm completed at `http://127.0.0.1:5177/?qa=release-scenarios-final`: 70 route checks, 0 notes.
+- Scope guard live swarm completed at `http://127.0.0.1:5177/?qa=scope-guard-system-info`: 71 route checks, 0 notes.
+- Native engine roadmap live swarm completed at `http://127.0.0.1:5177/?qa=native-engine-roadmap`: 61 route checks, 0 notes.
+- CueForge Brain live browser proof completed at `http://127.0.0.1:5177/?qa=cueforge-brain`: command center rendered the audio chain verifier + personal sound engine proof strip with 7 pillars, Start Setup Flow opened Auto Detect, console logs stayed clean, desktop/mobile overflow checks passed, and the human swarm rerun completed 70 route checks with 0 notes.
+- GitHub CI gate matrix implemented in `.github/workflows/release-gate.yml` with `lint-and-unit`, `build-web`, `playwright-web`, `electron-smoke`, `redaction-contract`, `feedback-contract`, `swarm-contract`, `audio-fixture-regression`, optional self-hosted `route-graph-lab`, and `release-readiness` jobs.
+- Local CI proof completed after wiring the gate matrix: `npm.cmd test` 69 files / 264 tests passed, `npm.cmd run build` passed, `npm.cmd run test:playwright:web` 4/4 passed, `npm.cmd run export:redaction-check` 7 files / 20 tests passed, and `npm.cmd audit --audit-level=moderate` reported 0 vulnerabilities.
+- New release-matrix helper scripts passed locally: audio fixture regression, feedback contract, Windows route graph lab, and release readiness all wrote safe `docs/repair` reports.
+- Manifest/fixture/harness/UI proof stayed green after the CI update: `validate:manifest` 25 tests, `validate:fixtures` 35 tests, `test:harness` 41 tests, and `test:ui` 26 tests passed.
+- Desktop CI path passed locally: `npm.cmd run desktop:dir` produced the unpacked Windows app, and `npm.cmd run test:desktop-smoke` passed with 10/10 VM-lab steps and no Panda Notes.
+- GitHub Pages bundle refreshed from `dist` after the CI gate update, then `npm.cmd run notes:repair` found 0 notes / 0 repair actions and `npm.cmd run qa:preflight` passed 6/6 command checks plus 3/3 privacy checks.
+- Setup Assessment Snapshot and companion-repo integration contracts implemented: `cueforge.setup-assessment-snapshot.v1` now publishes via localStorage, `window.cueforgeSetupAssessment`, and the `cueforge:setup-assessment` event; Autobot/Kalshi Scout/Feedback Automation/Crypto Intelligence patterns are mapped as safe read-only proof/triage contracts.
+- Snapshot/companion proof completed: targeted tests passed 3 files / 10 tests, expanded `npm.cmd run validate:manifest` passed 7 files / 32 tests, full `npm.cmd test` passed 71 files / 271 tests, `npm.cmd run build` passed, `npm.cmd run test:playwright:web` passed 4/4, `npm.cmd run export:redaction-check` passed 7 files / 20 tests, `npm.cmd run qa:release-readiness` passed, `npm.cmd run qa:preflight` passed, `npm.cmd run notes:repair` found 0 notes / 0 actions, and audit reported 0 vulnerabilities.
+- Swarm manifest contracts implemented: `swarm/routes`, `swarm/jobs`, and `swarm/repair` now contain checked-in Setup Command Center, Auto Detect, Self Test, Report Lab, daily smoke, nightly audio regression, release-candidate, Panda Notes, and route-regression manifests with privacy locks and no-system/no-public-post gates.
+- Swarm proof completed: `npm.cmd run validate:swarm` passed 1 file / 4 tests, `npm.cmd run validate:fixtures` passed 6 files / 39 tests, and `npm.cmd run validate:manifest` passed 7 files / 32 tests after wiring swarm validation into run-checks, pre-release QA, and the GitHub `swarm-contract` job.
+- Full swarm-gate release proof completed: `npm.cmd test` passed 72 files / 275 tests, `npm.cmd run build` passed, `npm.cmd run test:playwright:web` passed 4/4, `npm.cmd run export:redaction-check` passed 7 files / 20 tests, `npm.cmd audit --audit-level=moderate` found 0 vulnerabilities, `npm.cmd run qa:preflight` passed 7/7 command gates and 3/3 privacy checks, `npm.cmd run qa:release-readiness` passed, and `npm.cmd run notes:repair` found 0 notes / 0 actions.
+- GitHub Pages bundle refreshed from `dist` after the swarm-gate build.
+- Release ship bars implemented for v0.2.0 Foundations, v0.3.0 Proof, and v0.4.0 Production readiness in `src/data/releaseShipBars.js`, then mirrored into the Master Plan, Native Engine Roadmap, release queue, release checklist, and test matrix.
+- Release ship bar proof completed: targeted roadmap tests passed 3 files / 14 tests, `npm.cmd run validate:manifest` passed 8 files / 36 tests, `npm.cmd test` passed 73 files / 279 tests, `npm.cmd run validate:fixtures` passed 6 files / 39 tests, `npm.cmd run validate:swarm` passed 1 file / 4 tests, `npm.cmd run build` passed, `npm.cmd run export:redaction-check` passed 7 files / 20 tests, audit found 0 vulnerabilities, `npm.cmd run notes:repair` found 0 notes / 0 actions, `npm.cmd run qa:release-readiness` passed, and `npm.cmd run qa:preflight` passed 7/7 command gates plus 3/3 privacy checks.
+- GitHub Pages bundle refreshed from `dist` after the release ship bar build.
+- Playwright Electron desktop smoke implemented with `playwright.electron.config.mjs` and `qa/playwright/electron/desktop-bridge-smoke.spec.mjs`; the preload bridge now exposes the compatibility alias `getDesktopInfo` while preserving the locked API allowlist.
+- Desktop `file://` startup resource failure fixed by routing public media/tool fallback paths through the Vite base path and skipping the web-served bridge JSON fallback in Electron file mode.
+- Electron desktop proof completed: `npm.cmd run test:playwright:electron` passed, `npm.cmd run test:desktop-smoke` passed with 10/10 VM-lab steps and no Panda Notes, and `npm.cmd run test:playwright:web` passed 4/4 after the desktop path fix.
+- Current release proof completed after the Electron smoke update: `npm.cmd test` passed 73 files / 279 tests, `npm.cmd run validate:manifest` passed 8 files / 36 tests, `npm.cmd run validate:fixtures` passed 6 files / 39 tests, `npm.cmd run validate:swarm` passed 1 file / 4 tests, `npm.cmd run export:redaction-check` passed 7 files / 20 tests, `npm.cmd audit --audit-level=moderate` found 0 vulnerabilities, `npm.cmd run notes:repair` found 0 notes / 0 actions, `npm.cmd run qa:release-readiness` passed, and `npm.cmd run qa:preflight` passed 7/7 command gates plus 3/3 privacy checks.
+- GitHub Pages bundle refreshed from `dist` after the Electron smoke build.
+- EQ render A/B audio regression policy implemented in `qa/audio/policies/eq-render-a-b.json` with schema/test validation in `src/shared/schemas/audioRegressionPolicy.js` and regression tests in `src/tests/audioRegressionPolicy.test.js`.
+- `eq-render-a-b` now references `cue_steps_reference.wav`, WASAPI loopback on the active default render endpoint, +/-1.0 LUFS loudness tolerance, phase average > 0.95, cue-band gain +1.5 to +3.0 dB, no DC offset warning, no clipping, no output-device switch, no communications endpoint hijack, and no double-processing signature.
+- Audio fixture runner now validates and evaluates the A/B policy from a deterministic fixture-shaped signal. Latest report: `npm.cmd run qa:audio-fixture-regression` passed with 1.76 dB cue lift, 0.73 LUFS loudness delta, phase 1, and policy status PASS.
+- Current proof after the A/B policy update: focused tests passed 3 files / 13 tests, `npm.cmd run validate:fixtures` passed 7 files / 43 tests, `npm.cmd run test:harness` passed 8 files / 45 tests, `npm.cmd test` passed 74 files / 283 tests, `npm.cmd run build` passed, `npm.cmd run notes:repair` found 0 notes / 0 actions, `npm.cmd run qa:preflight` passed, `npm.cmd run qa:release-readiness` passed, audit found 0 vulnerabilities, and `git diff --check` found no whitespace errors.
+- Release candidate acceptance contract implemented in `src/data/releaseAcceptanceChecklist.js` and wired into `tools/Run-ReleaseReadiness.mjs`; local metadata runs stay usable, but tag/release/manual RC runs fail until real Windows loopback proof is present.
+- Current proof after the RC acceptance update: `npm.cmd test -- src/tests/releaseAcceptanceChecklist.test.js` passed 6/6, `npm.cmd run validate:manifest` passed 9 files / 42 tests, `npm.cmd run qa:release-readiness` passed locally while reporting RC status BLOCKED, forced RC mode failed without loopback proof as expected, `npm.cmd run notes:repair` found 0 notes / 0 actions, `npm.cmd test` passed 75 files / 289 tests, `npm.cmd run build` passed, `npm.cmd run export:redaction-check` passed 7 files / 20 tests, `npm.cmd run qa:preflight` passed 7/7 command gates plus 3/3 privacy checks, audit found 0 vulnerabilities, and `git diff --check` found no whitespace errors.
+- Open limitations were promoted into the release contract and docs: Windows-first now, public GitHub files as the external baseline, and no arbitrary-game post-mix occlusion claims.
+- Worktree cleanup lane audit added: `npm.cmd run repo:worktree-audit` groups dirty files into release/CI, product app, desktop/native, social/Discord, public bundle/media, repair evidence, docs, and swarm/lab lanes so cleanup can proceed without reverting older sprint work.
 
 ## Known boundary
 

@@ -1,0 +1,59 @@
+{
+  "schema": "cueforge.swarm-route.v1",
+  "routeId": "setup-command-center",
+  "label": "Setup Command Center first-run flow",
+  "entrySurface": "/?qa=swarm-setup-command-center",
+  "personaFocus": ["new player", "flow and QOL", "logic council"],
+  "requiredSelectors": [
+    ".command-center",
+    "[data-route=\"command-center\"]",
+    ".setup-health-card",
+    ".next-best-action",
+    ".audio-chain-summary"
+  ],
+  "expectedStateTransitions": [
+    {
+      "from": "first-load",
+      "action": "open command center",
+      "to": "guided assessment",
+      "expected": "Setup Health, Active Profile, Audio Chain, and Next Best Action are visible without hunting panels."
+    },
+    {
+      "from": "guided assessment",
+      "action": "start auto setup",
+      "to": "auto-detect route",
+      "expected": "User lands on Auto Detect with a clear browser-vs-desktop evidence explanation."
+    }
+  ],
+  "requiredNativeApis": [
+    "window.cueforgeDesktop.info:optional",
+    "window.cueforgeSetupAssessment:required-local"
+  ],
+  "fixtureIds": [
+    "setup-command-center-smoke",
+    "win-realtek-hyperx-sonar",
+    "browser-permission-denied"
+  ],
+  "analyzerThresholds": {
+    "maxConsoleErrors": 0,
+    "maxHorizontalOverflowPx": 0,
+    "maxRawLeakCount": 0,
+    "maxHarmRate": 0,
+    "minDiagnosisAccuracy": 90
+  },
+  "privacy": {
+    "allowRawAudioExport": false,
+    "allowCloudUpload": false,
+    "redactDeviceIds": true,
+    "redactUserPaths": true,
+    "summaryOnlyReports": true
+  },
+  "failureOwner": "setup-command-center",
+  "safeAutoRepairActions": [
+    "create-panda-note-repair-ticket",
+    "add-playwright-selector-regression",
+    "docs-copy-clarification",
+    "style-only-layout-adjustment"
+  ],
+  "escalationLevel": "high"
+}

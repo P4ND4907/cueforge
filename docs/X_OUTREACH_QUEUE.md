@@ -6,14 +6,17 @@ Snapshot date: May 22, 2026.
 
 ```text
 X profile updated: May 22, 2026.
-Account: @CueForge907
-Display name: CueForge
-Bio: Free FPS audio test lab. Mic checks, IEM/headset tuning, Equalizer APO exports, and real match feedback. Proof over hype.
-Location: Panda Lab / FPS Audio
-Website: https://p4nd4907.github.io/cueforge/
+Account: @PAND4907
+Display name: P4ND4907
+Bio: Gamer-built CueForge: local FPS audio testing, setup notes, and honest match feedback. Built by Panda + Chiefyy. Replies over hype.
+Location: Alaska
+Website: not set
 Avatar: assets/discord/cueforge-server-pfp.png
 Header: assets/discord/cueforge-profile-header.png
-First post: https://x.com/CueForge907/status/2057751260326174727
+Latest profile check: https://x.com/PAND4907
+Following count after first signal wave: 18
+May 23 rollout result: Update 004 was posted from `@PAND4907`. The account followed 8 relevant audio/PC/gaming accounts and reached 26 following.
+May 24 queue: Social Command Center pack is ready in `docs/social/2026-05-24-social-command-center.md`. Update the bio/website first, then post the main X update or thread. Keep mentions out of the first post.
 ```
 
 ## Posting Guardrails
@@ -61,6 +64,26 @@ Use these sparingly. A cold post should usually use hashtags only.
 | Valorant | `@PlayVALORANT`, `@VALORANT` | HRTF or tactical audio discussion |
 | Counter-Strike | `@CounterStrike` | CS2 HRTF/footstep testing |
 | Headsets | `@HyperX`, `@SteelSeries` | Gear-specific mic/headset thread |
+
+## Latest Ready Post
+
+### Update 005 - Social Command Center / Proof Gate
+
+```text
+CueForge update:
+
+The app is becoming an audio chain verifier + personal sound engine for gamers.
+
+Not magic surround. Not preset hype.
+
+Setup check -> chain graph -> conflict warnings -> personal profile -> safe export -> real match proof.
+
+https://p4nd4907.github.io/cueforge/
+
+#CueForge #FPSAudio #PCGaming #GamingAudio
+```
+
+Longer thread copy, profile bio, and timeline copy live in `docs/social/2026-05-24-social-command-center.md`.
 
 ## Post Queue
 
