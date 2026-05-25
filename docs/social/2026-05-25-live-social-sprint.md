@@ -131,6 +131,12 @@ The current Reddit feed shows an `r/micro_saas` thread titled:
 Drop your product, I'll help you find your first 100 users
 ```
 
+URL:
+
+```text
+https://www.reddit.com/r/micro_saas/comments/1tljvaz/drop_your_product_ill_help_you_find_your_first/
+```
+
 This is a better fit than cold posting because the thread is explicitly asking for products. Use one concise reply. If the account looks fragile, leave the direct app link out and say the link is on the profile.
 
 Reply:

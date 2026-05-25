@@ -50,7 +50,7 @@ I would separate the problem into clean output, driver/routing stability, and so
 
 ### 2. r/micro_saas - Drop your product, I'll help you find your first 100 users
 
-URL: not captured from feed screenshot; open the visible Reddit recent-post card before replying.
+URL: https://www.reddit.com/r/micro_saas/comments/1tljvaz/drop_your_product_ill_help_you_find_your_first/
 Status: drafted
 Tags: first-100-users, beta-testers, product-feedback
 Next move: Reply only if the thread is still active and rules fit. Use one concise product reply, preferably with "link is on my profile" instead of a direct app link.
