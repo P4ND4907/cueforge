@@ -11,7 +11,7 @@ describe('export pack', () => {
       dna: { id: 'Tactical Cue Hunter' },
       uiFeedbackNotes: [{ tag: 'layout issue', note: 'button text wraps badly' }],
       shortcuts: [
-        { label: 'Download alpha', kind: 'link', value: 'https://example.com/download' },
+        { label: 'Open web app', kind: 'link', value: 'https://example.com/app' },
         { label: 'Private setup code', kind: 'code', value: 'super-secret-code' }
       ]
     });
@@ -21,7 +21,7 @@ describe('export pack', () => {
     expect(pack.files['audio-dna.json']).toContain('Tactical Cue Hunter');
     expect(pack.files['export-fingerprints.json']).toContain('cueforge.export-fingerprints.v1');
     expect(pack.files['ui-feedback-notes.json']).toContain('layout issue');
-    expect(pack.files['shortcuts.json']).toContain('Download alpha');
+    expect(pack.files['shortcuts.json']).toContain('Open web app');
     expect(pack.files['shortcuts.json']).toContain('[locked]');
     expect(pack.files['shortcuts.json']).not.toContain('super-secret-code');
     expect(pack.files['README.txt']).toContain('Open Equalizer APO');

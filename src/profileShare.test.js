@@ -16,7 +16,8 @@ describe('profile sharing', () => {
 
     expect(invite).toContain('Try CueForge with me.');
     expect(invite).toContain('Open app: https://example.test/app');
-    expect(invite).toContain('Download: https://example.test/download');
+    expect(invite).toContain('Release notes: https://example.test/download');
+    expect(invite).not.toContain('Download:');
     expect(invite).not.toMatch(/password|token|phone|DOB/i);
   });
 

@@ -3,17 +3,15 @@ export const SHORTCUT_VAULT_KEY = 'cueforge-shortcut-vault';
 const SECRET_WORDS = /\b(api[-_\s]?key|auth|bearer|bot[-_\s]?token|code|discord[-_\s]?token|license|password|private|recovery|secret|signing|token|webhook)\b/i;
 const SECRET_VALUE = /\b(?:sk-[a-z0-9_-]{12,}|[a-f0-9]{24,}|[A-Za-z0-9_-]{30,}\.[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{20,})\b/;
 const SHORTCUT_LIMIT = 80;
+const OBSOLETE_PUBLIC_DOWNLOAD_IDS = new Set(['download-alpha']);
+
+function isObsoletePublicDownloadShortcut(shortcut = {}) {
+  return OBSOLETE_PUBLIC_DOWNLOAD_IDS.has(shortcut.id)
+    || (/download (cueforge )?alpha/i.test(shortcut.label) && /github\.com\/P4ND4907\/cueforge\/releases/i.test(shortcut.value));
+}
 
 export function createDefaultShortcuts({ release = {}, brand = {} } = {}) {
   return [
-    {
-      id: 'download-alpha',
-      label: 'Download CueForge alpha',
-      kind: 'link',
-      value: release.download || 'https://github.com/P4ND4907/cueforge/releases/latest',
-      scope: 'player',
-      locked: false
-    },
     {
       id: 'open-web-app',
       label: 'Open CueForge web build',
@@ -27,6 +25,14 @@ export function createDefaultShortcuts({ release = {}, brand = {} } = {}) {
       label: 'Join the Panda Lab',
       kind: 'link',
       value: brand.discord || 'https://discord.gg/vyQwyJ49v',
+      scope: 'player',
+      locked: false
+    },
+    {
+      id: 'release-notes',
+      label: 'Read CueForge release notes',
+      kind: 'link',
+      value: release.notes || 'https://github.com/P4ND4907/cueforge/releases/latest',
       scope: 'player',
       locked: false
     },
@@ -75,7 +81,9 @@ export function createDefaultShortcuts({ release = {}, brand = {} } = {}) {
 
 export function mergeShortcutDefaults(saved = [], options = {}) {
   const defaults = createDefaultShortcuts(options);
-  const savedShortcuts = Array.isArray(saved) ? saved.map(normalizeShortcut).filter(Boolean) : [];
+  const savedShortcuts = Array.isArray(saved)
+    ? saved.map(normalizeShortcut).filter(Boolean).filter((shortcut) => !isObsoletePublicDownloadShortcut(shortcut))
+    : [];
   const byId = new Map(defaults.map((shortcut) => [shortcut.id, shortcut]));
 
   savedShortcuts.forEach((shortcut) => {

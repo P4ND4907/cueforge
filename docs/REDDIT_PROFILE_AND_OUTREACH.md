@@ -219,7 +219,6 @@ Social links:
 ```text
 App: https://p4nd4907.github.io/cueforge/
 GitHub: https://github.com/P4ND4907/cueforge
-Windows alpha: https://github.com/P4ND4907/cueforge/releases/latest
 Discord: https://discord.gg/vyQwyJ49v
 ```
 
@@ -263,9 +262,6 @@ https://p4nd4907.github.io/cueforge/
 
 GitHub:
 https://github.com/P4ND4907/cueforge
-
-Windows alpha:
-https://github.com/P4ND4907/cueforge/releases/latest
 
 Discord:
 https://discord.gg/vyQwyJ49v

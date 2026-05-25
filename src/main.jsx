@@ -174,9 +174,9 @@ const latestReleaseUrl = 'https://github.com/P4ND4907/cueforge/releases/latest';
 
 const publicRelease = {
   app: 'https://p4nd4907.github.io/cueforge/',
-  download: latestReleaseUrl,
   notes: latestReleaseUrl,
-  feedback: 'https://github.com/P4ND4907/cueforge/issues/1'
+  feedback: 'https://github.com/P4ND4907/cueforge/issues/1',
+  desktopStatus: 'Desktop downloads are paused for public testers while the next proof gates finish. Use the web app and feedback loop for now.'
 };
 
 function publicAssetPath(path) {
@@ -654,7 +654,6 @@ function App() {
     : 'Start with auto setup, run one check, tune safely, then play. Expert tools stay out of the way until you need them.';
   const appInviteText = useMemo(() => buildAppInviteText({
     appUrl: publicRelease.app,
-    releaseUrl: publicRelease.download,
     discordUrl: socialLinks.Discord
   }), []);
 
@@ -738,7 +737,6 @@ function App() {
     selectedSourceProfile,
     sourceProfile: localSourceProfiles[selectedSourceProfile],
     appUrl: publicRelease.app,
-    releaseUrl: publicRelease.download,
     cueforgeState: cueforgeState.stateV2
   }), [eq, selectedGame, selectedSourceProfile, cueforgeState]);
   const shareProfileText = useMemo(() => buildAudioProfileShareText(shareProfilePayload), [shareProfilePayload]);
@@ -1013,7 +1011,7 @@ function App() {
               <>
                 <button className="ghost" onClick={() => updateUserSettings({ interfaceMode: 'simple' })}><Gauge size={18} /> Simple</button>
                 <button className="ghost" onClick={() => copyShareText(shareProfileText, 'Audio profile')}><Copy size={18} /> Copy Profile</button>
-                <a className="ghost" href={publicRelease.download} target="_blank" rel="noreferrer"><Download size={18} /> Download Alpha</a>
+                <a className="ghost" href={publicRelease.feedback} target="_blank" rel="noreferrer"><Bug size={18} /> Feedback</a>
                 <button className="ghost" onClick={exportSetupPack}><Download size={18} /> Export Pack</button>
                 <button className="primary" onClick={downloadConfig}><Download size={18} /> Export APO</button>
               </>
@@ -1062,9 +1060,10 @@ function App() {
                 <li>Fast loop: tester issues feed the repair queue so real sessions turn into real updates.</li>
               </ul>
               <div className="live-actions">
-                <a className="primary button-link" href={publicRelease.download} target="_blank" rel="noreferrer"><Download size={18} /> Download alpha</a>
+                <a className="primary button-link" href={publicRelease.app} target="_blank" rel="noreferrer"><Play size={18} /> Open web app</a>
                 <a className="ghost button-link" href={publicRelease.feedback} target="_blank" rel="noreferrer"><Bug size={18} /> Send feedback</a>
               </div>
+              <p className="callout">{publicRelease.desktopStatus}</p>
             </Panel>
             <Panel title="Product Invention" icon={Radio}>
               <h2>Audio DNA</h2>
@@ -6028,7 +6027,7 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], shortcutVault = [], onU
       </Panel>
 
       <Panel title="Shortcut Vault" icon={Save}>
-        <p>Save player shortcuts for download, setup, support, and feedback. Code shortcuts lock locally and export as redacted placeholders.</p>
+        <p>Save player shortcuts for setup, support, feedback, and release notes. Code shortcuts lock locally and export as redacted placeholders.</p>
         <div className="metric-row selftest-summary">
           <Metric label="Saved" value={String(shortcutSummary.total)} tone={shortcutSummary.total ? 'teal' : 'amber'} />
           <Metric label="Public" value={String(shortcutSummary.exportable)} tone={shortcutSummary.exportable ? 'teal' : 'amber'} />
@@ -6040,7 +6039,7 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], shortcutVault = [], onU
             <input
               value={shortcutDraft.label}
               onChange={(event) => setShortcutDraft({ ...shortcutDraft, label: event.target.value })}
-              placeholder="Example: Download alpha"
+              placeholder="Example: Open web app"
             />
           </label>
           <label className="field">

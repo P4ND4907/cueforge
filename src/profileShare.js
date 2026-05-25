@@ -37,7 +37,7 @@ export function buildAppInviteText({ appUrl = '', releaseUrl = '', discordUrl = 
     '',
     'It is a local-first FPS audio tool for setup checks, mic testing, EQ profiles, and real match feedback.',
     appUrl ? `Open app: ${appUrl}` : '',
-    releaseUrl ? `Download: ${releaseUrl}` : '',
+    releaseUrl ? `Release notes: ${releaseUrl}` : '',
     discordUrl ? `Discord: ${discordUrl}` : '',
     '',
     'Run Auto Setup, Auto Tune, then one real match. If it gets worse, send that too.'

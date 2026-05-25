@@ -73,7 +73,7 @@ Next GitHub polish:
 
 1. Merge the current CueForge PR after review.
 2. Make sure the README first screen uses the same positioning.
-3. Keep releases/latest as the download link.
+3. Keep the GitHub Pages web app as the public CTA. Do not use releases/latest as a public download CTA until desktop proof gates pass.
 
 ## Professional Pass
 

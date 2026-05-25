@@ -23,10 +23,12 @@ describe('owned social links', () => {
     expect(`${appSource}\n${audit}`).not.toMatch(/@?PAND4907|x\.com\/PAND4907/i);
   });
 
-  it('keeps public release actions pointed at the latest GitHub release page', () => {
+  it('keeps public release notes current without exposing alpha download CTAs', () => {
     const source = readFileSync(join(root, 'src/main.jsx'), 'utf8');
 
     expect(source).toContain("const latestReleaseUrl = 'https://github.com/P4ND4907/cueforge/releases/latest'");
+    expect(source).toContain('notes: latestReleaseUrl');
+    expect(source).not.toMatch(/publicRelease\.download|Download Alpha|Download alpha/);
     expect(source).not.toMatch(/releases\/(?:download|tag)\/v0\.1\.0-alpha\.2/);
   });
 
@@ -41,6 +43,7 @@ describe('owned social links', () => {
 
     expect(bundle).toContain('https://x.com/CueForge907');
     expect(bundle).toContain('https://github.com/P4ND4907/cueforge/releases/latest');
+    expect(bundle).not.toMatch(/Download Alpha|Download alpha|Download CueForge alpha|Download:/);
     expect(bundle).not.toMatch(/@?PAND4907|x\.com\/PAND4907/i);
     expect(bundle).not.toMatch(/releases\/(?:download|tag)\/v0\.1\.0-alpha\.2/);
   });

@@ -39,15 +39,13 @@ Use GitHub issues for feedback:
 - Tuning impressions: open Player Feedback.
 - Privacy concern: open Privacy / Redaction Review.
 
-## Public Alpha
+## Public Test Build
 
 - Web app: https://p4nd4907.github.io/cueforge/
-- Latest Windows alpha release: https://github.com/P4ND4907/cueforge/releases/latest
 - Feedback thread: https://github.com/P4ND4907/cueforge/issues/1
+- Release notes: https://github.com/P4ND4907/cueforge/releases/latest
 
-The Windows alpha is unsigned while CueForge builds reputation, so Windows may show `Windows protected your PC`. That prompt is expected for an unsigned alpha, not proof that the app is broken. Only run builds from the official GitHub release; if you trust that download, choose `More info` and then `Run anyway`. Use the web app first if you want the lightest test.
-
-If the Windows app opens to a blank dark window, delete the old download and download again from the release page. The fixed `v0.1.0-alpha.2` asset SHA256 is `8371FD9FF12AB795157302F681177D1BEDD214A967E1D5812F5CF010D84A2621`.
+Desktop downloads are paused as the public call-to-action while CueForge finishes the next proof gates. Send testers to the web app first, then collect feedback through GitHub or Discord. Desktop package notes stay in the release history for maintainers, but public posts should not ask players to download an alpha build.
 
 ## Public Roadmap
 

@@ -64,7 +64,7 @@ Proof pass:
 Try it here:
 https://p4nd4907.github.io/cueforge/
 
-Download:
+Release notes:
 https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.2
 
 What I need from testers:

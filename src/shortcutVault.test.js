@@ -3,6 +3,7 @@ import {
   buildShortcutExportText,
   createDefaultShortcuts,
   lockSensitiveShortcuts,
+  mergeShortcutDefaults,
   saveShortcut,
   sanitizeShortcutsForExport,
   summarizeShortcutVault
@@ -19,6 +20,7 @@ describe('shortcut vault', () => {
 
     expect(safe.some((shortcut) => shortcut.label === 'Open feedback form' && shortcut.exportable)).toBe(true);
     expect(buildShortcutExportText(shortcuts)).toContain('Open feedback form');
+    expect(buildShortcutExportText(shortcuts)).not.toMatch(/Download CueForge alpha|Download alpha/i);
   });
 
   it('auto-locks code-like shortcuts before export', () => {
@@ -60,5 +62,19 @@ describe('shortcut vault', () => {
 
     expect(shortcuts[0].locked).toBe(true);
     expect(shortcuts[0].value).toBe('[locked]');
+  });
+
+  it('drops the retired public alpha download shortcut when merging saved defaults', () => {
+    const merged = mergeShortcutDefaults([{
+      id: 'download-alpha',
+      label: 'Download CueForge alpha',
+      kind: 'link',
+      value: 'https://github.com/P4ND4907/cueforge/releases/latest'
+    }]);
+    const labels = merged.map((shortcut) => shortcut.label).join('\n');
+
+    expect(labels).not.toMatch(/Download CueForge alpha/i);
+    expect(labels).toContain('Open CueForge web build');
+    expect(labels).toContain('Read CueForge release notes');
   });
 });
