@@ -163,13 +163,22 @@ Before changing EQ again, I would verify the actual device path. Windows default
 
 Use manual Chrome joins only. Read rules first, do not introduce CueForge immediately, and do not DM people unsolicited.
 
-Target categories:
+Validated targets from the May 25 search pass:
 
-- SteelSeries/Sonar community or official support server if available
-- Equalizer APO / Peace EQ community if available
-- PC gaming hardware/community servers with setup-help channels
-- game-specific servers with audio/help/off-topic channels for Siege, Valorant, CS2, Tarkov, Apex, or Warzone
-- beta tester / indie maker servers only if they have a feedback channel
+| Priority | Community | Link | Why it fits | First action |
+| --- | --- | --- | --- | --- |
+| 1 | SteelSeries | https://discord.gg/steelseries | Official SteelSeries community; Sonar, custom presets, Discord routing, and Nova headset users map directly to CueForge Auto Detect and profile-switch testing. | Join/read rules, watch Sonar/audio channels, do not post a link on arrival. |
+| 2 | Logitech G | https://discord.gg/logitechg | Official Logitech G server with large gaming/creator community and headset/mic users. | Join/read rules, look for support/audio/peripheral channels. |
+| 3 | PCMR | https://discord.gg/pcmr | Large PC gaming/hardware community with troubleshooting and setup discussion. | Join/read rules, only help in support/audio threads. |
+| 4 | ilovePCs / PC Build Help | https://discord.do/pc-build-help-tech-support-ilovepcs/ | PC troubleshooting server that explicitly includes peripherals and audio-device recommendations. | Check rules before joining; useful comments only. |
+| 5 | Indie Hackers Discord | https://discordhome.com/server/indie-hacker | Founder/project feedback audience; useful for app feedback, not FPS tester recruitment. | Use intro/feedback channels if rules allow. |
+| 6 | TurboStarter Discord | https://www.turbostarter.dev/discord | Indie/SaaS builder community; useful for distribution feedback and tester-process learning. | Read first; post only in feedback/showcase channels. |
+
+Open target categories after these:
+
+- Equalizer APO / Peace EQ community if a legitimate server is found.
+- game-specific servers with audio/help/off-topic channels for Siege, Valorant, CS2, Tarkov, Apex, or Warzone.
+- beta tester / indie maker servers only if they have a clear feedback channel.
 
 First safe intro, only where introductions are normal:
 
@@ -200,3 +209,33 @@ Stop posting for the session if:
 - Discord asks for verification or moderator approval
 - any community rules are unclear
 - the account is not the correct CueForge/P4ND4907 account
+
+## Fresh Reddit Queue
+
+Use these in order. Prefer replies to active existing threads over new promo posts.
+
+| Priority | Thread | Link | Action |
+| --- | --- | --- | --- |
+| 1 | r/micro_saas - Drop your product, I'll help you find your first 100 users | https://www.reddit.com/r/micro_saas/comments/1tljvaz/drop_your_product_ill_help_you_find_your_first/ | Best current invited product reply. Use the drafted no-direct-link reply. |
+| 2 | r/SideProject - Looking for 3 beta testers | https://www.reddit.com/r/SideProject/comments/1tm00lb/looking_for_3_beta_testers/ | Comment only if tester exchange is still active. Offer CueForge as a web app and say you can test/review theirs too. |
+| 3 | r/SaaS - how the hell do you find beta testers? | https://www.reddit.com/r/SaaS/comments/1ta2g8q/how_the_hell_do_you_find_beta_testers/ | Helpful no-link comment: target people already complaining about audio setup, not generic beta testers. |
+| 4 | r/betatests - Has anyone actually gotten beta testers here? | https://www.reddit.com/r/betatests/comments/1qqz5lq/has_anyone_actually_gotten_beta_testers_here/ | Read/comment carefully; this community has been fragile for CueForge, so no app link. |
+| 5 | r/alphaandbetausers - current tester posts | https://www.reddit.com/r/alphaandbetausers/ | Read only unless account trust improves; previous CueForge posts were filtered. |
+
+Reply for priority 2:
+
+```text
+I can trade feedback if you still need testers. CueForge is a local-first web app for Windows FPS players with messy headset/mic/audio setups.
+
+What I need tested is pretty narrow: run Auto Detect, see if it identifies the right headset/mic without weird Windows device names, save a game profile, then tell me what felt unclear.
+
+I can give you a real first-run review back too.
+```
+
+Helpful comment for priority 3:
+
+```text
+The useful beta testers are usually not people who enjoy testing. They are people already annoyed by the exact problem.
+
+For CueForge I am not looking for "gamers" broadly. I am looking for Windows FPS players who already complain about Discord/Sonar/APO/headset routing, weird device names, bad mic gain, or footsteps feeling inconsistent. That makes the ask much more concrete: run one setup check, play one match, report what got clearer/worse/confusing.
+```

@@ -62,6 +62,17 @@ After saving:
 3. Invite testers to run one setup and one real match.
 4. Keep raw setup issues in the right channels so the server looks organized.
 
+## External Discord Join Pass
+
+Use `docs/social/2026-05-25-live-social-sprint.md` before joining.
+
+1. Join only one or two servers per session.
+2. Start with SteelSeries and Logitech G because they are official hardware communities.
+3. Read rules and channel names before saying anything.
+4. Do not post CueForge links on entry.
+5. Use the intro copy only where intro/project channels are normal.
+6. Log the server, channel, action, and result in `COMMUNITY_MEMORY.md`.
+
 ## GitHub
 
 Already verified:

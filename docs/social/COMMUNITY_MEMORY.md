@@ -22,6 +22,8 @@ May 24 social lane: use `docs/social/2026-05-24-social-command-center.md` as the
 
 May 25 social lane: use `docs/social/2026-05-25-live-social-sprint.md` for the Auto Detect/device-name/game-profile story. Reddit feed showed one high-fit invited thread, `r/micro_saas - Drop your product, I'll help you find your first 100 users`; prefer that kind of invited product reply over cold launch posts.
 
+May 25 search update: verified Discord targets now include `discord.gg/steelseries`, `discord.gg/logitechg`, `discord.gg/pcmr`, `ilovePCs / PC Build Help`, Indie Hackers Discord, and TurboStarter Discord. Treat official hardware/community servers as learn-and-help spaces first, not places to drop the app link on entry.
+
 ## High-Engagement Watchlist
 
 | Community | Members | Active Now | Hot Comments | Mode | Fit | Next move |
@@ -65,6 +67,38 @@ It helps players check the real audio chain, clean up confusing device names, te
 The first 100 users I need are not generic gamers. I need people with SteelSeries/HyperX/Realtek/USB DAC/Discord/Sonar/APO setups who can run Auto Detect, play one real match, and say what got clearer, worse, or confusing.
 
 Link is on my profile. I am mostly trying to learn where those players already hang out.
+```
+
+### 3. r/SideProject - Looking for 3 beta testers
+
+URL: https://www.reddit.com/r/SideProject/comments/1tm00lb/looking_for_3_beta_testers/
+Status: drafted
+Tags: tester-exchange, first-run-feedback, sideproject
+Next move: Reply only if the exchange is still active. Offer a real review back and avoid a direct app link unless asked.
+
+Suggested reply shape:
+
+```text
+I can trade feedback if you still need testers. CueForge is a local-first web app for Windows FPS players with messy headset/mic/audio setups.
+
+What I need tested is pretty narrow: run Auto Detect, see if it identifies the right headset/mic without weird Windows device names, save a game profile, then tell me what felt unclear.
+
+I can give you a real first-run review back too.
+```
+
+### 4. r/SaaS - how the hell do you find beta testers?
+
+URL: https://www.reddit.com/r/SaaS/comments/1ta2g8q/how_the_hell_do_you_find_beta_testers/
+Status: drafted
+Tags: beta-testers, audience, positioning
+Next move: Helpful no-link comment only. The value is the positioning lesson: target problem-sufferers, not generic beta testers.
+
+Suggested reply shape:
+
+```text
+The useful beta testers are usually not people who enjoy testing. They are people already annoyed by the exact problem.
+
+For CueForge I am not looking for "gamers" broadly. I am looking for Windows FPS players who already complain about Discord/Sonar/APO/headset routing, weird device names, bad mic gain, or footsteps feeling inconsistent. That makes the ask much more concrete: run one setup check, play one match, report what got clearer/worse/confusing.
 ```
 
 ## Conversation Flow
