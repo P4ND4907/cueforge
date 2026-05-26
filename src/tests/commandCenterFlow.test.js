@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildCommandCenterSummary, commandCenterFlow, routeForAction } from '../core/commandCenterFlow.js';
+import {
+  buildCommandCenterSummary,
+  buildGuidedSetupRun,
+  commandCenterFlow,
+  routeForAction
+} from '../core/commandCenterFlow.js';
 
 const baseState = {
   chainGraph: {
@@ -72,7 +77,7 @@ describe('command center flow', () => {
       'Mic Check',
       'Hearing Model',
       'Choose Game / Genre',
-      'Blind Match',
+      'Sound Match',
       'Masking Lab',
       'Profile Recommendation',
       'Engine Preview',
@@ -136,6 +141,111 @@ describe('command center flow', () => {
     expect(routeForAction('Run Confirm APO Path.')).toBe('detect');
     expect(routeForAction('Run Mic Lab.')).toBe('mic');
     expect(routeForAction('Complete Hearing Model.')).toBe('hearing');
+    expect(routeForAction('Run Sound Match.')).toBe('blindmatch');
     expect(routeForAction('Generate export pack.')).toBe('export');
+  });
+
+  it('starts Auto Setup with a scan-first result when no evidence exists yet', () => {
+    const guided = buildGuidedSetupRun({});
+
+    expect(guided.title).toBe('Start Auto Setup');
+    expect(guided.summary).toMatch(/scan/i);
+    expect(guided.nextAction).toMatchObject({
+      id: 'scan-devices',
+      label: 'Start Auto Setup',
+      route: 'detect'
+    });
+    expect(guided.checks.map((check) => check.label)).toEqual([
+      'Device scan',
+      'Output picked',
+      'Mic picked',
+      'Route conflicts',
+      'Starter tune',
+      'Sound Match'
+    ]);
+    expect(guided.checks.every((check) => check.status === 'todo')).toBe(true);
+  });
+
+  it('points scanned setups to the starter tune before deeper personalization', () => {
+    const profileEq = [-1, -0.5, 0, 0.5, 1, 1.5, 2, 2, 0.5, -0.5];
+    const guided = buildGuidedSetupRun({
+      chainGraph: {
+        summary: { inputs: 1, outputs: 1, companions: 1 }
+      },
+      autoDetectReport: {
+        source: 'browser',
+        confidence: { score: 48, tier: 'partial', requiresExplicitScan: true }
+      },
+      conflicts: {
+        summary: { high: 0 },
+        chainHealth: { warnings: [] }
+      },
+      profile: {
+        recommendation: {
+          id: 'competitive-fps-browser',
+          label: 'Competitive FPS',
+          eq: profileEq
+        }
+      },
+      readiness: {
+        gates: [{ id: 'blind-match', ready: false }]
+      }
+    }, {
+      currentEq: Array(10).fill(0)
+    });
+
+    const checks = Object.fromEntries(guided.checks.map((check) => [check.id, check]));
+
+    expect(guided.title).toBe('Setup scanned');
+    expect(guided.nextAction).toMatchObject({
+      id: 'starter-tune',
+      label: 'Use Starter Tune',
+      route: 'starter-tune'
+    });
+    expect(checks['device-scan'].status).toBe('warn');
+    expect(checks['output-picked'].status).toBe('done');
+    expect(checks['mic-picked'].status).toBe('done');
+    expect(checks['route-conflicts'].status).toBe('done');
+    expect(checks['starter-tune'].status).toBe('next');
+    expect(checks['sound-match'].status).toBe('todo');
+  });
+
+  it('moves from applied starter tune into Sound Match as the next proof step', () => {
+    const profileEq = [-1, -0.5, 0, 0.5, 1, 1.5, 2, 2, 0.5, -0.5];
+    const guided = buildGuidedSetupRun({
+      chainGraph: {
+        summary: { inputs: 1, outputs: 1, companions: 0 }
+      },
+      autoDetectReport: {
+        source: 'browser+desktop_bridge',
+        confidence: { score: 84, tier: 'strong', requiresExplicitScan: false }
+      },
+      conflicts: {
+        summary: { high: 0 },
+        chainHealth: { warnings: [] }
+      },
+      profile: {
+        recommendation: {
+          id: 'competitive-fps-desktop',
+          label: 'Competitive FPS',
+          eq: profileEq
+        }
+      },
+      readiness: {
+        gates: [{ id: 'blind-match', ready: false }]
+      }
+    }, {
+      currentEq: profileEq
+    });
+
+    const checks = Object.fromEntries(guided.checks.map((check) => [check.id, check]));
+
+    expect(guided.nextAction).toMatchObject({
+      id: 'sound-match',
+      label: 'Run Sound Match',
+      route: 'blindmatch'
+    });
+    expect(checks['starter-tune'].status).toBe('done');
+    expect(checks['sound-match'].status).toBe('next');
   });
 });

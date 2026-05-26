@@ -132,6 +132,7 @@ import {
   upsertGameProfile
 } from './deviceProfiles.js';
 import { buildCueForgeState } from './core/cueforgeState.js';
+import { buildGuidedSetupRun } from './core/commandCenterFlow.js';
 import { publishSetupAssessmentSnapshot } from './core/setupAssessmentSnapshot.js';
 import { buildAutoDetectReport, summarizeAutoDetectReport } from './core/autoDetectReport.js';
 import { summarizeReleasePack } from './core/exportSchema.js';
@@ -145,7 +146,7 @@ import {
 import { buildScopeBoundarySummary } from './core/scopeGuard.js';
 import { buildMicPlan } from './engines/micPlan.js';
 import { honestSpatialModes, spatialTruthWarning } from './engines/spatialPlan.js';
-import { SetupCommandCenter } from './ui/SetupCommandCenter.jsx';
+import { GuidedSetupRunPanel, SetupCommandCenter } from './ui/SetupCommandCenter.jsx';
 import './styles.css';
 
 const headsetProfiles = [
@@ -590,7 +591,7 @@ const EXPERT_NAV_ITEMS = [
   ['dashboard', Gauge, 'Control'],
   ['selftest', TestTube2, 'Self Test'],
   ['dna', BrainCircuit, 'Audio DNA'],
-  ['blindmatch', Radio, 'Blind Match'],
+  ['blindmatch', Radio, 'Sound Match'],
   ['masking', AudioLines, 'Masking Lab'],
   ['trial', Gamepad2, 'Player Trial'],
   ['beta', Activity, 'Beta Check-in'],
@@ -655,9 +656,13 @@ function App() {
   const navItems = expertMode ? EXPERT_NAV_ITEMS : SIMPLE_NAV_ITEMS;
   const activeTitle = active === 'dashboard'
     ? 'Setup Command Center'
-    : !expertMode && active === 'blindmatch'
-      ? 'Sound Match'
-      : sectionTitle(active);
+    : !expertMode && active === 'detect'
+      ? 'Auto Setup'
+      : !expertMode && active === 'eq'
+        ? 'Starter Tune'
+        : !expertMode && active === 'blindmatch'
+          ? 'Sound Match'
+          : sectionTitle(active);
   const topbarCopy = expertMode
     ? 'Test your mic, tune your IEMs, generate game-ready EQ, and keep your setup dialed in without guessing.'
     : 'Start with auto setup, run one check, tune safely, then play. Expert tools stay out of the way until you need them.';
@@ -737,7 +742,8 @@ function App() {
     lastTrial: getSavedJson('cueforge-last-player-trial'),
     lastReport: getSavedJson('cueforge-last-issue-report'),
     latestDna: latestDnaProfile(),
-    betaCheckins: getSavedJson('cueforge-beta-checkins') || []
+    betaCheckins: getSavedJson('cueforge-beta-checkins') || [],
+    currentEq: eq
   }), [active, analysis, uiNotes.length, cueforgeState]);
   const shareProfilePayload = useMemo(() => createAudioProfileShare({
     eq,
@@ -1020,7 +1026,7 @@ function App() {
             {!expertMode ? (
               <>
                 <button className="primary" onClick={() => setActive('detect')}><Search size={18} /> Auto setup</button>
-                <button className="ghost" onClick={applySimpleAutoTune}><Sparkles size={18} /> Auto tune</button>
+                <button className="ghost" onClick={applyProfileBrain}><Sparkles size={18} /> Starter tune</button>
                 <button className="ghost" onClick={() => copyShareText(appInviteText, 'App invite')}><Copy size={18} /> Share</button>
                 <button className="ghost" onClick={() => setActive('reports')}><Bug size={18} /> Report issue</button>
                 <button className="ghost" onClick={() => updateUserSettings({ interfaceMode: 'expert' })}><BrainCircuit size={18} /> Expert</button>
@@ -1281,8 +1287,10 @@ function App() {
         )}
 
         {active === 'detect' && <AutoDetect
+          currentEq={eq}
           onApplyProfile={applySetupIntelligenceProfile}
           onAutoSwitchProfile={autoSwitchDetectedGameProfile}
+          onOpen={setActive}
           onUpdateChain={({ devices, bridgeReport, autoDetectReport, desktopReady }) => {
             if (devices) setChainDevices(devices);
             if (bridgeReport) setChainBridgeReport(bridgeReport);
@@ -2529,7 +2537,7 @@ function SimpleHome({
       : 'Mic looks usable';
   const nextMove = analysis.clipping > 15
     ? 'Run Mic Check before playing.'
-    : 'Run Auto Setup, then use Auto Tune.';
+    : 'Run Auto Setup, then use Starter Tune.';
 
   return (
     <section className="grid simple-home">
@@ -2564,10 +2572,10 @@ function SimpleHome({
             <strong>2. Mic check</strong>
             <span>Make sure Discord and teammates can hear you clearly.</span>
           </button>
-          <button className="simple-step" onClick={onAutoTune}>
+          <button className="simple-step" onClick={onApplyProfileBrain || onAutoTune}>
             <Sparkles size={22} />
-            <strong>3. Auto tune</strong>
-            <span>Apply a safe FPS starting curve without touching drivers.</span>
+            <strong>3. Starter tune</strong>
+            <span>Apply a safe FPS curve first, then personalize it with Sound Match.</span>
           </button>
           <button className="simple-step" onClick={() => onOpen('trial')}>
             <Gamepad2 size={22} />
@@ -3646,7 +3654,7 @@ function sectionTitle(id) {
     mic: 'Mic Lab',
     selftest: 'Auto Self Test',
     dna: 'Audio DNA',
-    blindmatch: 'Blind Match',
+    blindmatch: 'Sound Match',
     masking: 'Tactical Masking Lab',
     trial: 'Player Trial',
     beta: 'Beta Check-in',
@@ -5056,7 +5064,7 @@ function avg(values, start, end) {
   return count ? total / count : 0;
 }
 
-function AutoDetect({ onApplyProfile, onAutoSwitchProfile, onUpdateChain }) {
+function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateChain, onOpen }) {
   const [devices, setDevices] = useState([]);
   const [status, setStatus] = useState('Auto scan starts when this page opens.');
   const [bridgeReport, setBridgeReport] = useState(null);
@@ -5217,6 +5225,40 @@ function AutoDetect({ onApplyProfile, onAutoSwitchProfile, onUpdateChain }) {
     budgetTier,
     desktopReady
   }), [namedDevices, bridgeReport, setupGame, budgetTier, desktopReady]);
+  const guidedAutoSetup = useMemo(() => {
+    const inputCount = autoDetectReport.devices.browserInputs.length + autoDetectReport.devices.windowsCaptureDevices.length;
+    const outputCount = autoDetectReport.devices.browserOutputs.length + autoDetectReport.devices.windowsRenderDevices.length;
+    const highRisks = autoDetectReport.risks.filter((risk) => risk.severity === 'high').length;
+    const sourceProfile = setupIntelligence.gamePlan.sourceProfile;
+    return buildGuidedSetupRun({
+      autoDetectReport,
+      chainGraph: {
+        summary: {
+          inputs: inputCount,
+          outputs: outputCount,
+          companions: setupIntelligence.detected.companionLayers.length
+        }
+      },
+      conflicts: {
+        summary: { high: highRisks },
+        chainHealth: {
+          warnings: autoDetectReport.risks.map((risk) => risk.title || risk.detail).filter(Boolean)
+        }
+      },
+      profile: {
+        recommendation: {
+          id: sourceProfile || 'starter-tune',
+          label: setupIntelligence.gamePlan.profile,
+          eq: buildEqFromSourceProfile(localSourceProfiles[sourceProfile], baseEq)
+        }
+      },
+      readiness: {
+        gates: [{ id: 'blind-match', ready: false }]
+      }
+    }, {
+      currentEq
+    });
+  }, [autoDetectReport, setupIntelligence, currentEq]);
   const setupIntelligenceText = useMemo(() => buildSetupIntelligenceText(setupIntelligence), [setupIntelligence]);
   const redditTesterAsk = useMemo(
     () => buildRedditSafeDraft({
@@ -5318,8 +5360,21 @@ function AutoDetect({ onApplyProfile, onAutoSwitchProfile, onUpdateChain }) {
     setStatus(`${setupIntelligence.gamePlan.profile} applied inside CueForge. Review EQ Studio before exporting APO.`);
   };
 
+  const runGuidedAutoSetupAction = (action = guidedAutoSetup.nextAction) => {
+    if (action.route === 'starter-tune') {
+      applySuggestedProfile();
+      return;
+    }
+    if (action.route === 'detect') {
+      scanDevices();
+      return;
+    }
+    onOpen?.(action.route);
+  };
+
   return (
     <section className="grid two">
+      <GuidedSetupRunPanel guided={guidedAutoSetup} onAction={runGuidedAutoSetupAction} />
       <Panel title="Connected Device Scanner" icon={Search}>
         <p>{status}</p>
         <button className="primary" onClick={() => scanDevices()}><Search size={18} /> Scan audio devices</button>

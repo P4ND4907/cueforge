@@ -1,0 +1,16 @@
+{
+  "name": "CueForge Audio Support Hub",
+  "short_name": "CueForge",
+  "description": "A free local-first FPS audio setup and tuning lab for Windows players.",
+  "start_url": "/cueforge/",
+  "display": "standalone",
+  "background_color": "#081014",
+  "theme_color": "#081014",
+  "icons": [
+    {
+      "src": "/cueforge/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

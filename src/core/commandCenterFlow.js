@@ -8,7 +8,7 @@ export const commandCenterFlow = [
   { id: 'mic-check', label: 'Mic Check', route: 'mic', group: 'checks' },
   { id: 'hearing-model', label: 'Hearing Model', route: 'hearing', group: 'personalize' },
   { id: 'choose-game', label: 'Choose Game / Genre', route: 'games', group: 'personalize' },
-  { id: 'blind-match', label: 'Blind Match', route: 'blindmatch', group: 'personalize' },
+  { id: 'blind-match', label: 'Sound Match', route: 'blindmatch', group: 'personalize' },
   { id: 'masking-lab', label: 'Masking Lab', route: 'masking', group: 'personalize' },
   { id: 'profile-recommendation', label: 'Profile Recommendation', route: 'dashboard', group: 'recommend' },
   { id: 'engine-preview', label: 'Engine Preview', route: 'dashboard', group: 'recommend' },
@@ -25,6 +25,174 @@ function humanStatus(status = '') {
 
 function gateReady(readiness, id) {
   return Boolean((readiness?.gates || []).find((gate) => gate.id === id)?.ready);
+}
+
+function countReportDevices(report = {}) {
+  const devices = report.devices || {};
+  return {
+    inputs: (devices.browserInputs?.length || 0) + (devices.windowsCaptureDevices?.length || 0),
+    outputs: (devices.browserOutputs?.length || 0) + (devices.windowsRenderDevices?.length || 0)
+  };
+}
+
+function deviceCounts(state = {}) {
+  const graphSummary = state.chainGraph?.summary || {};
+  const reportCounts = countReportDevices(state.autoDetectReport);
+  return {
+    inputs: Number(graphSummary.inputs || 0) || reportCounts.inputs,
+    outputs: Number(graphSummary.outputs || 0) || reportCounts.outputs,
+    companions: Number(graphSummary.companions || 0)
+  };
+}
+
+function browserEvidenceIsPartial(state = {}) {
+  const report = state.autoDetectReport || {};
+  const source = String(report.source || '');
+  if (!source) return true;
+  if (report.confidence?.requiresExplicitScan) return true;
+  return source === 'browser' || (!source.includes('desktop') && !source.includes('bridge'));
+}
+
+function eqMatches(expected = [], actual = []) {
+  if (!Array.isArray(expected) || !Array.isArray(actual)) return false;
+  if (!expected.length || expected.length !== actual.length) return false;
+  return expected.every((gain, index) => Math.abs((Number(gain) || 0) - (Number(actual[index]) || 0)) <= 0.15);
+}
+
+function profileEq(state = {}) {
+  return state.profile?.recommendation?.eq || state.stateV2?.recommendedProfile?.eq || [];
+}
+
+function profileReady(state = {}) {
+  return Boolean(state.profile?.recommendation?.id || state.stateV2?.recommendedProfile?.id);
+}
+
+function setupCheck(id, label, status, detail, route = 'detect') {
+  return { id, label, status, detail, route };
+}
+
+export function buildGuidedSetupRun(state = {}, context = {}) {
+  const counts = deviceCounts(state);
+  const hasOutput = counts.outputs > 0;
+  const hasInput = counts.inputs > 0;
+  const hasScanEvidence = hasOutput || hasInput || Boolean(state.autoDetectReport?.source);
+  const highConflicts = Number(state.conflicts?.summary?.high || 0);
+  const partialEvidence = hasScanEvidence && browserEvidenceIsPartial(state);
+  const recommendationEq = profileEq(state);
+  const hasStarterTune = profileReady(state) && recommendationEq.length > 0;
+  const starterTuneApplied = context.starterTuneApplied === true || eqMatches(recommendationEq, context.currentEq);
+  const soundMatchDone = gateReady(state.readiness, 'blind-match') || state.stateV2?.calibration?.blindMatch?.complete === true;
+
+  const checks = [
+    setupCheck(
+      'device-scan',
+      'Device scan',
+      hasScanEvidence ? (partialEvidence ? 'warn' : 'done') : 'todo',
+      hasScanEvidence
+        ? partialEvidence
+          ? 'Browser scan is checked. Windows bridge scan gives exact endpoint proof when available.'
+          : 'Device and Windows evidence are checked.'
+        : 'Scan devices so CueForge can stop guessing.'
+    ),
+    setupCheck(
+      'output-picked',
+      'Output picked',
+      hasOutput ? 'done' : 'todo',
+      hasOutput ? `${counts.outputs} output${counts.outputs === 1 ? '' : 's'} found.` : 'Pick the headset, IEM, DAC, or speakers used for game audio.'
+    ),
+    setupCheck(
+      'mic-picked',
+      'Mic picked',
+      hasInput ? 'done' : 'todo',
+      hasInput ? `${counts.inputs} mic/input${counts.inputs === 1 ? '' : 's'} found.` : 'Pick or allow the mic used for Discord/game chat.',
+      'mic'
+    ),
+    setupCheck(
+      'route-conflicts',
+      'Route conflicts',
+      hasScanEvidence ? (highConflicts > 0 ? 'blocked' : 'done') : 'todo',
+      highConflicts > 0
+        ? `${highConflicts} high-risk route conflict${highConflicts === 1 ? '' : 's'} need fixing first.`
+        : hasScanEvidence
+          ? 'No high-risk conflict is blocking the starter path.'
+          : 'Conflict checks run after device scan.'
+    ),
+    setupCheck(
+      'starter-tune',
+      'Starter tune',
+      starterTuneApplied ? 'done' : hasScanEvidence && hasStarterTune ? 'next' : 'todo',
+      starterTuneApplied
+        ? 'Starter tune is already active in EQ Studio.'
+        : hasStarterTune
+          ? 'CueForge has a safe starter curve ready to apply.'
+          : 'Starter tune appears after scan and profile recommendation.',
+      'starter-tune'
+    ),
+    setupCheck(
+      'sound-match',
+      'Sound Match',
+      soundMatchDone ? 'done' : starterTuneApplied ? 'next' : 'todo',
+      soundMatchDone
+        ? 'Personal sound preference proof is saved.'
+        : starterTuneApplied
+          ? 'Run hidden A/B rounds so the curve follows what you actually hear.'
+          : 'Do this after the starter tune is active.',
+      'blindmatch'
+    )
+  ];
+
+  let nextAction = {
+    id: 'scan-devices',
+    label: 'Start Auto Setup',
+    route: 'detect',
+    detail: 'Scan devices first so the setup result is based on real evidence.'
+  };
+
+  if (hasScanEvidence && (!hasOutput || !hasInput)) {
+    nextAction = {
+      id: 'pick-devices',
+      label: 'Pick Headset + Mic',
+      route: 'detect',
+      detail: 'Confirm which output and input are actually being used.'
+    };
+  } else if (hasScanEvidence && highConflicts > 0) {
+    nextAction = {
+      id: 'fix-route',
+      label: 'Fix Route Conflict',
+      route: 'detect',
+      detail: 'Clear high-risk routing conflicts before applying a tune.'
+    };
+  } else if (hasScanEvidence && hasStarterTune && !starterTuneApplied) {
+    nextAction = {
+      id: 'starter-tune',
+      label: 'Use Starter Tune',
+      route: 'starter-tune',
+      detail: 'Apply the safe profile to EQ Studio, then prove it with Sound Match or a play test.'
+    };
+  } else if (starterTuneApplied && !soundMatchDone) {
+    nextAction = {
+      id: 'sound-match',
+      label: 'Run Sound Match',
+      route: 'blindmatch',
+      detail: 'Use the hidden sound pairs to personalize the starter curve.'
+    };
+  } else if (soundMatchDone) {
+    nextAction = {
+      id: 'play-test',
+      label: 'Play Test',
+      route: 'trial',
+      detail: 'Run one real match and score what improved or got worse.'
+    };
+  }
+
+  return {
+    title: hasScanEvidence ? 'Setup scanned' : 'Start Auto Setup',
+    summary: hasScanEvidence
+      ? 'CueForge checked the audio chain and picked the next safe step.'
+      : 'Run one scan first. Then CueForge turns the result into a setup checklist and one next button.',
+    nextAction,
+    checks
+  };
 }
 
 function firstUsefulWarning(state = {}) {
@@ -347,7 +515,7 @@ export function routeForAction(action = '') {
   if (text.includes('apo') || text.includes('endpoint') || text.includes('chain') || text.includes('detect')) return 'detect';
   if (text.includes('mic')) return 'mic';
   if (text.includes('hearing')) return 'hearing';
-  if (text.includes('blind')) return 'blindmatch';
+  if (text.includes('blind') || text.includes('sound match')) return 'blindmatch';
   if (text.includes('masking')) return 'masking';
   if (text.includes('export')) return 'export';
   if (text.includes('match') || text.includes('trial')) return 'trial';

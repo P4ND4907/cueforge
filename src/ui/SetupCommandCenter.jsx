@@ -1,6 +1,6 @@
 import React from 'react';
-import { Activity, AudioLines, BrainCircuit, Bug, CheckCircle2, Download, Gamepad2, Gauge, Headphones, Mic, Search, ShieldCheck, Sparkles } from 'lucide-react';
-import { buildCommandCenterSummary } from '../core/commandCenterFlow.js';
+import { Activity, AudioLines, BrainCircuit, Bug, CheckCircle2, Download, Gamepad2, Gauge, Headphones, Mic, Radio, Search, ShieldCheck, Sparkles } from 'lucide-react';
+import { buildCommandCenterSummary, buildGuidedSetupRun } from '../core/commandCenterFlow.js';
 import { summarizeCueForgeBrain } from '../core/cueforgeBrain.js';
 import { ChainGraphView } from './ChainGraphView.jsx';
 import { ConflictFixPanel } from './ConflictFixPanel.jsx';
@@ -44,6 +44,15 @@ const stepIcons = {
   'report-audio-dna': Bug
 };
 
+const guidedCheckIcons = {
+  'device-scan': Search,
+  'output-picked': Headphones,
+  'mic-picked': Mic,
+  'route-conflicts': ShieldCheck,
+  'starter-tune': Sparkles,
+  'sound-match': Radio
+};
+
 export function SetupCommandCenter({
   state,
   context,
@@ -53,17 +62,23 @@ export function SetupCommandCenter({
   compact = false
 }) {
   const summary = buildCommandCenterSummary(state, context);
+  const guidedSetup = buildGuidedSetupRun(state, context);
   const brain = summarizeCueForgeBrain(state?.brain);
   const brainPillars = (state?.brain?.pillars || []).slice(0, 7);
-  const nextAction = summary.nextBestAction;
+  const nextAction = guidedSetup.nextAction.label || summary.nextBestAction;
   const autoDetect = state?.autoDetectReport || {};
   const openRoute = (route) => {
+    if (route === 'starter-tune') {
+      onApplyProfile?.();
+      return;
+    }
     if (route === 'export') {
       onExportPack?.();
       return;
     }
     onOpen?.(route || 'dashboard');
   };
+  const runGuidedAction = (action = guidedSetup.nextAction) => openRoute(action.route);
 
   return (
     <section className={`setup-command-center ${compact ? 'compact' : ''}`}>
@@ -76,13 +91,16 @@ export function SetupCommandCenter({
         <div className="command-next">
           <span>Next best move</span>
           <strong>{nextAction}</strong>
+          <small>{guidedSetup.nextAction.detail}</small>
         </div>
       </div>
       <div className="command-actions command-main-actions">
-        <button className="primary" onClick={() => onOpen?.('detect')}><Search size={18} /> Run setup scan</button>
-        <button className="ghost" onClick={onApplyProfile}><Sparkles size={18} /> Apply profile brain</button>
+        <button className="primary" onClick={() => runGuidedAction()}><Sparkles size={18} /> {guidedSetup.nextAction.label}</button>
+        <button className="ghost" onClick={() => onOpen?.('detect')}><Search size={18} /> Scan details</button>
+        <button className="ghost" onClick={onApplyProfile}><Sparkles size={18} /> Use starter tune</button>
         <button className="ghost" onClick={onExportPack}><Download size={18} /> Export release pack</button>
       </div>
+      <GuidedSetupRunPanel guided={guidedSetup} onAction={runGuidedAction} />
       <div className="command-operating-panel">
         <div className="command-operating-head">
           <span>Default operating mode</span>
@@ -161,6 +179,37 @@ export function SetupCommandCenter({
         <EnginePreviewPanel engine={state?.engine} applyPath={state?.applyPath} onExport={onExportPack} />
       </div>
     </section>
+  );
+}
+
+export function GuidedSetupRunPanel({ guided, onAction, compact = false }) {
+  if (!guided) return null;
+
+  return (
+    <div className={`guided-setup-run ${compact ? 'compact' : ''}`} aria-label="Auto Setup guided result">
+      <div className="guided-setup-head">
+        <div>
+          <span>Auto Setup Result</span>
+          <strong>{guided.title}</strong>
+          <small>{guided.summary}</small>
+        </div>
+        <button className="primary" onClick={() => onAction?.(guided.nextAction)}>
+          <Sparkles size={18} /> {guided.nextAction.label}
+        </button>
+      </div>
+      <div className="guided-check-grid">
+        {guided.checks.map((check) => {
+          const Icon = guidedCheckIcons[check.id] || CheckCircle2;
+          return (
+            <button className={`guided-check check-${check.status}`} key={check.id} onClick={() => onAction?.({ route: check.route })}>
+              <span><Icon size={16} /> {check.label}</span>
+              <strong>{check.status}</strong>
+              <small>{check.detail}</small>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
