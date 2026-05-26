@@ -1509,10 +1509,10 @@ function SetupJourney({ settings, onComplete, onSkip }) {
   }));
 
   const setupSteps = [
-    ['Trail Gear', 'Name the chain before the forest starts listening.'],
-    ['Bamboo Scan', 'Scan browser devices and optional local bridge data.'],
-    ['Pond Tune', 'Choose the first match-ready tuning direction.'],
-    ['Reflection', 'Save the profile and meet the tuned version.']
+    ['Signal Profile', 'Tell CueForge what you play and what gear is in the chain.'],
+    ['Device Scan', 'Check browser devices and optional Windows bridge data.'],
+    ['Starter Tune', 'Pick the first safe tuning direction before Sound Match.'],
+    ['Launch Hub', 'Save the profile and open the Audio Support Hub.']
   ];
   const setupStage = setupSteps[step];
   const backgroundAudioAllowed = canPlayBackgroundAudio(settings);
@@ -1659,7 +1659,7 @@ function SetupJourney({ settings, onComplete, onSkip }) {
 
       soundRef.current = { context, master, filter, drift, drones, noise, lfo };
       setSoundActive(true);
-      setToneStatus('bamboo soundwalk on - local, low, and motion-matched');
+      setToneStatus('audio test bed on - local, low, and motion-matched');
       pulseSetupStep(step);
     } catch {
       setToneStatus('audio tunnel could not start in this browser');
@@ -1685,7 +1685,7 @@ function SetupJourney({ settings, onComplete, onSkip }) {
     }
     soundRef.current = null;
     setSoundActive(false);
-    setToneStatus('bamboo soundwalk off');
+    setToneStatus('audio test bed off');
   };
 
   const pulseSetupStep = (activeStep) => {
@@ -1728,17 +1728,17 @@ function SetupJourney({ settings, onComplete, onSkip }) {
             <div className="brand-mark"><Waves size={22} /></div>
             <div>
               <strong>CueForge</strong>
-              <span>First-run setup</span>
+              <span>Audio setup</span>
             </div>
           </div>
           <div className="setup-kicker">
-            <span>Bamboo soundwalk</span>
+            <span>Audio Support Hub</span>
             <strong>{String(step + 1).padStart(2, '0')} / {String(setupSteps.length).padStart(2, '0')}</strong>
           </div>
-          <h1>Walk the bamboo path before you tune.</h1>
-          <p>The first run is a guided soundwalk: gear in, devices checked, calibration shaped, then the pond reflection reveals the tuned player CueForge is building around.</p>
+          <h1>Set up your FPS audio without guessing.</h1>
+          <p>CueForge checks the real chain: headset, mic, Discord, EQ layers, game focus, and one safe starter tune before deeper Sound Match testing.</p>
           <div className="setup-audio-controls">
-            <button className={backgroundAudioAllowed ? 'primary' : 'ghost'} onClick={startSetupSoundscape}><Volume2 size={18} /> {soundActive ? 'Stop soundwalk' : backgroundAudioAllowed ? 'Start soundwalk' : 'Background audio off'}</button>
+            <button className={backgroundAudioAllowed ? 'primary' : 'ghost'} onClick={startSetupSoundscape}><Volume2 size={18} /> {soundActive ? 'Stop test bed' : backgroundAudioAllowed ? 'Start test bed' : 'Test bed off'}</button>
             <span>{toneStatus}</span>
           </div>
           <div className="setup-meta-grid" aria-label="Setup safety and status">
@@ -1853,7 +1853,7 @@ function SetupJourney({ settings, onComplete, onSkip }) {
                 <span>{setupSummary.join(' / ')}</span>
                 <small>{setupRecovery.primaryAction}</small>
               </div>
-              <p className="callout">After this, CueForge opens the main app without a setup tab in the sidebar. Rerun the bamboo soundwalk later from System Info.</p>
+              <p className="callout">After this, CueForge opens the main app without a setup tab in the sidebar. Rerun Audio Support Hub setup later from System Info.</p>
             </>
           )}
 
@@ -1885,13 +1885,16 @@ function SetupThreeScene({ step }) {
     let scene;
     let camera;
     let world;
-    let panda;
-    let reflection;
-    let pond;
-    let rippleGroup;
-    let bambooGroup;
-    let ferroGroup;
-    let fireflies;
+    let waveform;
+    let meterGroup;
+    let routeGroup;
+    let cableGroup;
+    let nodeGroup;
+    let signalParticles;
+    let playbackHead;
+    let headphoneGroup;
+    let micGroup;
+    let rigGroup;
     let animationFrame = 0;
     let resizeObserver;
     let disposed = false;
@@ -1906,42 +1909,22 @@ function SetupThreeScene({ step }) {
       const THREE = await import('three');
       if (disposed || !canvasRef.current) return;
 
-      const matteGreen = new THREE.MeshStandardMaterial({ color: 0x214b2f, roughness: 0.82 });
-      const bambooMaterial = new THREE.MeshStandardMaterial({ color: 0x2f9c5b, roughness: 0.62, metalness: 0.02 });
-      const bambooRingMaterial = new THREE.MeshStandardMaterial({ color: 0x16391f, roughness: 0.7 });
-      const leafMaterial = new THREE.MeshStandardMaterial({ color: 0x5fbd66, roughness: 0.74, side: THREE.DoubleSide });
-      const pathMaterial = new THREE.MeshStandardMaterial({ color: 0x1a261d, roughness: 0.88 });
-      const whiteFur = new THREE.MeshStandardMaterial({ color: 0xf1eee3, roughness: 0.68 });
-      const blackFur = new THREE.MeshStandardMaterial({ color: 0x070807, roughness: 0.48, metalness: 0.08 });
-      const ferroMaterial = new THREE.MeshStandardMaterial({
-        color: 0x050606,
-        emissive: 0x06221d,
-        metalness: 0.72,
-        roughness: 0.2
-      });
-      const waterMaterial = new THREE.MeshStandardMaterial({
-        color: 0x0c5e65,
-        emissive: 0x021918,
-        metalness: 0.14,
+      const benchMaterial = new THREE.MeshStandardMaterial({ color: 0x0a0e13, roughness: 0.82, metalness: 0.18 });
+      const rackMaterial = new THREE.MeshStandardMaterial({ color: 0x111923, roughness: 0.66, metalness: 0.32 });
+      const darkMetal = new THREE.MeshStandardMaterial({ color: 0x05080c, roughness: 0.54, metalness: 0.58 });
+      const tealMaterial = new THREE.MeshStandardMaterial({ color: 0x12c99a, emissive: 0x064f43, roughness: 0.34, metalness: 0.18 });
+      const amberMaterial = new THREE.MeshStandardMaterial({ color: 0xf6b13d, emissive: 0x5d3004, roughness: 0.36, metalness: 0.12 });
+      const violetMaterial = new THREE.MeshStandardMaterial({ color: 0x8d7aff, emissive: 0x251c66, roughness: 0.3, metalness: 0.16 });
+      const glassMaterial = new THREE.MeshStandardMaterial({
+        color: 0x142330,
+        emissive: 0x03151f,
         roughness: 0.18,
+        metalness: 0.24,
         transparent: true,
-        opacity: 0.62
+        opacity: 0.58
       });
-      const rippleMaterial = new THREE.MeshBasicMaterial({ color: 0x8df7dd, transparent: true, opacity: 0.32 });
-      const reflectionWhite = new THREE.MeshStandardMaterial({
-        color: 0xbef8e4,
-        emissive: 0x063a35,
-        roughness: 0.28,
-        transparent: true,
-        opacity: 0.3
-      });
-      const reflectionBlack = new THREE.MeshStandardMaterial({
-        color: 0x03100f,
-        emissive: 0x021918,
-        roughness: 0.22,
-        transparent: true,
-        opacity: 0.36
-      });
+      const cableMaterial = new THREE.LineBasicMaterial({ color: 0x72f6d4, transparent: true, opacity: 0.38 });
+      const waveformMaterial = new THREE.LineBasicMaterial({ color: 0x9fffe3, transparent: true, opacity: 0.78 });
 
       renderer = new THREE.WebGLRenderer({
         canvas: canvasRef.current,
@@ -1953,178 +1936,161 @@ function SetupThreeScene({ step }) {
       renderer.setClearColor(0x000000, 0);
 
       scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x06120d, 0.044);
-      camera = new THREE.PerspectiveCamera(52, 1, 0.1, 120);
-      camera.position.set(0, 1.2, 8.4);
+      scene.fog = new THREE.FogExp2(0x070b10, 0.05);
+      camera = new THREE.PerspectiveCamera(48, 1, 0.1, 120);
+      camera.position.set(0.65, 1.35, 8.2);
 
-      scene.add(new THREE.HemisphereLight(0xbaf3e4, 0x102416, 1.15));
-      const moon = new THREE.DirectionalLight(0xd8fff0, 1.8);
-      moon.position.set(-2.4, 5.8, 5.2);
-      scene.add(moon);
-      const pondGlow = new THREE.PointLight(0x20c9a9, 2.2, 12);
-      pondGlow.position.set(0, -0.3, -4.2);
-      scene.add(pondGlow);
+      scene.add(new THREE.HemisphereLight(0xd5fff7, 0x0a1018, 0.95));
+      const keyLight = new THREE.DirectionalLight(0xd8fff7, 1.5);
+      keyLight.position.set(-3.6, 5.2, 4.6);
+      scene.add(keyLight);
+      const tealGlow = new THREE.PointLight(0x12c99a, 2.4, 12);
+      tealGlow.position.set(-2.6, 0.1, -1.8);
+      scene.add(tealGlow);
+      const amberGlow = new THREE.PointLight(0xf6b13d, 1.4, 9);
+      amberGlow.position.set(3.1, 1.4, -2.7);
+      scene.add(amberGlow);
+      const violetGlow = new THREE.PointLight(0x8d7aff, 1.2, 8);
+      violetGlow.position.set(0.2, 2.2, -4.1);
+      scene.add(violetGlow);
 
       world = new THREE.Group();
       scene.add(world);
 
-      const ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 26), matteGreen);
-      ground.rotation.x = -Math.PI / 2;
-      ground.position.set(0, -1.34, -3.5);
-      world.add(ground);
+      const bench = new THREE.Mesh(new THREE.PlaneGeometry(28, 22), benchMaterial);
+      bench.rotation.x = -Math.PI / 2;
+      bench.position.set(0, -1.34, -2.4);
+      world.add(bench);
 
-      const path = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 12), pathMaterial);
-      path.rotation.x = -Math.PI / 2;
-      path.position.set(0, -1.325, 0.3);
-      path.scale.x = 0.72;
-      world.add(path);
+      const floorGrid = new THREE.GridHelper(18, 34, 0x12c99a, 0x24313a);
+      floorGrid.position.set(0, -1.31, -2.4);
+      floorGrid.material.transparent = true;
+      floorGrid.material.opacity = 0.18;
+      world.add(floorGrid);
 
-      pond = new THREE.Mesh(new THREE.CircleGeometry(2.35, 96), waterMaterial);
-      pond.rotation.x = -Math.PI / 2;
-      pond.position.set(0, -1.27, -4.2);
-      world.add(pond);
-
-      rippleGroup = new THREE.Group();
-      [0.7, 1.15, 1.65, 2.05].forEach((radius, index) => {
-        const ripple = new THREE.Mesh(new THREE.TorusGeometry(radius, 0.01, 8, 128), rippleMaterial.clone());
-        ripple.rotation.x = Math.PI / 2;
-        ripple.position.set(0, -1.245, -4.2);
-        ripple.userData = { baseRadius: radius, offset: index * 0.7 };
-        rippleGroup.add(ripple);
+      rigGroup = new THREE.Group();
+      const rackBack = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.2, 0.16), rackMaterial);
+      rackBack.position.set(3.4, 0.06, -2.7);
+      rigGroup.add(rackBack);
+      [-0.62, 0, 0.62].forEach((offset, panelIndex) => {
+        const panel = new THREE.Mesh(new THREE.BoxGeometry(2.08, 0.44, 0.12), darkMetal);
+        panel.position.set(3.4, -0.55 + panelIndex * 0.62, -2.56);
+        rigGroup.add(panel);
+        [0, 1, 2, 3].forEach((knobIndex) => {
+          const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.04, 18), panelIndex === 1 ? amberMaterial : tealMaterial);
+          knob.rotation.x = Math.PI / 2;
+          knob.position.set(2.6 + knobIndex * 0.28, -0.55 + panelIndex * 0.62, -2.48);
+          rigGroup.add(knob);
+        });
+        const meter = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.13, 0.035), panelIndex === 2 ? violetMaterial : tealMaterial);
+        meter.position.set(3.78, -0.55 + panelIndex * 0.62, -2.47);
+        meter.userData = { pulse: panelIndex + 1 };
+        rigGroup.add(meter);
       });
-      world.add(rippleGroup);
+      world.add(rigGroup);
 
-      bambooGroup = new THREE.Group();
-      for (let index = 0; index < 42; index += 1) {
-        const side = index % 2 === 0 ? -1 : 1;
-        const row = Math.floor(index / 2);
-        const x = side * (2.0 + (row % 5) * 0.64 + Math.sin(row * 1.37) * 0.22);
-        const z = 3.1 - row * 0.48 + Math.cos(row * 0.73) * 0.24;
-        const height = 4.9 + (row % 6) * 0.32;
-        const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.075, height, 12), bambooMaterial);
-        stalk.position.set(x, -1.3 + height / 2, z);
-        stalk.rotation.z = side * (0.035 + Math.sin(row) * 0.018);
-        stalk.userData = { seed: row * 0.37, side };
-        bambooGroup.add(stalk);
+      headphoneGroup = new THREE.Group();
+      const band = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.042, 14, 78, Math.PI), darkMetal);
+      band.rotation.z = Math.PI;
+      band.position.set(0, 0.18, 0);
+      headphoneGroup.add(band);
+      [-0.62, 0.62].forEach((x) => {
+        const cup = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.68, 0.28), darkMetal);
+        cup.position.set(x, -0.28, 0);
+        headphoneGroup.add(cup);
+        const pad = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.44, 0.32), glassMaterial);
+        pad.position.set(x, -0.28, 0.08);
+        headphoneGroup.add(pad);
+      });
+      headphoneGroup.position.set(-2.9, -0.33, -0.9);
+      headphoneGroup.rotation.set(-0.18, 0.42, -0.08);
+      world.add(headphoneGroup);
 
-        for (let node = 0; node < 5; node += 1) {
-          const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.082, 0.082, 0.026, 12), bambooRingMaterial);
-          ring.position.set(x, -0.55 + node * (height / 6), z);
-          ring.rotation.z = stalk.rotation.z;
-          bambooGroup.add(ring);
-        }
+      micGroup = new THREE.Group();
+      const micBody = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.82, 26), darkMetal);
+      micBody.rotation.z = 0.05;
+      micGroup.add(micBody);
+      const micGrille = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.2, 26), tealMaterial);
+      micGrille.position.y = 0.48;
+      micGroup.add(micGrille);
+      const micStand = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.9, 14), rackMaterial);
+      micStand.position.y = -0.78;
+      micGroup.add(micStand);
+      const micBase = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.06, 36), rackMaterial);
+      micBase.position.y = -1.24;
+      micGroup.add(micBase);
+      micGroup.position.set(-1.35, 0.05, -2.7);
+      micGroup.rotation.y = -0.32;
+      world.add(micGroup);
 
-        for (let leafIndex = 0; leafIndex < 3; leafIndex += 1) {
-          const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.68, 4), leafMaterial);
-          leaf.position.set(
-            x + side * (0.22 + leafIndex * 0.18),
-            -1.3 + height * (0.72 + leafIndex * 0.06),
-            z + Math.sin(leafIndex + row) * 0.22
-          );
-          leaf.rotation.set(0.8 + leafIndex * 0.18, 0, side * (1.2 + leafIndex * 0.35));
-          leaf.userData = { seed: row + leafIndex * 0.8, side };
-          bambooGroup.add(leaf);
-        }
+      meterGroup = new THREE.Group();
+      for (let index = 0; index < 18; index += 1) {
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.48, 0.12), index % 6 === 0 ? amberMaterial : tealMaterial);
+        bar.position.set(-1.9 + index * 0.22, -0.95, -3.35);
+        bar.userData = { seed: index * 0.41, base: 0.18 + (index % 5) * 0.12 };
+        meterGroup.add(bar);
       }
-      world.add(bambooGroup);
+      world.add(meterGroup);
 
-      const createPanda = ({ reflected = false } = {}) => {
-        const group = new THREE.Group();
-        const white = reflected ? reflectionWhite : whiteFur;
-        const black = reflected ? reflectionBlack : blackFur;
-        const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 28, 20), white);
-        body.scale.set(0.85, 1.05, 0.72);
-        body.position.y = -0.56;
-        group.add(body);
+      nodeGroup = new THREE.Group();
+      const routePoints = [
+        new THREE.Vector3(-3.05, -0.08, -0.95),
+        new THREE.Vector3(-1.35, 0.2, -2.7),
+        new THREE.Vector3(0.22, -0.28, -3.2),
+        new THREE.Vector3(1.72, 0.22, -2.55),
+        new THREE.Vector3(3.38, 0.1, -2.42)
+      ];
+      routePoints.forEach((point, index) => {
+        const node = new THREE.Mesh(new THREE.SphereGeometry(0.09 + index * 0.006, 24, 16), index === 2 ? violetMaterial : index === 4 ? amberMaterial : tealMaterial);
+        node.position.copy(point);
+        node.userData = { index };
+        nodeGroup.add(node);
+      });
+      world.add(nodeGroup);
 
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 28, 20), white);
-        head.position.y = -0.05;
-        group.add(head);
-
-        [['leftEar', -0.24], ['rightEar', 0.24]].forEach(([name, x]) => {
-          const ear = new THREE.Mesh(new THREE.SphereGeometry(0.12, 18, 12), black);
-          ear.position.set(x, 0.22, -0.02);
-          ear.userData = { name };
-          group.add(ear);
-        });
-
-        [['leftEye', -0.12], ['rightEye', 0.12]].forEach(([name, x]) => {
-          const patch = new THREE.Mesh(new THREE.SphereGeometry(0.09, 18, 12), black);
-          patch.scale.set(1.05, 0.68, 0.34);
-          patch.position.set(x, -0.03, 0.27);
-          patch.userData = { name };
-          group.add(patch);
-        });
-
-        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.052, 14, 10), black);
-        nose.scale.set(1.15, 0.7, 0.52);
-        nose.position.set(0, -0.11, 0.31);
-        group.add(nose);
-
-        [['leftArm', -0.36], ['rightArm', 0.36]].forEach(([name, x]) => {
-          const limb = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), black);
-          limb.scale.set(0.58, 1.3, 0.55);
-          limb.position.set(x, -0.5, 0.03);
-          limb.userData = { name };
-          group.add(limb);
-        });
-
-        if (reflected) {
-          [['leftBatEar', -0.25], ['rightBatEar', 0.25]].forEach(([name, x]) => {
-            const batEar = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.55, 3), black);
-            batEar.position.set(x, 0.48, 0.02);
-            batEar.rotation.z = x < 0 ? 0.28 : -0.28;
-            batEar.userData = { name };
-            group.add(batEar);
-          });
-        }
-
-        return group;
-      };
-
-      panda = createPanda();
-      panda.position.set(0, -0.24, 1.05);
-      panda.rotation.y = Math.PI;
-      world.add(panda);
-
-      reflection = createPanda({ reflected: true });
-      reflection.position.set(0, -1.13, -4.12);
-      reflection.scale.set(0.88, 0.12, 0.88);
-      reflection.rotation.x = Math.PI;
-      reflection.userData = { materials: [reflectionWhite, reflectionBlack] };
-      world.add(reflection);
-
-      ferroGroup = new THREE.Group();
-      for (let index = 0; index < 74; index += 1) {
-        const drop = new THREE.Mesh(
-          new THREE.SphereGeometry(0.035 + (index % 5) * 0.009, 14, 10),
-          ferroMaterial
+      cableGroup = new THREE.Group();
+      for (let index = 0; index < routePoints.length - 1; index += 1) {
+        const cable = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints([routePoints[index], routePoints[index + 1]]),
+          cableMaterial.clone()
         );
-        drop.userData = {
-          angle: index * 0.54,
-          radius: 0.45 + (index % 9) * 0.055,
-          lane: index % 3
-        };
-        ferroGroup.add(drop);
+        cable.userData = { index };
+        cableGroup.add(cable);
       }
-      world.add(ferroGroup);
+      world.add(cableGroup);
 
-      const fireflyGeometry = new THREE.BufferGeometry();
-      const fireflyPositions = new Float32Array(360 * 3);
-      for (let index = 0; index < 360; index += 1) {
-        const lane = index % 2 === 0 ? -1 : 1;
-        fireflyPositions[index * 3] = lane * (1.4 + (index % 19) * 0.24);
-        fireflyPositions[index * 3 + 1] = -0.1 + (index % 23) * 0.15;
-        fireflyPositions[index * 3 + 2] = 3.6 - (index % 41) * 0.22;
+      routeGroup = new THREE.Group();
+      waveform = new THREE.Line(new THREE.BufferGeometry(), waveformMaterial);
+      const waveformPoints = new Float32Array(96 * 3);
+      for (let index = 0; index < 96; index += 1) {
+        const x = -4.4 + index * 0.092;
+        waveformPoints[index * 3] = x;
+        waveformPoints[index * 3 + 1] = 0.32;
+        waveformPoints[index * 3 + 2] = -4.15;
       }
-      fireflyGeometry.setAttribute('position', new THREE.BufferAttribute(fireflyPositions, 3));
-      fireflies = new THREE.Points(
-        fireflyGeometry,
-        new THREE.PointsMaterial({ color: 0xf6d46c, size: 0.032, transparent: true, opacity: 0.72 })
+      waveform.geometry.setAttribute('position', new THREE.BufferAttribute(waveformPoints, 3));
+      routeGroup.add(waveform);
+      playbackHead = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.76, 0.045), amberMaterial);
+      playbackHead.position.set(-4.4, 0.32, -4.15);
+      routeGroup.add(playbackHead);
+      world.add(routeGroup);
+
+      const particleGeometry = new THREE.BufferGeometry();
+      const particlePositions = new Float32Array(240 * 3);
+      for (let index = 0; index < 240; index += 1) {
+        particlePositions[index * 3] = -4.8 + (index % 40) * 0.24;
+        particlePositions[index * 3 + 1] = -0.82 + (index % 19) * 0.12;
+        particlePositions[index * 3 + 2] = -4.55 + Math.floor(index / 40) * 0.72;
+      }
+      particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+      signalParticles = new THREE.Points(
+        particleGeometry,
+        new THREE.PointsMaterial({ color: 0x9fffe3, size: 0.028, transparent: true, opacity: 0.54 })
       );
-      world.add(fireflies);
+      world.add(signalParticles);
 
       const resize = () => {
+        if (!canvasRef.current) return;
         const rect = canvasRef.current.getBoundingClientRect();
         const width = Math.max(1, Math.floor(rect.width));
         const height = Math.max(1, Math.floor(rect.height));
@@ -2142,60 +2108,57 @@ function SetupThreeScene({ step }) {
         const activeStep = stepRef.current;
         const now = performance.now() * 0.001;
         const progress = activeStep / 3;
-        const cameraTargetZ = 8.2 - progress * 2.15;
-        const cameraTargetY = 1.28 + progress * 0.28;
-        const lookTarget = new THREE.Vector3(0, -0.45 + progress * 0.18, -1.0 - progress * 2.25);
-        camera.position.x += ((reducedMotion ? 0 : pointer.x * 0.36) - camera.position.x) * 0.035;
-        camera.position.y += ((reducedMotion ? cameraTargetY : cameraTargetY + pointer.y * -0.18) - camera.position.y) * 0.035;
+        const cameraTargetX = 0.6 + progress * 0.55;
+        const cameraTargetZ = 8.2 - progress * 1.8;
+        const cameraTargetY = 1.35 + progress * 0.22;
+        const lookTarget = new THREE.Vector3(0.35 + progress * 0.65, -0.28 + progress * 0.16, -2.45 - progress * 0.65);
+        camera.position.x += ((reducedMotion ? cameraTargetX : cameraTargetX + pointer.x * 0.26) - camera.position.x) * 0.035;
+        camera.position.y += ((reducedMotion ? cameraTargetY : cameraTargetY + pointer.y * -0.14) - camera.position.y) * 0.035;
         camera.position.z += (cameraTargetZ - camera.position.z) * 0.035;
         camera.lookAt(lookTarget);
 
-        panda.position.z += ((1.05 - progress * 3.55) - panda.position.z) * 0.04;
-        panda.position.y = -0.24 + Math.sin(now * 4.6) * (reducedMotion ? 0.006 : 0.028);
-        panda.rotation.y = Math.PI + Math.sin(now * 1.3) * 0.06;
-
-        reflection.userData.materials.forEach((material) => {
-          material.opacity += ((activeStep >= 2 ? 0.48 : 0.16) - material.opacity) * 0.04;
-        });
-        reflection.position.y = -1.13 + Math.sin(now * 1.4) * 0.012;
-        reflection.rotation.z = Math.sin(now * 0.9) * 0.025;
-
-        pond.rotation.z += reducedMotion ? 0.0002 : 0.0011;
-        rippleGroup.children.forEach((ripple, index) => {
-          const scale = 1 + Math.sin(now * 1.2 + ripple.userData.offset) * 0.055 + activeStep * 0.02;
-          ripple.scale.setScalar(scale);
-          ripple.material.opacity = 0.18 + Math.sin(now * 1.6 + index) * 0.08 + activeStep * 0.03;
+        meterGroup.children.forEach((bar, index) => {
+          const activity = Math.max(0.18, bar.userData.base + Math.sin(now * 2.4 + bar.userData.seed + activeStep) * 0.32 + activeStep * 0.06);
+          bar.scale.y += (activity - bar.scale.y) * 0.1;
+          bar.position.y = -1.18 + bar.scale.y * 0.26;
+          bar.material.emissiveIntensity = 0.55 + Math.sin(now * 2 + index) * 0.2;
         });
 
-        bambooGroup.children.forEach((item) => {
-          const seed = item.userData.seed || 0;
-          const side = item.userData.side || 1;
-          item.rotation.z += Math.sin(now * 0.85 + seed) * side * (reducedMotion ? 0.000005 : 0.000035);
+        nodeGroup.children.forEach((node) => {
+          const distance = Math.abs(node.userData.index - activeStep);
+          const target = distance <= 1 ? 1.18 : 0.86;
+          node.scale.setScalar(node.scale.x + (target - node.scale.x) * 0.08);
+          node.material.emissiveIntensity = distance <= 1 ? 0.9 : 0.35;
+        });
+        cableGroup.children.forEach((cable) => {
+          const isActive = cable.userData.index <= activeStep;
+          cable.material.opacity += ((isActive ? 0.82 : 0.24) - cable.material.opacity) * 0.08;
         });
 
-        ferroGroup.children.forEach((drop, index) => {
-          const data = drop.userData;
-          const audioPulse = 1 + Math.sin(now * 3.2 + index) * (reducedMotion ? 0.04 : 0.18);
-          const orbit = data.angle + now * (0.8 + activeStep * 0.18);
-          const laneZ = activeStep < 2 ? 0.5 - data.lane * 0.75 - progress * 2.1 : -4.05;
-          const orbitRadius = data.radius + activeStep * 0.08;
-          drop.position.set(
-            Math.cos(orbit) * orbitRadius,
-            -0.86 + Math.sin(orbit * 1.7) * 0.34,
-            laneZ + Math.sin(orbit) * (activeStep < 2 ? 0.34 : 0.24)
-          );
-          drop.scale.setScalar(audioPulse);
-        });
-        ferroGroup.rotation.y += reducedMotion ? 0.0005 : 0.002 + activeStep * 0.0004;
-
-        const positions = fireflies.geometry.attributes.position.array;
-        for (let index = 0; index < positions.length; index += 3) {
-          positions[index + 1] += Math.sin(now + index) * 0.0008;
-          positions[index + 2] += reducedMotion ? 0.0006 : 0.0022;
-          if (positions[index + 2] > 4.2) positions[index + 2] = -5.6;
+        const waveformPositions = waveform.geometry.attributes.position.array;
+        for (let index = 0; index < waveformPositions.length; index += 3) {
+          const lane = index / 3;
+          waveformPositions[index + 1] = 0.28 + Math.sin(now * (2.4 + activeStep * 0.35) + lane * 0.32) * (0.06 + activeStep * 0.025);
         }
-        fireflies.geometry.attributes.position.needsUpdate = true;
-        fireflies.rotation.y = Math.sin(now * 0.28) * 0.05;
+        waveform.geometry.attributes.position.needsUpdate = true;
+        playbackHead.position.x = -4.4 + ((now * (0.45 + activeStep * 0.08)) % 1) * 8.6;
+        playbackHead.scale.y = 0.9 + Math.sin(now * 5) * 0.08;
+
+        const positions = signalParticles.geometry.attributes.position.array;
+        for (let index = 0; index < positions.length; index += 3) {
+          positions[index] += reducedMotion ? 0.0008 : 0.002 + activeStep * 0.0004;
+          positions[index + 1] += Math.sin(now + index) * 0.0005;
+          if (positions[index] > 4.9) positions[index] = -4.8;
+        }
+        signalParticles.geometry.attributes.position.needsUpdate = true;
+        signalParticles.rotation.y = Math.sin(now * 0.24) * 0.04;
+        headphoneGroup.rotation.y = 0.42 + Math.sin(now * 0.65) * (reducedMotion ? 0.01 : 0.04);
+        micGroup.rotation.z = Math.sin(now * 1.1) * (reducedMotion ? 0.002 : 0.012);
+        rigGroup.children.forEach((item) => {
+          if (item.userData.pulse) {
+            item.scale.x = 0.75 + Math.sin(now * 2.1 + item.userData.pulse) * 0.12 + activeStep * 0.04;
+          }
+        });
 
         renderer.render(scene, camera);
         animationFrame = requestAnimationFrame(animate);
@@ -2223,7 +2186,7 @@ function SetupThreeScene({ step }) {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="setup-3d-canvas" aria-label="CueForge bamboo setup scene" />;
+  return <canvas ref={canvasRef} className="setup-3d-canvas" aria-label="CueForge audio setup scene" />;
 }
 
 function PersonalHearingModel() {
@@ -3736,13 +3699,13 @@ function SettingsPage({ settings, onUpdate, onReset, onRerunSetup, onOpen, uiNot
         <div className="settings-stack">
           <SettingsToggle
             label="Quiet mode"
-            detail="Blocks background soundwalks and cinematic video audio. Mic feedback and headphone checks still require a click."
+            detail="Blocks background test-bed audio and cinematic video audio. Mic feedback and headphone checks still require a click."
             checked={normalized.quietMode}
             onChange={(value) => onUpdate({ quietMode: value })}
           />
           <SettingsToggle
-            label="Allow background soundwalk"
-            detail="Lets the first-run bamboo setup bed play after you press Start soundwalk."
+            label="Allow background test bed"
+            detail="Lets the first-run audio setup bed play after you press Start test bed."
             checked={normalized.backgroundAudio}
             onChange={(value) => onUpdate({ backgroundAudio: value })}
           />

@@ -48,7 +48,7 @@ export function buildAudioPolicySummary(settings = {}) {
   }
 
   const enabled = [
-    normalized.backgroundAudio ? 'background soundwalks' : '',
+    normalized.backgroundAudio ? 'background test-bed audio' : '',
     normalized.cinematicVideoAudio ? 'cinematic video audio' : ''
   ].filter(Boolean);
 

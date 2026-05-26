@@ -40,7 +40,7 @@ select {
 .setup-journey-shell {
   min-height: 100vh;
   overflow: hidden;
-  background: #050c10;
+  background: #05080d;
 }
 
 .setup-journey {
@@ -49,9 +49,8 @@ select {
   overflow: hidden;
   isolation: isolate;
   background:
-    radial-gradient(circle at 70% 22%, rgba(246, 177, 61, 0.16), transparent 26%),
-    radial-gradient(circle at 50% 74%, rgba(18, 201, 154, 0.24), transparent 28%),
-    linear-gradient(135deg, #04100b 0%, #092018 48%, #10140d 100%);
+    linear-gradient(115deg, rgba(18, 201, 154, 0.12) 0 1px, transparent 1px 22%),
+    linear-gradient(135deg, #05080d 0%, #11141d 48%, #071411 100%);
 }
 
 .setup-journey::before {
@@ -60,10 +59,12 @@ select {
   inset: 0;
   z-index: -1;
   background-image:
-    linear-gradient(90deg, transparent 0 11%, rgba(92, 189, 102, 0.08) 11% 12%, transparent 12% 22%),
-    linear-gradient(rgba(186, 243, 228, 0.035) 1px, transparent 1px);
-  background-size: 140px 100%, 100% 96px;
-  mask-image: linear-gradient(90deg, rgba(0,0,0,0.85), rgba(0,0,0,0.28) 48%, transparent 92%);
+    linear-gradient(90deg, rgba(159, 255, 227, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(141, 122, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(120deg, transparent 0 46%, rgba(246, 177, 61, 0.1) 46% 47%, transparent 47% 100%);
+  background-size: 118px 100%, 100% 88px, 340px 100%;
+  mask-image: linear-gradient(90deg, rgba(0,0,0,0.82), rgba(0,0,0,0.46) 52%, transparent 96%);
+  opacity: 0.82;
   pointer-events: none;
 }
 
@@ -82,18 +83,18 @@ select {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(90deg, rgba(4,16,11,0.9), rgba(4,16,11,0.35) 52%, rgba(4,16,11,0.68)),
-    linear-gradient(180deg, transparent 42%, rgba(4,16,11,0.68));
+    linear-gradient(90deg, rgba(5,8,13,0.95), rgba(5,8,13,0.44) 48%, rgba(5,8,13,0.78)),
+    linear-gradient(180deg, rgba(5,8,13,0.02) 35%, rgba(5,8,13,0.76));
   pointer-events: none;
 }
 
 .setup-journey-content {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(320px, 0.88fr) minmax(420px, 0.82fr);
-  gap: 44px;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(430px, 0.82fr);
+  gap: 52px;
   align-items: center;
-  width: min(1280px, calc(100vw - 56px));
+  width: min(1320px, calc(100vw - 56px));
   margin: 0 auto;
   padding: 48px 0;
 }
@@ -116,13 +117,14 @@ select {
   width: fit-content;
   max-width: 100%;
   padding: 8px 10px;
-  border: 1px solid rgba(18,201,154,0.24);
+  border: 1px solid rgba(159,255,227,0.22);
   border-radius: 8px;
-  background: rgba(5,12,16,0.54);
+  background: rgba(5,8,13,0.62);
   color: #baf3e4;
   font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.025);
 }
 
 .setup-kicker strong {
@@ -131,14 +133,16 @@ select {
 
 .setup-copy h1 {
   max-width: 760px;
-  font-size: clamp(46px, 5.4vw, 82px);
+  font-size: clamp(46px, 5.15vw, 80px);
   line-height: 0.95;
+  letter-spacing: 0;
 }
 
 .setup-copy p {
   max-width: 650px;
-  color: #c4dadb;
+  color: #c9d6d8;
   font-size: 17px;
+  line-height: 1.55;
 }
 
 .setup-audio-controls {
@@ -148,9 +152,10 @@ select {
   align-items: center;
   max-width: 620px;
   padding: 12px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(159,255,227,0.14);
   border-radius: 8px;
-  background: rgba(255,255,255,0.055);
+  background: rgba(8,15,21,0.7);
+  box-shadow: 0 18px 60px rgba(0,0,0,0.26);
 }
 
 .setup-audio-controls span {
@@ -170,9 +175,9 @@ select {
 .setup-meta-grid div {
   min-width: 0;
   padding: 11px 12px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(159,255,227,0.1);
   border-radius: 8px;
-  background: rgba(5,12,16,0.56);
+  background: rgba(8,15,21,0.66);
 }
 
 .setup-meta-grid span,
@@ -204,18 +209,24 @@ select {
   display: grid;
   gap: 4px;
   padding: 14px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(159,255,227,0.1);
   border-radius: 8px;
   color: #c9d7d9;
   text-align: left;
-  background: rgba(255,255,255,0.055);
+  background: rgba(8,15,21,0.58);
   cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.setup-steps button:hover {
+  border-color: rgba(159,255,227,0.22);
+  transform: translateY(-1px);
 }
 
 .setup-steps button.selected {
   color: #edf8f7;
-  border-color: rgba(18,201,154,0.58);
-  background: rgba(18,201,154,0.15);
+  border-color: rgba(18,201,154,0.62);
+  background: linear-gradient(135deg, rgba(18,201,154,0.22), rgba(141,122,255,0.1));
 }
 
 .setup-steps button.done {
@@ -238,9 +249,11 @@ select {
   display: grid;
   align-content: start;
   padding: 22px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(159,255,227,0.14);
   border-radius: 8px;
-  background: rgba(8, 17, 22, 0.82);
+  background:
+    linear-gradient(145deg, rgba(11, 18, 25, 0.9), rgba(6, 12, 17, 0.84)),
+    rgba(8, 17, 22, 0.86);
   box-shadow: 0 28px 110px rgba(0,0,0,0.44);
   backdrop-filter: blur(18px);
 }
@@ -280,9 +293,9 @@ select {
   align-items: center;
   min-height: 44px;
   padding: 10px 12px;
-  border: 1px solid rgba(255,255,255,0.09);
+  border: 1px solid rgba(159,255,227,0.1);
   border-radius: 8px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.045);
   color: #d9e7e8;
   font-weight: 800;
 }
