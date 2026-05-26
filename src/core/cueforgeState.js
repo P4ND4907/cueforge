@@ -311,7 +311,7 @@ export function buildCueForgeState({
     calibration: {
       hearingModel: hearing,
       repeatedHearingAnswers,
-      blindMatch: blindMatch || (preferenceModel?.roundsCompleted ? { complete: preferenceModel.roundsCompleted >= 5, preferenceModel } : null),
+      blindMatch: blindMatch || (preferenceModel?.roundsCompleted ? { complete: preferenceModel.roundsCompleted >= 9, preferenceModel } : null),
       preferenceModel: preferenceModel || blindMatch?.preferenceModel || null,
       maskingLab,
       playerTrial

@@ -136,7 +136,7 @@ The product should stay honest: no hidden driver changes, no sketchy anti-cheat 
 - Sound-scene intelligence guardrails that separate post-mix inference from true game-world metadata.
 - IEM/headphone checks for left, right, center, and sweep testing.
 - Auto Calibration wizard for output target, game focus, treble sensitivity, bass preference, footstep focus, and mic boom/noise.
-- Sound Match, the this-or-that ear test that learns a personal EQ curve and hidden preference model for EQ, dynamics, and spatial recommendations.
+- Sound Match, the nine-round this-or-that ear test with too-close choices, hidden repeat checks, and a personal preference model for EQ, dynamics, and spatial recommendations.
 - Tactical Masking Lab that stress-tests footsteps, comms, and IEM sharpness against masking scenarios.
 - Report Lab for real player testing: create redacted issue reports, import them later, and replay the exact EQ/game/source/mic state that caused a problem.
 - EQ Studio with 10-band editing, local source profiles, and Equalizer APO export.
@@ -228,7 +228,7 @@ The generated bridge report is local machine data. It is ignored by Git and excl
 5. Use `Left`, `Right`, `Center`, and `Sweep` to check channel balance and harsh peaks.
 6. Open `Hearing Model`, keep volume low, test left/right ears, and export the hearing profile.
 7. Open `Calibration`, generate autotune, and apply it to EQ Studio.
-8. Open `Sound Match`, run the this-or-that rounds, and apply the learned curve.
+8. Open `Sound Match`, run the standard 9-round check, and apply the learned curve only when repeat consistency is clean.
 9. Open `Masking Lab`, pick a scenario, and apply the anti-masking curve.
 10. Open `Player Trial`, run the guided match script, fill the ratings, and export the tester packet.
 11. Open `Beta Check-in`, record a short opt-in evidence clip if the tester agrees, and export the local evidence JSON.

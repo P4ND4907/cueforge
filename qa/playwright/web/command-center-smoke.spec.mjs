@@ -61,6 +61,16 @@ test('guided web flow renders, navigates, and avoids runtime/layout failures', a
   await expect(page.getByRole('button', { name: /Export tester packet/i })).toBeVisible();
   await expectNoHorizontalOverflow(page, 'player trial');
 
+  await openSimpleRoute(page, 'blindmatch', 'Sound Match');
+  await expect(page.getByText(/Round 1 of 9/i).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Too close \/ no clear difference/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Apply learned EQ/i })).toBeDisabled();
+  await page.getByRole('button', { name: /A: More footstep bite/i }).click();
+  await expect(page.getByText(/Round 2 of 9/i).first()).toBeVisible();
+  await page.getByRole('button', { name: /Too close \/ no clear difference/i }).click();
+  await expect(page.getByText(/Round 3 of 9/i).first()).toBeVisible();
+  await expectNoHorizontalOverflow(page, 'sound match');
+
   await openSimpleRoute(page, 'reports', 'Report Lab');
   await expect(page.getByRole('button', { name: /Create redacted report/i })).toBeVisible();
   await page.getByRole('button', { name: /Create redacted report/i }).click();

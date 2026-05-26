@@ -38,7 +38,11 @@ describe('personalization lab inputs', () => {
       bass_vs_comms: 'b',
       wide_vs_center: 'b',
       detail_vs_fatigue: 'b',
-      direction_vs_body: 'a'
+      direction_vs_body: 'a',
+      masking_cut_vs_cue_boost: 'a',
+      voice_separation_vs_game_body: 'a',
+      repeat_footstep_vs_comfort: 'b',
+      repeat_bass_vs_comms: 'a'
     }, Array(10).fill(0));
     const maskingLab = createMaskingTune(Array(10).fill(0), 'footsteps-under-explosion');
     const playerTrial = buildTesterPacket({
@@ -69,6 +73,7 @@ describe('personalization lab inputs', () => {
     expect(lab.safety.playback.safe).toBe(true);
     expect(lab.inputs.hearing.ready).toBe(true);
     expect(lab.inputs.preference.ready).toBe(true);
+    expect(lab.inputs.preference.consistency.contradictions).toBe(0);
     expect(lab.inputs.masking.ready).toBe(true);
     expect(lab.inputs.playerTrial.ready).toBe(true);
     expect(lab.influence.total).toBeLessThanOrEqual(1);
@@ -102,7 +107,24 @@ describe('personalization lab inputs', () => {
     expect(lab.inputs.preference.ready).toBe(false);
     expect(lab.inputs.preference.influenceWeight).toBeGreaterThan(0);
     expect(lab.inputs.preference.influenceWeight).toBeLessThan(0.2);
-    expect(lab.readiness.nextActions).toContain('Run This-or-That / Blind Match.');
+    expect(lab.readiness.nextActions).toContain('Run Sound Match.');
+  });
+
+  it('keeps five-round Sound Match previews out of strong personalization', () => {
+    const blindMatch = createBlindMatchResult({
+      footstep_vs_comfort: 'a',
+      bass_vs_comms: 'b',
+      wide_vs_center: 'b',
+      detail_vs_fatigue: 'b',
+      direction_vs_body: 'a'
+    }, Array(10).fill(0));
+    const lab = buildPersonalizationLabInputs({ blindMatch });
+
+    expect(blindMatch.completedRounds).toBe(5);
+    expect(lab.inputs.preference.present).toBe(true);
+    expect(lab.inputs.preference.ready).toBe(false);
+    expect(lab.inputs.preference.influenceWeight).toBeLessThan(0.18);
+    expect(lab.readiness.blockers).toContain('Sound Match needs the standard 9-round consistency check before strong personalization.');
   });
 
   it('refuses medical and audiometry style claims', () => {

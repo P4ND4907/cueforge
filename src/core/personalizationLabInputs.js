@@ -1,6 +1,7 @@
 import { safetyRules } from './safetyRules.js';
 
 const MEDICAL_LANGUAGE = /\b(audiogram|audiologist|audiology|audiometry|diagnos(?:e|is|tic)|hearing loss|medical|clinical|tinnitus treatment|cure)\b/i;
+const SOUND_MATCH_STANDARD_ROUNDS = 9;
 
 function clamp(value, min = 0, max = 1) {
   return Math.max(min, Math.min(max, Number(value) || 0));
@@ -98,19 +99,43 @@ function buildPreferenceInput({ blindMatch = null, preferenceModel = null } = {}
   const model = preferenceModel || blindMatch?.preferenceModel || null;
   const rounds = Number(blindMatch?.completedRounds || model?.roundsCompleted || 0);
   const modelConfidence = confidence(blindMatch?.confidence ? scoreToUnit(blindMatch.confidence) : model?.confidence, 0);
-  const influenceWeight = clamp(rounds / 12, 0, 1) * Math.max(0.35, modelConfidence) * 0.34;
+  const requiredRounds = Number(blindMatch?.requiredRounds || SOUND_MATCH_STANDARD_ROUNDS);
+  const repeatChecks = count(blindMatch?.repeatChecks);
+  const contradictions = Number(blindMatch?.contradictions || 0);
+  const noDifferenceCount = Number(blindMatch?.noDifferenceCount || model?.noDifferenceCount || 0);
+  const evidenceReady = blindMatch?.applyReadiness
+    ? Boolean(blindMatch.applyReadiness.ready)
+    : rounds >= requiredRounds && modelConfidence >= 0.65 && contradictions === 0;
+  const previewMultiplier = evidenceReady ? 1 : 0.55;
+  const contradictionMultiplier = contradictions ? 0.4 : 1;
+  const neutralMultiplier = noDifferenceCount >= 3 ? 0.75 : 1;
+  const influenceWeight = clamp(rounds / 12, 0, 1)
+    * Math.max(0.28, modelConfidence)
+    * 0.34
+    * previewMultiplier
+    * contradictionMultiplier
+    * neutralMultiplier;
 
   return {
     present: Boolean(blindMatch || model),
-    ready: rounds >= 5 && modelConfidence >= 0.35,
+    ready: evidenceReady,
     influenceWeight: Number(clamp(influenceWeight, 0, 0.34).toFixed(2)),
     roundsCompleted: rounds,
+    requiredRounds,
     confidence: Number(modelConfidence.toFixed(2)),
+    consistency: {
+      repeatChecks,
+      contradictions,
+      noDifferenceCount,
+      ready: evidenceReady
+    },
     preferenceModel: model,
     summary: blindMatch?.summary || blindMatch?.preferenceSummary || null,
-    recommendations: rounds
+    recommendations: evidenceReady
       ? ['Blend preference choices conservatively into EQ, dynamics, and spatial planning.']
-      : ['Run This-or-That / Blind Match before treating preferences as learned.']
+      : rounds
+        ? ['Finish the standard Sound Match repeat check before strong personalization.']
+      : ['Run Sound Match before treating preferences as learned.']
   };
 }
 
@@ -196,12 +221,15 @@ export function buildPersonalizationLabInputs({
   );
   const blockers = dedupe([
     playbackSafety.safe ? null : 'Playback safety is not proven for hearing-style tests.',
-    hearing.responseConsistency?.retestRecommended ? 'Hearing answers need a repeat check before strong personalization.' : null
+    hearing.responseConsistency?.retestRecommended ? 'Hearing answers need a repeat check before strong personalization.' : null,
+    preference.present && !preference.ready && preference.roundsCompleted > 0
+      ? 'Sound Match needs the standard 9-round consistency check before strong personalization.'
+      : null
   ]);
   const nextActions = dedupe([
     !playbackSafety.safe ? 'Fix test tone playback safety.' : null,
     !hearing.ready ? 'Run or repeat Hearing Model.' : null,
-    !preference.ready ? 'Run This-or-That / Blind Match.' : null,
+    !preference.ready ? 'Run Sound Match.' : null,
     !masking.ready ? 'Run Masking Lab fixture.' : null,
     !trial.ready ? 'Run Player Trial with one real match.' : null
   ]).slice(0, 5);

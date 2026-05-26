@@ -40,7 +40,7 @@ import {
 import { buildAutoTuneEq } from './autoTune.js';
 import { createAudioDnaFromState } from './audioDna.js';
 import { buildExportPack, downloadTextFile } from './exportPack.js';
-import { blindMatchRounds, createBlindMatchResult } from './blindMatch.js';
+import { SOUND_MATCH_NEUTRAL_CHOICE, blindMatchRounds, createBlindMatchResult } from './blindMatch.js';
 import { createMaskingTune, maskingScenarios } from './maskingLab.js';
 import { buildIssueReport, redactDeep, validateIssueReport } from './reportPack.js';
 import { computeSetupReadiness } from './setupReadiness.js';
@@ -3881,11 +3881,18 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
 
   const round = blindMatchRounds[roundIndex];
   const result = createBlindMatchResult(choices, baseEq);
-  const sampleLabel = (sampleKey) => (sampleKey === 'a' ? `A: ${round.labelA}` : `B: ${round.labelB}`);
+  const complete = result.completedRounds >= result.requiredRounds;
+  const applyReady = Boolean(result.applyReadiness?.ready);
+  const repeatClean = result.repeatChecks.filter((check) => check.consistent === true).length;
+  const sampleLabel = (sampleKey) => {
+    if (sampleKey === SOUND_MATCH_NEUTRAL_CHOICE) return round.neutralLabel;
+    return sampleKey === 'a' ? `A: ${round.labelA}` : `B: ${round.labelB}`;
+  };
 
   const playSample = async (sampleKey) => {
     const sample = round[sampleKey];
-    const context = new AudioContext();
+    const Context = window.AudioContext || window.webkitAudioContext;
+    const context = new Context();
     const master = context.createGain();
     const panner = context.createStereoPanner();
     master.gain.value = 0.0001;
@@ -3897,13 +3904,13 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
       const gain = context.createGain();
       oscillator.type = index === 0 ? 'triangle' : 'sine';
       oscillator.frequency.value = frequency;
-      gain.gain.value = 0.16 / (index + 1);
+      gain.gain.value = (0.13 * (sample.loudnessGain || 0.86)) / Math.sqrt(index + 1);
       oscillator.connect(gain).connect(master);
       oscillator.start(context.currentTime + index * 0.08);
       oscillator.stop(context.currentTime + 0.85 + index * 0.08);
     });
 
-    master.gain.exponentialRampToValueAtTime(0.22, context.currentTime + 0.04);
+    master.gain.exponentialRampToValueAtTime(0.18, context.currentTime + 0.04);
     master.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 1.05);
     setTimeout(() => context.close(), 1200);
     setStatus(`Played ${sampleLabel(sampleKey)}. Pick based on comfort and detail, not loudness.`);
@@ -3918,7 +3925,9 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
     if (roundIndex < blindMatchRounds.length - 1) {
       setRoundIndex(roundIndex + 1);
     }
-    setStatus(`Locked ${round.label}: ${sampleLabel(sampleKey)} felt better.`);
+    setStatus(sampleKey === SOUND_MATCH_NEUTRAL_CHOICE
+      ? `Marked ${round.label} as too close. That protects the curve from fake certainty.`
+      : `Locked ${round.label}: ${sampleLabel(sampleKey)} felt better.`);
   };
 
   const reset = () => {
@@ -3935,23 +3944,23 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
     safeSetJson('cueforge-preference-model', next.preferenceModel);
     onSavePreferenceModel?.(next.preferenceModel);
     setSavedResult(next);
-    setStatus('Sound Match profile saved into the Profile Engine.');
+    setStatus(next.applyReadiness.ready
+      ? 'Sound Match profile saved into the Profile Engine.'
+      : 'Sound Match saved as preview evidence. Repeat consistency is needed before direct apply.');
   };
 
   const exportResult = () => {
     const payload = createBlindMatchResult(choices, baseEq);
-    downloadTextFile('cueforge-blind-match.json', JSON.stringify(payload, null, 2));
+    downloadTextFile('cueforge-sound-match.json', JSON.stringify(payload, null, 2));
   };
-
-  const complete = result.completedRounds === blindMatchRounds.length;
 
   return (
     <section className="grid two">
       <Panel title="Sound Match" icon={Radio}>
-        <p>This is the eye test for your ears. Compare hidden sound pairs, pick what actually works, and CueForge turns those choices into a personal curve.</p>
+        <p>This is the eye test for your ears. Compare hidden sound pairs, pick what actually works, or mark them too close. CueForge learns a personal curve only when your choices repeat cleanly.</p>
         <div className="dna-hero">
           <strong>{round.label}</strong>
-          <span>Round {roundIndex + 1} of {blindMatchRounds.length}</span>
+          <span>Round {roundIndex + 1} of {result.requiredRounds}</span>
         </div>
         <p className="callout">{round.prompt}</p>
         <div className="blind-actions">
@@ -3959,6 +3968,7 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
           <button className="ghost" onClick={() => playSample('b')}><Play size={18} /> Play B</button>
           <button className="primary" onClick={() => choose('a')}>A: {round.labelA}</button>
           <button className="primary" onClick={() => choose('b')}>B: {round.labelB}</button>
+          <button className="ghost" onClick={() => choose(SOUND_MATCH_NEUTRAL_CHOICE)}>{round.neutralLabel}</button>
         </div>
         <p>{status}</p>
         <div className="live-actions">
@@ -3972,24 +3982,30 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
               onSavePreferenceModel?.(result.preferenceModel);
               onApply(result.eq);
             }}
-            disabled={!complete}
+            disabled={!applyReady}
           >
             <CheckCircle2 size={18} /> Apply learned EQ
           </button>
         </div>
       </Panel>
       <Panel title="Learned Curve" icon={SlidersHorizontal}>
-        <Metric label="Confidence" value={`${result.confidence}%`} tone={complete ? 'teal' : 'amber'} />
+        <Metric label="Confidence" value={`${result.confidence}%`} tone={applyReady ? 'teal' : 'amber'} />
+        <Metric label="Consistency" value={`${repeatClean}/${result.repeatChecks.length || 2}`} tone={applyReady ? 'teal' : 'amber'} />
         <Metric label="Preference" value={`${Math.round((result.preferenceModel?.confidence || 0) * 100)}%`} tone={complete ? 'teal' : 'amber'} />
         <p>{result.summary}</p>
         <div className="data-card">
           <strong>{result.preferenceSummary}</strong>
           <span>The simple choices are saved as hidden weights so the profile engine can tune EQ, dynamics, and spatial behavior together.</span>
-          <small>Footsteps {result.preferenceModel.footstepPriority || 0} / Comms {result.preferenceModel.voiceClarity || 0} / Bass {result.preferenceModel.bassImpact || 0} / Width {result.preferenceModel.spatialWidth || 0} / Comfort {result.preferenceModel.comfortPriority || 0}</small>
+          <small>Footsteps {result.preferenceModel.footstepPriority || 0} / Comms {result.preferenceModel.voiceClarity || 0} / Bass {result.preferenceModel.bassImpact || 0} / Masking {result.preferenceModel.maskingControl || 0} / Comfort {result.preferenceModel.comfortPriority || 0}</small>
+        </div>
+        <div className="data-card">
+          <strong>{result.applyReadiness.status === 'ready' ? 'Ready for controlled apply' : 'Preview evidence only'}</strong>
+          <span>{result.applyReadiness.reason}</span>
+          <small>{result.whyChips.join(' / ')}</small>
         </div>
         <div className="data-card replay-export-status">
           <strong>Replay-safe export status</strong>
-          <span>{complete ? 'Ready to export choices, preference weights, confidence, and learned EQ.' : 'Complete all rounds before the replay-safe export unlocks.'}</span>
+          <span>{complete ? 'Ready to export choices, repeat checks, preference weights, confidence, and learned EQ.' : 'Complete the standard 9-round flow before the replay-safe export unlocks.'}</span>
           <small>No raw audio is stored. The export is enough to replay the decision path.</small>
         </div>
         <div className="eq-preview">
@@ -4585,11 +4601,21 @@ function SelfTestRunner() {
     }
 
     try {
-      const choices = Object.fromEntries(blindMatchRounds.map((round) => [round.id, 'a']));
+      const choices = {
+        footstep_vs_comfort: 'a',
+        bass_vs_comms: 'b',
+        wide_vs_center: 'b',
+        detail_vs_fatigue: 'b',
+        direction_vs_body: 'a',
+        masking_cut_vs_cue_boost: 'a',
+        voice_separation_vs_game_body: 'a',
+        repeat_footstep_vs_comfort: 'b',
+        repeat_bass_vs_comms: 'a'
+      };
       const match = createBlindMatchResult(choices, [-1, 1.5, 0.5, -2, -1, 0.5, 2.5, 3.2, 1.2, -0.5]);
-      record('Blind Match learning', match.eq.length === 10 && match.completedRounds === blindMatchRounds.length ? 'pass' : 'fail', `${match.completedRounds} rounds produce a learned EQ curve.`);
+      record('Sound Match learning', match.eq.length === 10 && match.completedRounds === blindMatchRounds.length && match.applyReadiness.ready ? 'pass' : 'fail', `${match.completedRounds} rounds produce a learned EQ curve with ${match.contradictions} repeat contradictions.`);
     } catch {
-      record('Blind Match learning', 'fail', 'Blind Match failed to generate a learned curve.');
+      record('Sound Match learning', 'fail', 'Sound Match failed to generate a learned curve.');
     }
 
     try {

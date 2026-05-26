@@ -116,15 +116,19 @@ Apply readiness values:
 
 ### Adaptive Rounds
 
-The first pass keeps the existing five preference dimensions, then adds repeat and conflict checks:
+The first implemented pass uses a standard 9-round flow. The old five-round path is still a useful preview shape, but it is no longer enough for strong apply readiness:
 
 - footsteps vs comfort
 - bass impact vs comms clarity
 - wide space vs centered direction
 - detail vs fatigue
 - direction cues vs body/fullness
-- repeat check for the strongest preference
-- contradiction check for the riskiest preference
+- masking cut vs cue boost
+- voice separation vs game body
+- reversed repeat check for footsteps vs comfort
+- reversed repeat check for bass vs comms
+
+Players can mark any round as too close / no clear difference. Those answers count as evidence, but they do not push hidden preference weights. Confidence drops when too many answers are neutral or when reversed repeat checks contradict earlier choices.
 
 Game and device context can reorder or add weight:
 

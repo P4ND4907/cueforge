@@ -64,7 +64,7 @@ export function calculateReadinessScore(state = {}) {
   else nextActions.push('Complete Hearing Model.');
 
   if (state.calibration?.blindMatch?.complete) score += 10;
-  else nextActions.push('Run Blind Match.');
+  else nextActions.push('Run Sound Match.');
 
   if (state.calibration?.maskingLab?.complete) score += 10;
   else nextActions.push('Run Masking Lab.');
@@ -166,7 +166,7 @@ export function computeReadinessScoreV2({
     ),
     legacyGate('channel-check', 'Output/channel check passed', readinessState.calibration.channelCheck.passed, 15, 'Run channel check.'),
     legacyGate('hearing-model', 'Hearing Model complete', readinessState.calibration.hearingModel.complete, 10, 'Complete Hearing Model.'),
-    legacyGate('blind-match', 'Blind Match complete', readinessState.calibration.blindMatch.complete, 10, 'Run Blind Match.'),
+    legacyGate('blind-match', 'Sound Match complete', readinessState.calibration.blindMatch.complete, 10, 'Run Sound Match.'),
     legacyGate('masking-lab', 'Masking Lab complete', readinessState.calibration.maskingLab.complete, 10, 'Run Masking Lab.'),
     legacyGate('conflicts', 'No high-risk conflicts', conflictSummary.high === 0, 15, 'Open Conflict Fix Panel.'),
     legacyGate('export-report', 'Export/report ready', Boolean(readinessState.exports.apoConfig || readinessState.exports.engineManifest), 10, 'Generate export pack.')

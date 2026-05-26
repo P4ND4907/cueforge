@@ -29,20 +29,39 @@ describe('this or that preference model', () => {
     expect(model.confidence).toBe(1);
   });
 
+  it('records too-close rounds without pushing hidden weights', () => {
+    const model = updatePreferenceModel(defaultPreferenceModel, {
+      selected: 'neutral',
+      weightDelta: { footstepPriority: 2, treble: 2 },
+      updatedAt: '2026-05-23T00:00:00Z'
+    });
+
+    expect(model.roundsCompleted).toBe(1);
+    expect(model.noDifferenceCount).toBe(1);
+    expect(model.footstepPriority).toBe(0);
+    expect(model.treble).toBe(0);
+    expect(model.confidence).toBeLessThan(0.1);
+  });
+
   it('builds a replayable model from A/B choices', () => {
     const model = buildPreferenceModelFromChoices({
       footstep_vs_comfort: 'a',
       bass_vs_comms: 'b',
       wide_vs_center: 'b',
-      detail_vs_fatigue: 'b'
+      detail_vs_fatigue: 'b',
+      masking_cut_vs_cue_boost: 'a',
+      voice_separation_vs_game_body: 'a'
     }, preferenceRounds);
 
-    expect(model.roundsCompleted).toBe(4);
+    expect(preferenceRounds.length).toBeGreaterThanOrEqual(7);
+    expect(model.roundsCompleted).toBe(6);
     expect(model.footstepPriority).toBeGreaterThan(0);
     expect(model.voiceClarity).toBeGreaterThan(0);
     expect(model.centerFocus).toBeGreaterThan(0);
     expect(model.comfortPriority).toBeGreaterThan(0);
-    expect(model.confidence).toBeCloseTo(4 / 12);
+    expect(model.maskingControl).toBeGreaterThan(0);
+    expect(model.voiceSeparation).toBeGreaterThan(0);
+    expect(model.confidence).toBeGreaterThan(0.4);
   });
 
   it('turns choices into EQ, dynamics, and spatial changes without unsafe extremes', () => {

@@ -253,9 +253,11 @@ Evidence privacy remains part of the metrics contract: public packets keep deriv
 
 ## This Or That Preference Model
 
-Sound Match is now the simple player-facing layer for preference learning. The UI asks direct A/B questions such as footsteps vs comfort, bass vs comms, wide vs center, detail vs fatigue, and direction vs body.
+Sound Match is now the player-facing layer for preference learning. The standard flow uses nine hidden A/B rounds: seven preference axes plus two reversed repeat checks. Players can also mark a round as too close so CueForge does not force fake certainty into the model.
 
-Those answers produce a hidden model in `src/core/preferenceModel.js` with bounded weights for footstep priority, voice clarity, bass impact, spatial width, center focus, detail, comfort, treble, bass, and fatigue risk. The saved model lives in `cueforgeStateV2.calibration.preferenceModel` and can also be attached to the Blind Match result.
+Those answers produce a hidden model in `src/core/preferenceModel.js` with bounded weights for footstep priority, voice clarity, bass impact, masking control, cue boost, voice separation, spatial width, center focus, detail, comfort, treble, bass, and fatigue risk. The saved model lives in `cueforgeStateV2.calibration.preferenceModel` and can also be attached to the Sound Match result.
+
+`src/blindMatch.js` keeps the legacy module name for compatibility, but the exported result schema is `cueforge.sound-match-result.v2`. Result confidence now depends on completed rounds, neutral choices, hidden repeat consistency, and contradiction count. Five-round runs stay preview-only; the standard 9-round pass is required before direct apply readiness.
 
 The profile engine consumes that model before export/apply recommendations. It adjusts EQ, dynamics, and spatial planning together instead of treating Sound Match as a separate lab. Any future tuning feature that learns user preference should update this same model or translate into this shape before reaching `src/core/profileEngine.js`.
 
@@ -268,7 +270,7 @@ The contract keeps the product honest:
 - Hearing data is safe self-calibration and preference weighting, not medical audiometry.
 - Playback must be quiet, amplitude-capped, and click-to-play.
 - Repeated threshold checks can lower confidence and force a retest.
-- Blind Match, Masking Lab, and Player Trial each receive capped influence weights.
+- Sound Match, Masking Lab, and Player Trial each receive capped influence weights.
 - The profile engine can learn from player choices without letting one shaky test overdrive EQ or treble.
 
 This is the product path for personal clarity without wrecking comfort: repeated safe tests, consistency checks, conservative weights, real match proof, and no medical language.

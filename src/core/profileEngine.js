@@ -279,7 +279,7 @@ function buildStateForLegacyProfile({ game, graph, conflicts, hearing, selectedS
       channelCheck: { passed: Boolean(graph?.summary?.outputs) },
       micCheck: { ready: Boolean(graph?.summary?.inputs) },
       hearingModel: hearingAnswered >= 4 ? { ...hearing, complete: Boolean(hearing?.score?.complete || hearing?.complete || hearingAnswered >= 4) } : hearing,
-      blindMatch: preferenceModel?.roundsCompleted ? { complete: preferenceModel.roundsCompleted >= 5, preferenceModel } : null,
+      blindMatch: preferenceModel?.roundsCompleted ? { complete: preferenceModel.roundsCompleted >= 9, preferenceModel } : null,
       preferenceModel: preferenceModel || null,
       maskingLab: null
     },
