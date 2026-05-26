@@ -134,6 +134,11 @@ import {
 } from './deviceProfiles.js';
 import { buildCueForgeState } from './core/cueforgeState.js';
 import { buildGuidedSetupRun } from './core/commandCenterFlow.js';
+import {
+  clampSetupJourneyStep,
+  nextSetupJourneyStep,
+  setupJourneyActionLabel
+} from './core/setupJourneyFlow.js';
 import { publishSetupAssessmentSnapshot } from './core/setupAssessmentSnapshot.js';
 import { buildAutoDetectReport, summarizeAutoDetectReport } from './core/autoDetectReport.js';
 import { summarizeReleasePack } from './core/exportSchema.js';
@@ -1496,6 +1501,8 @@ function SetupJourney({ settings, onComplete, onSkip }) {
   const [toneStatus, setToneStatus] = useState('ready');
   const [soundActive, setSoundActive] = useState(false);
   const soundRef = useRef(null);
+  const panelRef = useRef(null);
+  const stepNavigationRef = useRef(false);
   const [profile, setProfile] = useState(() => ({
     handle: '',
     gameFocus: gameProfiles[0].game,
@@ -1519,6 +1526,7 @@ function SetupJourney({ settings, onComplete, onSkip }) {
     ['Launch Hub', 'Save the profile and open the Audio Support Hub.']
   ];
   const setupStage = setupSteps[step];
+  const setupPrimaryLabel = setupJourneyActionLabel(step);
   const backgroundAudioAllowed = canPlayBackgroundAudio(settings);
   const bridgeSummary = useMemo(() => summarizeBridgeReport(bridgeReport), [bridgeReport]);
   const profileStrength = Math.round((Number(profile.footstepFocus) + Number(profile.commsFocus) + Number(profile.bassControl) + Number(profile.fatigueControl)) / 4 * 10);
@@ -1547,9 +1555,20 @@ function SetupJourney({ settings, onComplete, onSkip }) {
     ...current,
     tools: { ...current.tools, [key]: value }
   }));
+  const goToStep = (targetStep) => {
+    stepNavigationRef.current = true;
+    setStep(clampSetupJourneyStep(targetStep, setupSteps.length));
+  };
+  const goToNextStep = (action = 'continue') => goToStep(nextSetupJourneyStep(step, action, setupSteps.length));
 
   useEffect(() => {
     if (soundRef.current) pulseSetupStep(step);
+    if (!stepNavigationRef.current) return undefined;
+    const focusTimer = window.setTimeout(() => {
+      panelRef.current?.focus({ preventScroll: true });
+      panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 80);
+    return () => window.clearTimeout(focusTimer);
   }, [step]);
 
   useEffect(() => () => stopSetupSoundscape({ immediate: true }), []);
@@ -1595,12 +1614,14 @@ function SetupJourney({ settings, onComplete, onSkip }) {
       });
       stream.getTracks().forEach((track) => track.stop());
       setMicStatus('granted');
+      return 'granted';
     } catch {
       setMicStatus('blocked or skipped');
+      return 'blocked or skipped';
     }
   };
 
-  const scanSetup = async () => {
+  const scanSetup = async ({ advance = false } = {}) => {
     const devices = await getBrowserAudioDevices();
     const bridge = await getGeneratedBridgeReport();
     setDeviceCount(devices.length);
@@ -1609,6 +1630,13 @@ function SetupJourney({ settings, onComplete, onSkip }) {
     setScanStatus(bridge
       ? `${devices.length} browser audio devices plus desktop evidence: ${formatBridgeReportProof(bridge)}`
       : `${devices.length} browser audio devices. Desktop link still needed for Windows endpoints, APO, Sonar, Discord, and running-game proof.`);
+    if (advance) goToNextStep('device-check-complete');
+    return { devices, bridge };
+  };
+
+  const runDeviceCheckAndContinue = async () => {
+    await requestMic();
+    await scanSetup({ advance: true });
   };
 
   const runSetupDesktopScan = async () => {
@@ -1631,6 +1659,7 @@ function SetupJourney({ settings, onComplete, onSkip }) {
       setBridgeReport(result.report);
       setBridgeFound(true);
       setScanStatus(`Desktop linked: ${formatBridgeReportProof(result.report)}`);
+      goToNextStep('device-check-complete');
     } catch {
       setScanStatus('Windows scan failed before a report could be linked.');
     } finally {
@@ -1669,6 +1698,11 @@ function SetupJourney({ settings, onComplete, onSkip }) {
     } catch {
       setToneStatus('tone engine blocked');
     }
+  };
+
+  const playSetupPulseAndContinue = async () => {
+    await playSetupPulse();
+    window.setTimeout(() => goToNextStep('starter-tune-complete'), 420);
   };
 
   const startSetupSoundscape = async () => {
@@ -1794,6 +1828,22 @@ function SetupJourney({ settings, onComplete, onSkip }) {
     });
   };
 
+  const runPrimarySetupAction = () => {
+    if (step === 1) {
+      runDeviceCheckAndContinue();
+      return;
+    }
+    if (step === 2) {
+      playSetupPulseAndContinue();
+      return;
+    }
+    if (step < setupSteps.length - 1) {
+      goToNextStep('continue');
+      return;
+    }
+    finish();
+  };
+
   return (
     <section className="setup-journey">
       <SetupThreeScene step={step} />
@@ -1824,7 +1874,7 @@ function SetupJourney({ settings, onComplete, onSkip }) {
           </div>
           <div className="setup-steps">
             {setupSteps.map(([label, detail], index) => (
-              <button className={step === index ? 'selected' : index < step ? 'done' : ''} key={label} onClick={() => setStep(index)}>
+              <button className={step === index ? 'selected' : index < step ? 'done' : ''} key={label} onClick={() => goToStep(index)}>
                 <strong>{index + 1}. {label}</strong>
                 <span>{detail}</span>
               </button>
@@ -1832,7 +1882,7 @@ function SetupJourney({ settings, onComplete, onSkip }) {
           </div>
         </div>
 
-        <div className="setup-panel">
+        <div className="setup-panel" ref={panelRef} tabIndex={-1} aria-live="polite">
           <div className="setup-panel-stage">
             <span>Stage {String(step + 1).padStart(2, '0')}</span>
             <strong>{setupStage[0]}</strong>
@@ -1904,8 +1954,8 @@ function SetupJourney({ settings, onComplete, onSkip }) {
                 </small>
               </div>
               <div className="live-actions">
-                <button className="primary" onClick={requestMic}><Mic size={18} /> Grant mic access</button>
-                <button className="ghost" onClick={scanSetup}><Search size={18} /> Scan devices</button>
+                <button className="primary" onClick={runDeviceCheckAndContinue}><Mic size={18} /> Check devices, then Starter Tune</button>
+                <button className="ghost" onClick={() => scanSetup({ advance: true })}><Search size={18} /> Scan devices and continue</button>
                 <button className={desktopInfo ? 'primary' : 'ghost'} onClick={runSetupDesktopScan} disabled={desktopBusy}>
                   <MonitorCog size={18} /> {desktopBusy ? 'Scanning Windows...' : setupDesktopPlan.primaryOption.label}
                 </button>
@@ -1926,7 +1976,7 @@ function SetupJourney({ settings, onComplete, onSkip }) {
                 <Slider label="Fatigue control" value={profile.fatigueControl} onChange={(value) => updateProfile('fatigueControl', value)} />
               </div>
               <div className="live-actions">
-                <button className="primary" onClick={playSetupPulse}><Play size={18} /> Play calibration pulse</button>
+                <button className="primary" onClick={playSetupPulseAndContinue}><Play size={18} /> Play pulse, then Launch Hub</button>
               </div>
               <p className="callout">{toneStatus}</p>
             </>
@@ -1950,12 +2000,11 @@ function SetupJourney({ settings, onComplete, onSkip }) {
           )}
 
           <div className="setup-nav-actions">
-            <button className="ghost" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>Back</button>
-            {step < setupSteps.length - 1 ? (
-              <button className="primary" onClick={() => setStep(step + 1)}>Continue</button>
-            ) : (
-              <button className="primary" onClick={finish}><CheckCircle2 size={18} /> Enter app</button>
-            )}
+            <button className="ghost" onClick={() => goToStep(step - 1)} disabled={step === 0}>Back</button>
+            <button className="primary" onClick={runPrimarySetupAction}>
+              {step === setupSteps.length - 1 && <CheckCircle2 size={18} />}
+              {setupPrimaryLabel}
+            </button>
             <button className="ghost" onClick={onSkip}>Skip for now</button>
           </div>
         </div>
