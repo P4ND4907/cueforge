@@ -1,0 +1,43 @@
+{
+  "schema": "cueforge.panda-notes-repair-run.v1",
+  "generatedAt": "2026-05-25T08:04:54.126Z",
+  "sources": [],
+  "summary": {
+    "total": 0,
+    "open": 0,
+    "reviewed": 0,
+    "fixed": 0,
+    "needsRetest": 0,
+    "archived": 0,
+    "topTag": "none yet",
+    "latest": null,
+    "byTag": {
+      "confusing": 0,
+      "broken": 0,
+      "text issue": 0,
+      "layout issue": 0,
+      "missing feedback": 0,
+      "slow": 0,
+      "idea": 0
+    },
+    "byStatus": {
+      "open": 0,
+      "reviewed": 0,
+      "fixed": 0,
+      "needs-retest": 0,
+      "archived": 0
+    }
+  },
+  "check": {
+    "schema": "cueforge.ui-repair-check.v1",
+    "generatedAt": "2026-05-25T08:04:54.126Z",
+    "status": "no-notes-yet",
+    "totalNotes": 0,
+    "actionableNotes": 0,
+    "actionCount": 0,
+    "topAction": null,
+    "actions": [],
+    "boundary": "CueForge can auto-triage local notes and generate a repair packet. Source edits still need a developer or explicit desktop automation review."
+  },
+  "packet": "CueForge Panda Notes repair packet\nGenerated: 2026-05-25T08:04:54.126Z\nStatus: no-notes-yet\nNotes scanned: 0\nRepair actions: 0\n\nBoundary:\nCueForge can auto-triage local notes and generate a repair packet. Source edits still need a developer or explicit desktop automation review.\n\nInstruction:\nUse these notes to make targeted code/UI fixes, then run tests, build, and browser QA. Do not remove privacy redaction, do not add hidden telemetry, and do not silently change Windows audio settings.\n\nNo developer notes were found. Right-click an app area, tag the issue, save a note, then rerun this packet."
+}

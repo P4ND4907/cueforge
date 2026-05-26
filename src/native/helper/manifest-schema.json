@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CueForge Native Helper Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestVersion", "os", "endpoints", "tools", "capabilities"],
+  "properties": {
+    "manifestVersion": { "const": "cueforge.native.v1" },
+    "os": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family"],
+      "properties": {
+        "family": { "const": "windows" },
+        "build": { "type": "string" }
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "role": { "enum": ["playback", "recording", "communications"] },
+          "transport": { "enum": ["usb", "bluetooth", "internal", "virtual"] },
+          "sampleRates": {
+            "type": "array",
+            "items": { "type": "number" },
+            "default": []
+          },
+          "channels": {
+            "type": "array",
+            "items": { "type": "number" },
+            "default": []
+          },
+          "defaultFor": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": []
+          }
+        }
+      }
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "equalizerApo": { "type": "boolean" },
+        "peace": { "type": "boolean" },
+        "sonar": { "type": "boolean" },
+        "voicemeeter": { "type": "boolean" },
+        "vbCable": { "type": "boolean" }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canReadDefaults", "canReadSessions", "canReadLoopback", "canWriteApoDraft", "canModifySystemState"],
+      "properties": {
+        "canReadDefaults": { "type": "boolean" },
+        "canReadSessions": { "type": "boolean" },
+        "canReadLoopback": { "type": "boolean" },
+        "canWriteApoDraft": { "type": "boolean" },
+        "canModifySystemState": { "const": false }
+      }
+    }
+  }
+}

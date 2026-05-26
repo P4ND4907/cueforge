@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   buildUiFeedbackRepairCheck,
   buildUiFeedbackRepairPacket,
+  cleanupUiFeedbackNotes,
   cueforgeCodeStructure,
   createUiFeedbackNote,
   getUiFeedbackSnippet,
+  markUiFeedbackNotes,
   sanitizeUiFeedbackNotes,
   summarizeUiFeedback
 } from './uiFeedback.js';
@@ -126,5 +128,37 @@ describe('ui feedback notes', () => {
     expect(cueforgeCodeStructure.some((entry) => entry.path === 'src/reportPack.js')).toBe(true);
     expect(snippet.file).toBe('src/main.jsx');
     expect(snippet.code).toContain('saveUiNote');
+  });
+
+  it('marks notes through review, retest, and cleanup states', () => {
+    const notes = [
+      createUiFeedbackNote({
+        page: 'System Info',
+        tag: 'confusing',
+        note: 'The next step is not obvious',
+        now: new Date('2026-05-22T12:05:00.000Z')
+      }),
+      createUiFeedbackNote({
+        page: 'Mic Lab',
+        tag: 'broken',
+        note: 'Start button did nothing',
+        now: new Date('2026-05-22T12:06:00.000Z')
+      })
+    ];
+
+    const reviewed = markUiFeedbackNotes(notes, [notes[0].id], 'reviewed', { now: new Date('2026-05-22T12:12:00.000Z') });
+    const retest = markUiFeedbackNotes(reviewed, [notes[1].id], 'needs-retest', { now: new Date('2026-05-22T12:13:00.000Z') });
+    const fixed = markUiFeedbackNotes(retest, [notes[0].id], 'fixed', { now: new Date('2026-05-22T12:14:00.000Z') });
+    const summary = summarizeUiFeedback(fixed);
+    const repairCheck = buildUiFeedbackRepairCheck(fixed);
+    const cleaned = cleanupUiFeedbackNotes(fixed);
+
+    expect(summary.reviewed).toBe(0);
+    expect(summary.fixed).toBe(1);
+    expect(summary.needsRetest).toBe(1);
+    expect(repairCheck.totalNotes).toBe(2);
+    expect(repairCheck.actionableNotes).toBe(1);
+    expect(cleaned).toHaveLength(1);
+    expect(cleaned[0].status).toBe('needs-retest');
   });
 });

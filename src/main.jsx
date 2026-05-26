@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Save,
   Search,
+  Settings2,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
@@ -31,20 +32,24 @@ import {
   calculateCompensation,
   createEmptyHearingResults,
   hearingFrequencies,
-  hearingScore
+  hearingScore,
+  nextHearingLevel,
+  normalizeHearingResults,
+  updateThresholdEntry
 } from './hearingModel.js';
 import { buildAutoTuneEq } from './autoTune.js';
-import { createAudioDna } from './audioDna.js';
+import { createAudioDnaFromState } from './audioDna.js';
 import { buildExportPack, downloadTextFile } from './exportPack.js';
-import { blindMatchRounds, createBlindMatchResult } from './blindMatch.js';
+import { SOUND_MATCH_NEUTRAL_CHOICE, blindMatchRounds, createBlindMatchResult } from './blindMatch.js';
 import { createMaskingTune, maskingScenarios } from './maskingLab.js';
-import { buildIssueReport, validateIssueReport } from './reportPack.js';
+import { buildIssueReport, redactDeep, validateIssueReport } from './reportPack.js';
 import { computeSetupReadiness } from './setupReadiness.js';
 import { buildTesterPacket, feedbackDefaults, scoreTrialFeedback, trialSteps } from './playerTrial.js';
 import { buildBetaTesterPacket, createBetaCheckIn, createTesterId, summarizeBetaActivity } from './betaCheckIn.js';
 import { buildAudioEvidencePacket, createAudioEvidenceSummary } from './audioEvidence.js';
 import {
   buildCommunityDraft,
+  buildCommunityFeedbackPacket,
   buildRedditSafeDraft,
   buildRollCallPrompt,
   buildSetupShareText,
@@ -53,6 +58,16 @@ import {
   feedbackTypes,
   summarizeCommunityFeedback
 } from './communityHub.js';
+import {
+  buildCommunityMemoryMarkdown,
+  buildCommunityPlan,
+  buildRedditThreadJsonUrl,
+  createThreadMemory,
+  defaultCommunityWatchlist,
+  parseRedditSnapshot,
+  summarizeThreads,
+  threadFromRedditJson
+} from './socialMemory.js';
 import {
   appendGameplaySnapshot,
   createGameplaySnapshot,
@@ -64,12 +79,73 @@ import { analyzeAudioFrame, createEmptySignalAnalysis, signalBands } from './sig
 import {
   buildUiFeedbackRepairCheck,
   buildUiFeedbackRepairPacket,
+  cleanupUiFeedbackNotes,
   cueforgeCodeStructure,
   createUiFeedbackNote,
+  markUiFeedbackNotes,
   summarizeUiFeedback,
   UI_FEEDBACK_KEY,
   uiFeedbackTags
 } from './uiFeedback.js';
+import { computeUiNoteFocusScrollDelta, computeUiNotePopoverPosition } from './uiNotePosition.js';
+import { evaluateMicCaptureProof, formatBridgeReportProof } from './hardwareProof.js';
+import { buildReleaseProofState, buildReleaseUpdateDraft, summarizeReleaseQueue } from './releaseQueue.js';
+import { buildPermissionRecovery, formatPermissionRecoverySteps } from './permissionRecovery.js';
+import { buildPrivacyAuditText, runPrivacyAudit } from './privacyAudit.js';
+import { buildIssuePatternMemory, buildIssuePatternMemoryText } from './issuePatternMemory.js';
+import { buildDesktopBridgeFixPlan, buildDesktopBridgeFixText } from './desktopBridgePlan.js';
+import {
+  buildSetupIntelligence,
+  buildSetupIntelligenceText,
+  setupIntelligenceOptions
+} from './setupIntelligence.js';
+import {
+  buildShortcutExportText,
+  lockSensitiveShortcuts,
+  mergeShortcutDefaults,
+  saveShortcut,
+  SHORTCUT_VAULT_KEY,
+  summarizeShortcutVault
+} from './shortcutVault.js';
+import {
+  buildAudioPolicySummary,
+  canPlayBackgroundAudio,
+  canPlayCinematicVideoAudio,
+  isExpertMode,
+  normalizeUserSettings,
+  readUserSettingsFromStorage,
+  USER_SETTINGS_KEY
+} from './appSettings.js';
+import {
+  buildAppInviteText,
+  buildAudioProfileShareText,
+  createAudioProfileShare,
+  parseAudioProfileShare
+} from './profileShare.js';
+import {
+  applyDeviceAliases,
+  detectActiveGameProfile,
+  DEVICE_ALIAS_KEY,
+  GAME_PROFILE_KEY,
+  mergeGameProfiles,
+  saveDeviceAlias,
+  upsertGameProfile
+} from './deviceProfiles.js';
+import { buildCueForgeState } from './core/cueforgeState.js';
+import { publishSetupAssessmentSnapshot } from './core/setupAssessmentSnapshot.js';
+import { buildAutoDetectReport, summarizeAutoDetectReport } from './core/autoDetectReport.js';
+import { summarizeReleasePack } from './core/exportSchema.js';
+import { summarizeNativeEngineRoadmap } from './data/nativeEngineRoadmap.js';
+import {
+  calculateRequiredPreamp,
+  clampEqToSafety,
+  playerSafetyWarnings,
+  safetyRules
+} from './core/safetyRules.js';
+import { buildScopeBoundarySummary } from './core/scopeGuard.js';
+import { buildMicPlan } from './engines/micPlan.js';
+import { honestSpatialModes, spatialTruthWarning } from './engines/spatialPlan.js';
+import { SetupCommandCenter } from './ui/SetupCommandCenter.jsx';
 import './styles.css';
 
 const headsetProfiles = [
@@ -77,12 +153,14 @@ const headsetProfiles = [
   { name: 'HyperX mic cleanup', correction: 'High-pass feel, lower boom, consonant clarity', focus: 'Discord voice quality', score: 86 },
   { name: 'Generic FPS Headset', correction: '+3dB 2.5kHz, -2dB 120Hz', focus: 'Footsteps and voice clarity', score: 82 },
   { name: 'SteelSeries / Sonar Style', correction: '+2dB 4kHz, -1dB 8kHz', focus: 'Competitive imaging', score: 88 },
+  { name: 'SteelSeries Arctis Nova Pro Omni', correction: 'Verify GameHub/Sonar source mix before EQ', focus: 'OmniPlay routing and mic clarity', score: 90 },
   { name: 'Music + Media', correction: '+2dB 60Hz, +1dB 12kHz', focus: 'Warm cinematic balance', score: 74 }
 ];
 
 const gameProfiles = [
   { game: 'Valorant / CS2', mode: 'Tactical FPS', changes: ['Use local Valorant overlay: -0.8dB at 150Hz', '+1.6dB at 3kHz', '+1.9dB at 4.7kHz'] },
   { game: 'Warzone / Apex', mode: 'Battle Royale', changes: ['Lift 180Hz impacts', 'Boost 3kHz cues', 'Reduce explosions'] },
+  { game: 'Tarkov / Siege / COD', mode: 'Real Match FPS', changes: ['Start from Competitive FPS', 'Check verticality and room tone before raising 4kHz again', 'Compare training/offline and one live server before blaming gear'] },
   { game: 'Discord + Game', mode: 'Comms Focus', changes: ['Voice band priority', 'Noise gate light', 'Music duck -8dB'] }
 ];
 
@@ -100,11 +178,266 @@ const socialBrand = {
   ]
 };
 
+const socialLinks = Object.fromEntries(socialBrand.links);
+const latestReleaseUrl = 'https://github.com/P4ND4907/cueforge/releases/latest';
+
 const publicRelease = {
-  download: 'https://github.com/P4ND4907/cueforge/releases/download/v0.1.0-alpha.2/CueForge-0.1.0-x64.exe',
-  notes: 'https://github.com/P4ND4907/cueforge/releases/tag/v0.1.0-alpha.2',
-  feedback: 'https://github.com/P4ND4907/cueforge/issues/1'
+  app: 'https://p4nd4907.github.io/cueforge/',
+  notes: latestReleaseUrl,
+  feedback: 'https://github.com/P4ND4907/cueforge/issues/1',
+  desktopStatus: 'Desktop downloads are paused for public testers while the next proof gates finish. Use the web app and feedback loop for now.'
 };
+
+function publicAssetPath(path) {
+  if (!path || /^(https?:|blob:|data:)/i.test(path)) return path;
+  const cleanPath = String(path).replace(/^\/+/, '');
+  const base = import.meta.env.BASE_URL || '/';
+  const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+  return `${normalizedBase}${cleanPath}`;
+}
+
+const hunterRewardTiers = [
+  {
+    tier: 'Scout',
+    points: '1 proof point',
+    claim: 'First clean check-in with game, setup, and a real before/after note.'
+  },
+  {
+    tier: 'Tracker',
+    points: '3 proof points',
+    claim: 'Repeatable issue with steps, screenshot, Panda Note, or report replay.'
+  },
+  {
+    tier: 'Forge Fixer',
+    points: '5 proof points',
+    claim: 'Verified retest after a fix proves the problem got better or stayed broken.'
+  },
+  {
+    tier: 'Signal Lead',
+    points: '8 proof points',
+    claim: 'A hard find changes the roadmap, tuning logic, or release gate for the next build.'
+  }
+];
+
+const pandaVideoAssets = {
+  desktopWebm: {
+    label: 'Desktop WebM hero',
+    url: publicAssetPath('/media/panda-soundwalk-hero-desktop.webm?v=final-preview-0522'),
+    meta: '1920x1080 / 15.9 sec final muted loop'
+  },
+  desktopMp4: {
+    label: 'Desktop MP4 fallback',
+    url: publicAssetPath('/media/panda-soundwalk-hero-desktop.mp4?v=final-preview-0522'),
+    meta: '1920x1080 / H.264 final fallback'
+  },
+  mobile: {
+    label: 'Mobile safe vertical',
+    url: publicAssetPath('/media/panda-soundwalk-hero-mobile.mp4?v=final-preview-0522'),
+    meta: '1080x1920 / final safe vertical crop'
+  },
+  poster: {
+    label: 'Poster frame',
+    url: publicAssetPath('/media/panda-soundwalk-poster.jpg?v=final-preview-0522'),
+    meta: 'OpenArt frame / battle-scar close-up'
+  },
+  full: {
+    label: 'Full cut with sound',
+    url: publicAssetPath('/media/panda-soundwalk-full-cut.mp4?v=final-preview-0522'),
+    meta: '24 seconds / mixed immersive audio'
+  }
+};
+
+const pandaStoryAssets = {
+  setupWebm: {
+    label: 'Opening WebM',
+    url: publicAssetPath('/media/panda-soundwalk-setup-chaos.webm?v=director-r11'),
+    meta: '1920x1080 / calmer forest pressure loop'
+  },
+  setupMp4: {
+    label: 'Opening MP4',
+    url: publicAssetPath('/media/panda-soundwalk-setup-chaos.mp4?v=director-r11'),
+    meta: '10.9 sec / quieter nature-first mix'
+  },
+  setupPoster: {
+    label: 'Opening poster',
+    url: publicAssetPath('/media/panda-soundwalk-setup-poster.jpg?v=director-r11'),
+    meta: 'Matched acoustic-ear panic frame'
+  },
+  enhancedWebm: {
+    label: 'Listening reveal WebM',
+    url: publicAssetPath('/media/panda-soundwalk-enhanced-clean.webm?v=director-r11'),
+    meta: '17.2 sec / sparse directional hearing loop'
+  },
+  enhancedMp4: {
+    label: 'Listening reveal MP4',
+    url: publicAssetPath('/media/panda-soundwalk-enhanced-clean.mp4?v=director-r11'),
+    meta: '48fps / quiet forest with gentle directional pings'
+  },
+  enhancedMobile: {
+    label: 'Mobile listening crop',
+    url: publicAssetPath('/media/panda-soundwalk-enhanced-mobile.mp4?v=director-r11'),
+    meta: '1080x1920 / matched-ear focused state'
+  },
+  storyFull: {
+    label: 'Full soundwalk cut',
+    url: publicAssetPath('/media/panda-soundwalk-story-full.mp4?v=director-r11'),
+    meta: '14 sec / cleaned immersive audio arc'
+  }
+};
+
+const motionPassFallback = {
+  status: 'pending-review',
+  revision: 'director-r11',
+  updatedAt: 'local',
+  summary: 'Cleaned the public page copy and added source-to-ear soundwave overlays synced to the quiet nature-first audio pass.',
+  blurFix: 'Visible director labels are gone; the hero now stays on one polished soundwalk concept while the video refresh source proves the active revision.',
+  audio: 'Sparse waves originate from forest cue points, ripple toward the ears, dissipate at contact, and trigger subtle ear-hit arcs only on cue moments.'
+};
+
+const MOTION_PASS_APPROVAL_KEY = 'cueforge-panda-motion-pass-approval';
+
+const soundwaveCueMap = {
+  panic: {
+    duration: 10.94,
+    cues: [
+      { at: 1.1, source: [74, 76], ear: [62, 24], side: 'right', strength: 0.38 },
+      { at: 3.55, source: [7, 40], ear: [42, 25], side: 'left', strength: 0.56 },
+      { at: 6.85, source: [92, 46], ear: [62, 24], side: 'right', strength: 0.62 },
+      { at: 9.05, source: [52, 18], ear: [52, 22], side: 'center', strength: 0.44 }
+    ]
+  },
+  enhanced: {
+    duration: 17.17,
+    cues: [
+      { at: 2.6, source: [8, 32], ear: [40, 24], side: 'left', strength: 0.48 },
+      { at: 5.15, source: [92, 30], ear: [66, 24], side: 'right', strength: 0.6 },
+      { at: 8.4, source: [50, 10], ear: [54, 22], side: 'center', strength: 0.42 },
+      { at: 12.2, source: [86, 42], ear: [66, 24], side: 'right', strength: 0.5 },
+      { at: 15.05, source: [14, 38], ear: [40, 24], side: 'left', strength: 0.42 }
+    ]
+  }
+};
+
+function readMotionPassApproval() {
+  try {
+    return JSON.parse(localStorage.getItem(MOTION_PASS_APPROVAL_KEY) || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function appendAssetRevision(url, revision) {
+  if (!url || url.startsWith('blob:')) return url;
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}motion=${encodeURIComponent(revision || 'live')}`;
+}
+
+function buildSoundwavePath(cue) {
+  const [sx, sy] = cue.source;
+  const [ex, ey] = cue.ear;
+  const midX = (sx + ex) / 2;
+  const midY = Math.min(sy, ey) - 10 - cue.strength * 8;
+  return `M ${sx} ${sy} Q ${midX} ${midY} ${ex} ${ey}`;
+}
+
+function SoundwaveOverlay({ stage, videoRef }) {
+  const [activeCue, setActiveCue] = useState(null);
+
+  useEffect(() => {
+    let frameId = 0;
+    const stagePlan = soundwaveCueMap[stage] || soundwaveCueMap.enhanced;
+
+    const tick = () => {
+      const video = videoRef.current;
+      if (video && Number.isFinite(video.currentTime)) {
+        const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : stagePlan.duration;
+        const mirroredCues = stagePlan.cues.flatMap((cue) => [
+          cue,
+          { ...cue, at: Math.max(0, duration - cue.at), mirrored: true }
+        ]);
+        const now = video.currentTime % duration;
+        const nextCue = mirroredCues
+          .map((cue) => ({ cue, distance: Math.abs(now - cue.at) }))
+          .filter(({ distance }) => distance < 0.9)
+          .sort((a, b) => a.distance - b.distance)[0];
+
+        if (nextCue) {
+          setActiveCue({
+            ...nextCue.cue,
+            key: `${stage}-${nextCue.cue.at.toFixed(2)}-${nextCue.cue.mirrored ? 'r' : 'f'}-${Math.floor(now * 10)}`,
+            phase: 1 - nextCue.distance / 0.9
+          });
+        } else {
+          setActiveCue(null);
+        }
+      }
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [stage, videoRef]);
+
+  if (!activeCue) return <div className="soundwave-overlay" aria-hidden="true" />;
+
+  const path = buildSoundwavePath(activeCue);
+  const [sx, sy] = activeCue.source;
+  const [ex, ey] = activeCue.ear;
+
+  return (
+    <div className={`soundwave-overlay ${activeCue.side}-cue`} aria-hidden="true">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+        <path className="soundwave-trace trace-glow" d={path} />
+        <path className="soundwave-trace trace-core" d={path} />
+      </svg>
+      <span className="sound-source-ripple" style={{ left: `${sx}%`, top: `${sy}%` }} />
+      <span className="sound-ear-contact" style={{ left: `${ex}%`, top: `${ey}%` }} />
+      <span className={`sound-ear-twitch ${activeCue.side}`} style={{ left: `${ex}%`, top: `${ey}%` }} />
+    </div>
+  );
+}
+
+const pandaFlowShotQueue = [
+  {
+    id: 'shot-01',
+    label: '01 / moonlit front reveal',
+    file: 'flow-shot-01-front-reveal.mp4',
+    duration: '6-8 sec',
+    prompt:
+      'Use the preferred style-board as the avatar reference and the latest OpenArt render as the dark glowing forest reference. Full-body moonlit front reveal of the same hyperreal stylized giant panda avatar in dense misty Sichuan bamboo at night after rain: compact powerful body, natural black-and-white wet fur, expressive focused face, elegant large bat-like acoustic ears, subtle healed cheek and shoulder scars, rough damp coat, controlled battle-worn presence. Keep head and ears fully in frame. A soft teal waveform glows behind and beside the panda, not through the fur or eyes. Dark premium nature-tech look, no text, no logo, no watermark.'
+  },
+  {
+    id: 'shot-02',
+    label: '02 / fast upright power walk',
+    file: 'flow-shot-02-upright-power-walk.mp4',
+    duration: '6-8 sec',
+    prompt:
+      'Low-angle tracking shot of the exact same panda avatar moving upright on two legs in a fast purposeful power-walk through dense wet bamboo, moss, ferns, and leaves in misty Sichuan China at night after rain. Make it feel like the first upright reference: full body visible, head and ears never cropped, strong two-leg rhythm, believable animal weight, stable shoulders, natural arm movement, no human costume feel. Keep the same face, same scars, same fur pattern, and same large acoustic bat-ear silhouette. No glowing feet, no amber foot rings, no magical sparks at paws. Faint teal 3D spatial-audio radar lines move through the forest at head/ear height and converge toward the panda ears. Premium cinematic wildlife, no mascot suit, no goofy biped motion, no text, no watermark.'
+  },
+  {
+    id: 'shot-03',
+    label: '03 / extended hearing lock',
+    file: 'flow-shot-03-hearing.mp4',
+    duration: '6-8 sec',
+    prompt:
+      'Extended close-up of the exact same hyperreal stylized panda avatar pausing in dense moonlit Sichuan bamboo. Same focused face, same healed cheek scar, same damp fur, same large elegant acoustic bat ears in every frame. No ear morphing: both ears keep the same shape. Make the ear response smart and directional: left-side bamboo creak sends faint 3D teal radar lines into the left ear, right-side water or leaf movement sends radar lines into the right ear, center predator-pressure pulse reaches both ears. When each radar line touches the ear, that ear subtly twitches and catches a tiny rim-light reaction. Forest insects and crickets go quiet when predator pressure gets close, then the panda locks onto the signal. The lines are faint and natural, never slicing through eye, fur, face, or ear. Premium, dark, intense, no horror, no text, no watermark.'
+  },
+  {
+    id: 'shot-04',
+    label: '04 / rear bamboo pulse',
+    file: 'flow-shot-04-rear-bamboo-pulse.mp4',
+    duration: '6-8 sec',
+    prompt:
+      'Cinematic rear and over-the-shoulder shot of the exact same panda avatar moving upright through a dense moonlit Sichuan bamboo forest at night after rain. Preserve the dark OpenArt mood: wet bamboo, blue-gray fog, faint teal spatial-audio glow, rain and mist. No glowing feet, no amber contact sparks, no ankle rings. The panda brushes one bamboo stalk while moving forward; faint 3D radar-like teal sound lines travel through the forest at head height and hit the ears, causing a subtle ear twitch. Surrounding insects go quiet when a distant predator moves nearby, then the focused directional audio returns. Keep paws, arms, ears, bamboo, and sound lines physically separated with no clipping, no phantom limbs, no duplicate panda, no head cropping, no text, no watermark.'
+  }
+];
+
+const legacyUiCopyRewrites = [
+  ['Discord Command Center', 'Community Signal Board'],
+  ['Developer UI Notes', 'Panda Notes Inbox'],
+  ['Copy/Paste Setup Kit', 'Redacted Setup Summary'],
+  ['Mic Analyzer', 'Mic Problem Analyzer']
+];
 
 const driverLayers = [
   {
@@ -132,6 +465,30 @@ const driverLayers = [
     url: 'https://steelseries.com/gg/sonar'
   },
   {
+    name: 'FxSound / OEM enhancers',
+    role: 'System enhancement layer',
+    fit: 'Useful to detect because it can change the sound before CueForge tuning is judged.',
+    action: 'Run one test with the enhancer on and one test with it off before blaming the EQ curve.',
+    risk: 'Can double-boost bass, widen spatial cues, or make footsteps sharp if stacked with APO or game HRTF.',
+    url: 'https://www.fxsound.com/'
+  },
+  {
+    name: 'Spatial layers',
+    role: 'Dolby, DTS, THX, or game HRTF',
+    fit: 'Important for FPS because spatial layers can help direction or make it worse depending on the game.',
+    action: 'Pick one spatial layer at a time. Do not stack game HRTF, Windows spatial, Sonar spatial, and THX together.',
+    risk: 'Stacked spatial processing can smear verticality and front/back cues.',
+    url: 'https://learn.microsoft.com/en-us/windows/win32/coreaudio/spatial-sound'
+  },
+  {
+    name: 'Mic processors',
+    role: 'Broadcast, Wave Link, G HUB, iCUE, or Voicemod',
+    fit: 'Useful when teammates hear boom, clipping, noise suppression artifacts, or doubled monitoring.',
+    action: 'Detect first, then test Discord input gain and CueForge mic analysis before changing filters.',
+    risk: 'Can hide the real mic level or add processing delay if several mic tools are active.',
+    url: 'https://learn.microsoft.com/en-us/windows/win32/coreaudio/wasapi'
+  },
+  {
     name: 'VB-CABLE / Voicemeeter',
     role: 'Virtual routing bridge',
     fit: 'Useful later for loopback tests, stream mixes, and before/after capture.',
@@ -153,9 +510,11 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function buildApoConfig(eq, preamp = -4.5) {
-  const lines = [`Preamp: ${preamp.toFixed(1)} dB`];
-  eq.forEach((gain, index) => {
+function buildApoConfig(eq, preamp = null) {
+  const safeEq = clampEqToSafety(eq, bands.map(frequencyValue));
+  const preampDb = preamp ?? calculateRequiredPreamp(safeEq);
+  const lines = [`Preamp: ${preampDb.toFixed(1)} dB`];
+  safeEq.forEach((gain, index) => {
     lines.push(`Filter ${index + 1}: ON PK Fc ${bands[index]} Hz Gain ${gain.toFixed(1)} dB Q 1.20`);
   });
   return lines.join('\n');
@@ -179,6 +538,88 @@ function analyzeSample(input) {
   };
 }
 
+function rewriteLegacyUiCopy(text = '') {
+  return legacyUiCopyRewrites.reduce(
+    (current, [before, after]) => current.replaceAll(before, after),
+    String(text || '')
+  );
+}
+
+function frequencyValue(value) {
+  if (typeof value === 'number') return value;
+  const text = String(value).toLowerCase();
+  if (text.endsWith('k')) return Number(text.replace('k', '')) * 1000;
+  return Number(text) || 1000;
+}
+
+function buildEqFromSourceProfile(profile, fallbackEq = baseEq) {
+  const next = [...fallbackEq];
+  if (!profile?.filters?.length) return next;
+
+  profile.filters.forEach((filter) => {
+    const target = Number(filter.fc);
+    if (!Number.isFinite(target)) return;
+    let bestIndex = 0;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    bands.forEach((band, index) => {
+      const distance = Math.abs(frequencyValue(band) - target);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = index;
+      }
+    });
+    next[bestIndex] = clamp(Number(filter.gainDb) || 0, -6, 6);
+  });
+
+  return next;
+}
+
+const SIMPLE_NAV_ITEMS = [
+  ['dashboard', Gauge, 'Command Center'],
+  ['detect', Search, 'Auto Setup'],
+  ['mic', Mic, 'Mic Check'],
+  ['eq', SlidersHorizontal, 'Tune'],
+  ['blindmatch', Radio, 'Sound Match'],
+  ['trial', Gamepad2, 'Play Test'],
+  ['reports', Bug, 'Fix Issue'],
+  ['settings', Settings2, 'Settings']
+];
+
+const EXPERT_NAV_ITEMS = [
+  ['hub', Radio, 'Community Hub'],
+  ['dashboard', Gauge, 'Control'],
+  ['selftest', TestTube2, 'Self Test'],
+  ['dna', BrainCircuit, 'Audio DNA'],
+  ['blindmatch', Radio, 'Blind Match'],
+  ['masking', AudioLines, 'Masking Lab'],
+  ['trial', Gamepad2, 'Player Trial'],
+  ['beta', Activity, 'Beta Check-in'],
+  ['notes', Bug, 'Panda Notes'],
+  ['saves', Save, 'Gameplay Save'],
+  ['reports', Bug, 'Report Lab'],
+  ['calibration', Sparkles, 'Calibration'],
+  ['mic', Mic, 'Mic Lab'],
+  ['eq', SlidersHorizontal, 'EQ Studio'],
+  ['games', Gamepad2, 'Game Profiles'],
+  ['detect', Search, 'Auto Detect'],
+  ['drivers', SlidersHorizontal, 'Driver Layer'],
+  ['hearing', Headphones, 'Hearing Model'],
+  ['inventory', BrainCircuit, 'System Info'],
+  ['settings', Settings2, 'Settings']
+];
+
+const SIMPLE_NAV_IDS = new Set(SIMPLE_NAV_ITEMS.map(([id]) => id));
+const SIMPLE_ALLOWED_IDS = new Set([
+  ...SIMPLE_NAV_ITEMS.map(([id]) => id),
+  'selftest',
+  'dna',
+  'masking',
+  'games',
+  'drivers',
+  'hearing',
+  'inventory'
+]);
+
 function App() {
   const [setupComplete, setSetupComplete] = useState(() => localStorage.getItem('cueforge-setup-complete') !== 'no');
   const [active, setActive] = useState('dashboard');
@@ -190,15 +631,40 @@ function App() {
   const [saved, setSaved] = useState(false);
   const [replayNotice, setReplayNotice] = useState('');
   const [uiNotes, setUiNotes] = useState(() => getSavedJson(UI_FEEDBACK_KEY) || []);
+  const [shortcutVault, setShortcutVault] = useState(() => mergeShortcutDefaults(getSavedJson(SHORTCUT_VAULT_KEY), {
+    release: publicRelease,
+    brand: { discord: socialLinks.Discord }
+  }));
+  const [userSettings, setUserSettings] = useState(() => normalizeUserSettings(getSavedJson(USER_SETTINGS_KEY)));
   const [uiNoteDraft, setUiNoteDraft] = useState(null);
   const [uiNoteNotice, setUiNoteNotice] = useState(() => localStorage.getItem('cueforge-ui-note-notice-dismissed') !== 'yes');
   const [uiNoteStatus, setUiNoteStatus] = useState('Right-click any app area to leave a developer note.');
+  const [shareStatus, setShareStatus] = useState('Share is ready. Copy the app invite or current audio profile when you want.');
+  const [chainDevices, setChainDevices] = useState([]);
+  const [chainBridgeReport, setChainBridgeReport] = useState(null);
+  const [chainAutoDetectReport, setChainAutoDetectReport] = useState(null);
+  const [soundPreferenceModel, setSoundPreferenceModel] = useState(() => getSavedJson('cueforge-preference-model'));
+  const [desktopBridgeReady, setDesktopBridgeReady] = useState(false);
   const configRef = useRef(null);
   const apoConfig = useMemo(() => buildApoConfig(eq), [eq]);
   const sourceConfig = useMemo(
     () => buildApoConfigFromFilters(localSourceProfiles[selectedSourceProfile]),
     [selectedSourceProfile]
   );
+  const expertMode = isExpertMode(userSettings);
+  const navItems = expertMode ? EXPERT_NAV_ITEMS : SIMPLE_NAV_ITEMS;
+  const activeTitle = active === 'dashboard'
+    ? 'Setup Command Center'
+    : !expertMode && active === 'blindmatch'
+      ? 'Sound Match'
+      : sectionTitle(active);
+  const topbarCopy = expertMode
+    ? 'Test your mic, tune your IEMs, generate game-ready EQ, and keep your setup dialed in without guessing.'
+    : 'Start with auto setup, run one check, tune safely, then play. Expert tools stay out of the way until you need them.';
+  const appInviteText = useMemo(() => buildAppInviteText({
+    appUrl: publicRelease.app,
+    discordUrl: socialLinks.Discord
+  }), []);
 
   const latestHearingProfile = () => {
     try {
@@ -226,6 +692,85 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    if (window.cueforgeDesktop?.info) {
+      window.cueforgeDesktop.info()
+        .then((info) => setDesktopBridgeReady(Boolean(info)))
+        .catch(() => setDesktopBridgeReady(Boolean(window.cueforgeDesktop?.isDesktop)));
+    } else {
+      setDesktopBridgeReady(Boolean(window.cueforgeDesktop?.isDesktop));
+    }
+
+    if (navigator.mediaDevices?.enumerateDevices) {
+      navigator.mediaDevices.enumerateDevices()
+        .then((devices) => setChainDevices(devices.filter((device) => device.kind?.includes('audio'))))
+        .catch(() => {});
+    }
+
+    getGeneratedBridgeReport()
+      .then((report) => {
+        if (report) setChainBridgeReport(report);
+      })
+      .catch(() => {});
+  }, []);
+
+  const cueforgeState = useMemo(() => buildCueForgeState({
+    devices: chainDevices,
+    bridgeReport: chainBridgeReport,
+    autoDetectReport: chainAutoDetectReport,
+    eq,
+    game: selectedGame,
+    selectedSourceProfile,
+    desktopReady: desktopBridgeReady,
+    hearing: latestHearingProfile(),
+    preferenceModel: soundPreferenceModel,
+    betaCheckins: getSavedJson('cueforge-beta-checkins') || [],
+    apoConfig
+  }), [chainDevices, chainBridgeReport, chainAutoDetectReport, eq, selectedGame, selectedSourceProfile, desktopBridgeReady, soundPreferenceModel, apoConfig]);
+
+  useEffect(() => {
+    if (!cueforgeState.setupAssessmentSnapshot) return;
+    publishSetupAssessmentSnapshot(cueforgeState.setupAssessmentSnapshot);
+  }, [cueforgeState]);
+
+  const commandCenterContext = useMemo(() => ({
+    lastTrial: getSavedJson('cueforge-last-player-trial'),
+    lastReport: getSavedJson('cueforge-last-issue-report'),
+    latestDna: latestDnaProfile(),
+    betaCheckins: getSavedJson('cueforge-beta-checkins') || []
+  }), [active, analysis, uiNotes.length, cueforgeState]);
+  const shareProfilePayload = useMemo(() => createAudioProfileShare({
+    eq,
+    bands,
+    selectedGame,
+    selectedSourceProfile,
+    sourceProfile: localSourceProfiles[selectedSourceProfile],
+    appUrl: publicRelease.app,
+    cueforgeState: cueforgeState.stateV2
+  }), [eq, selectedGame, selectedSourceProfile, cueforgeState]);
+  const shareProfileText = useMemo(() => buildAudioProfileShareText(shareProfilePayload), [shareProfilePayload]);
+
+  const applyProfileBrain = () => {
+    const nextEq = cueforgeState.profile?.recommendation?.eq;
+    if (Array.isArray(nextEq) && nextEq.length === bands.length) {
+      setEq(nextEq.map((gain) => clamp(Number(gain) || 0, -6, 6)));
+      setSelectedSourceProfile(cueforgeState.profile.recommendation.sourceProfile || selectedSourceProfile);
+      setSaved(false);
+      setActive('eq');
+      setShareStatus('Profile Engine v2 applied a safe starting curve. Review it before exporting.');
+    } else {
+      setShareStatus('Profile Engine needs setup data before it can apply a curve.');
+      setActive('detect');
+    }
+  };
+
+  const exportSeamlessReleasePack = () => {
+    const pack = cueforgeState.releasePack;
+    downloadTextFile('cueforge-v0.2.0-alpha.3-release-pack.json', JSON.stringify(pack, null, 2));
+    downloadTextFile('cueforge-v0.2.0-alpha.3-summary.txt', summarizeReleasePack(pack));
+    setShareStatus('v0.2.0-alpha.3 release pack exported locally.');
+  };
+
   const setBand = (index, value) => {
     setEq((current) => current.map((gain, i) => (i === index ? Number(value) : gain)));
     setSaved(false);
@@ -240,6 +785,69 @@ function App() {
     setEq(nextEq);
     setSaved(false);
     setActive('eq');
+  };
+
+  const applySetupIntelligenceProfile = ({ game, sourceProfile }) => {
+    const safeSourceProfile = localSourceProfiles[sourceProfile] ? sourceProfile : 'competitiveFps';
+    setSelectedGame(game || selectedGame);
+    setSelectedSourceProfile(safeSourceProfile);
+    setEq((current) => buildEqFromSourceProfile(localSourceProfiles[safeSourceProfile], current));
+    setSaved(false);
+    setActive('eq');
+  };
+
+  const autoSwitchDetectedGameProfile = ({ game, sourceProfile, matchedHint }) => {
+    const safeSourceProfile = localSourceProfiles[sourceProfile] ? sourceProfile : 'competitiveFps';
+    setSelectedGame(game || selectedGame);
+    setSelectedSourceProfile(safeSourceProfile);
+    setEq((current) => buildEqFromSourceProfile(localSourceProfiles[safeSourceProfile], current));
+    setSaved(false);
+    setShareStatus(`Detected ${game}. CueForge switched to ${localSourceProfiles[safeSourceProfile].name}; review before exporting. ${matchedHint ? `Match: ${matchedHint}.` : ''}`);
+  };
+
+  const applySharedAudioProfile = (profile) => {
+    if (!Array.isArray(profile.eq) || profile.eq.length !== bands.length) {
+      setShareStatus('That shared profile is missing the 10 CueForge EQ bands.');
+      return;
+    }
+    setEq(profile.eq.map((gain) => clamp(Number(gain) || 0, -6, 6)));
+    if (profile.game) setSelectedGame(profile.game);
+    if (localSourceProfiles[profile.sourceProfileId]) setSelectedSourceProfile(profile.sourceProfileId);
+    setSaved(false);
+    setActive('eq');
+    setShareStatus(`Imported ${profile.sourceProfileName || 'shared audio profile'} safely. Review EQ before exporting.`);
+  };
+
+  const copyShareText = async (text, label) => {
+    try {
+      await navigator.clipboard?.writeText(text);
+      setShareStatus(`${label} copied.`);
+    } catch {
+      setShareStatus(`${label} is ready in the Share panel. Select the text manually if clipboard is blocked.`);
+    }
+  };
+
+  const applySimpleAutoTune = () => {
+    applyAutoTune(buildAutoTuneEq({
+      preset: 'iem',
+      trebleSensitivity: 4,
+      bassPreference: 2,
+      footstepFocus: 7
+    }));
+  };
+
+  const updateUserSettings = (patch) => {
+    setUserSettings((current) => {
+      const next = normalizeUserSettings({ ...current, ...patch });
+      safeSetJson(USER_SETTINGS_KEY, next);
+      return next;
+    });
+  };
+
+  const resetUserSettings = () => {
+    const next = normalizeUserSettings();
+    setUserSettings(next);
+    safeSetJson(USER_SETTINGS_KEY, next);
   };
 
   const downloadConfig = () => {
@@ -258,7 +866,9 @@ function App() {
       calibration,
       hearing: latestHearingProfile(),
       dna: latestDnaProfile(),
-      uiFeedbackNotes: uiNotes
+      uiFeedbackNotes: uiNotes,
+      shortcuts: shortcutVault,
+      cueforgeState: cueforgeState.stateV2
     });
 
     Object.entries(pack.files).forEach(([filename, text], index) => {
@@ -267,11 +877,18 @@ function App() {
   };
 
   const handleUiContextMenu = (event) => {
+    if (!expertMode || !userSettings.uiNotesEnabled) return;
     const target = event.target;
     if (!(target instanceof Element) || target.closest('.ui-note-popover')) return;
     event.preventDefault();
 
     const rect = target.getBoundingClientRect();
+    const position = computeUiNotePopoverPosition({
+      clientX: event.clientX,
+      clientY: event.clientY,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight
+    });
     setUiNoteDraft({
       tag: 'confusing',
       note: '',
@@ -283,10 +900,7 @@ function App() {
         xPercent: Math.round((event.clientX / Math.max(1, window.innerWidth)) * 100),
         yPercent: Math.round((event.clientY / Math.max(1, window.innerHeight)) * 100)
       },
-      position: {
-        x: Math.max(16, Math.min(event.clientX, window.innerWidth - 360)),
-        y: Math.max(16, Math.min(event.clientY, window.innerHeight - 260))
-      },
+      position,
       rect: {
         width: Math.round(rect.width),
         height: Math.round(rect.height)
@@ -315,15 +929,15 @@ function App() {
 
   const feedbackLayer = (
     <>
-      {uiNoteNotice && (
+      {expertMode && userSettings.uiNotesEnabled && uiNoteNotice && (
         <div className="tester-note-banner">
           <Bug size={18} />
           <span>Personal UI debugger is on: right-click any CueForge area to tag a note. Notes stay local and only ride with the redacted report or export pack you choose to send.</span>
           <button className="ghost" onClick={dismissUiNoteNotice}>Got it</button>
         </div>
       )}
-      {uiNoteStatus && <p className="ui-note-status">{uiNoteStatus}</p>}
-      {uiNoteDraft && (
+      {expertMode && userSettings.uiNotesEnabled && uiNoteStatus && <p className="ui-note-status">{uiNoteStatus}</p>}
+      {expertMode && userSettings.uiNotesEnabled && uiNoteDraft && (
         <UiNotePopover
           draft={uiNoteDraft}
           onChange={setUiNoteDraft}
@@ -348,23 +962,28 @@ function App() {
     setActive('dashboard');
   };
 
+  useEffect(() => {
+    if (!expertMode && !SIMPLE_ALLOWED_IDS.has(active)) setActive('dashboard');
+  }, [active, expertMode]);
+
   if (!setupComplete) {
     return (
       <div className="setup-journey-shell" onContextMenu={handleUiContextMenu}>
-        <SetupJourney onComplete={completeSetup} onSkip={() => completeSetup({ skipped: true, completedAt: new Date().toISOString() })} />
+        <SetupJourney settings={userSettings} onComplete={completeSetup} onSkip={() => completeSetup({ skipped: true, completedAt: new Date().toISOString() })} />
         {feedbackLayer}
       </div>
     );
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${expertMode ? 'expert-mode' : 'simple-mode'}`} onContextMenu={handleUiContextMenu}>
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark"><Waves size={22} /></div>
           <div className="brand-copy">
             <strong>CueForge</strong>
             <span>{socialBrand.lab} / by {socialBrand.owner} / {socialBrand.handle}</span>
+            <em className="mode-badge">{expertMode ? 'Expert Mode' : 'Simple Mode'}</em>
             <div className="brand-socials" aria-label="CueForge social links">
               {socialBrand.links.map(([label, href]) => (
                 <a key={label} href={href} target="_blank" rel="noreferrer">{label}</a>
@@ -373,28 +992,13 @@ function App() {
           </div>
         </div>
         <nav>
-          {[
-            ['hub', Radio, 'Community Hub'],
-            ['dashboard', Gauge, 'Control'],
-            ['selftest', TestTube2, 'Self Test'],
-            ['dna', BrainCircuit, 'Audio DNA'],
-            ['blindmatch', Radio, 'Blind Match'],
-            ['masking', AudioLines, 'Masking Lab'],
-            ['trial', Gamepad2, 'Player Trial'],
-            ['beta', Activity, 'Beta Check-in'],
-            ['notes', Bug, 'Panda Notes'],
-            ['saves', Save, 'Gameplay Save'],
-            ['reports', Bug, 'Report Lab'],
-            ['calibration', Sparkles, 'Calibration'],
-            ['mic', Mic, 'Mic Lab'],
-            ['eq', SlidersHorizontal, 'EQ Studio'],
-            ['games', Gamepad2, 'Game Profiles'],
-            ['detect', Search, 'Auto Detect'],
-            ['drivers', SlidersHorizontal, 'Driver Layer'],
-            ['hearing', Headphones, 'Hearing Model'],
-            ['inventory', BrainCircuit, 'System Info']
-          ].map(([id, Icon, label]) => (
-            <button className={active === id ? 'active' : ''} key={id} onClick={() => setActive(id)}>
+          {navItems.map(([id, Icon, label]) => (
+            <button
+              className={active === id ? 'active' : ''}
+              data-qa-nav={id}
+              key={id}
+              onClick={() => setActive(id)}
+            >
               <Icon size={18} />
               <span>{label}</span>
             </button>
@@ -406,24 +1010,48 @@ function App() {
         </div>
       </aside>
 
-      <main onContextMenu={handleUiContextMenu}>
+      <main>
         <header className="topbar">
           <div>
-            <h1>{active === 'dashboard' ? 'Audio Command Center' : sectionTitle(active)}</h1>
-            <p>Test your mic, tune your IEMs, generate game-ready EQ, and keep your setup dialed in without guessing.</p>
+            <h1>{activeTitle}</h1>
+            <p>{topbarCopy}</p>
           </div>
           <div className="top-actions">
-            <a className="ghost" href={publicRelease.download} target="_blank" rel="noreferrer"><Download size={18} /> Download Alpha</a>
-            <button className="ghost" onClick={exportSetupPack}><Download size={18} /> Export Pack</button>
-            <button className="primary" onClick={downloadConfig}><Download size={18} /> Export APO</button>
+            {!expertMode ? (
+              <>
+                <button className="primary" onClick={() => setActive('detect')}><Search size={18} /> Auto setup</button>
+                <button className="ghost" onClick={applySimpleAutoTune}><Sparkles size={18} /> Auto tune</button>
+                <button className="ghost" onClick={() => copyShareText(appInviteText, 'App invite')}><Copy size={18} /> Share</button>
+                <button className="ghost" onClick={() => setActive('reports')}><Bug size={18} /> Report issue</button>
+                <button className="ghost" onClick={() => updateUserSettings({ interfaceMode: 'expert' })}><BrainCircuit size={18} /> Expert</button>
+              </>
+            ) : (
+              <>
+                <button className="ghost" onClick={() => updateUserSettings({ interfaceMode: 'simple' })}><Gauge size={18} /> Simple</button>
+                <button className="ghost" onClick={() => copyShareText(shareProfileText, 'Audio profile')}><Copy size={18} /> Copy Profile</button>
+                <a className="ghost" href={publicRelease.feedback} target="_blank" rel="noreferrer"><Bug size={18} /> Feedback</a>
+                <button className="ghost" onClick={exportSetupPack}><Download size={18} /> Export Pack</button>
+                <button className="primary" onClick={downloadConfig}><Download size={18} /> Export APO</button>
+              </>
+            )}
           </div>
         </header>
+        {shareStatus && <p className="share-status">{shareStatus}</p>}
         {feedbackLayer}
 
-        {active === 'hub' && <CommunityHubPage />}
+        {active === 'hub' && <CommunityHubPage cueforgeState={cueforgeState.stateV2} />}
 
-        {active === 'dashboard' && (
+        {active === 'dashboard' && (expertMode ? (
           <section className="grid dashboard-grid">
+            <Panel className="wide no-pad" title="Seamless Engine Foundation" icon={BrainCircuit}>
+              <SetupCommandCenter
+                state={cueforgeState}
+                context={commandCenterContext}
+                onOpen={setActive}
+                onApplyProfile={applyProfileBrain}
+                onExportPack={exportSeamlessReleasePack}
+              />
+            </Panel>
             <Panel className="wide" title="Live Intelligence" icon={Activity}>
               <div className="spectrum" aria-label="animated spectrum visualizer">
                 {Array.from({ length: 38 }).map((_, i) => <span key={i} style={{ '--h': `${24 + ((i * 17) % 72)}%` }} />)}
@@ -441,6 +1069,7 @@ function App() {
             </Panel>
             <Panel title="Why Test CueForge" icon={ShieldCheck}>
               <h2>Built by players, tested in real matches</h2>
+              <p>CueForge is for Windows players using IEMs, headsets, USB mics, Discord, Equalizer APO, Peace, Sonar, and real-world audio chains that never behave perfectly.</p>
               <p>CueForge is not trying to out-corporate big audio suites. It is for players who want to see what is actually happening in their setup, then help shape the fix.</p>
               <ul className="clean-list">
                 <li>Local-first: no hidden upload, no silent driver change, no mystery cloud tuning.</li>
@@ -449,23 +1078,46 @@ function App() {
                 <li>Fast loop: tester issues feed the repair queue so real sessions turn into real updates.</li>
               </ul>
               <div className="live-actions">
-                <a className="primary button-link" href={publicRelease.download} target="_blank" rel="noreferrer"><Download size={18} /> Download alpha</a>
+                <a className="primary button-link" href={publicRelease.app} target="_blank" rel="noreferrer"><Play size={18} /> Open web app</a>
                 <a className="ghost button-link" href={publicRelease.feedback} target="_blank" rel="noreferrer"><Bug size={18} /> Send feedback</a>
-                <button className="ghost" onClick={() => setActive('notes')}><Bug size={18} /> Open Panda Notes</button>
               </div>
+              <p className="callout">{publicRelease.desktopStatus}</p>
             </Panel>
             <Panel title="Product Invention" icon={Radio}>
               <h2>Audio DNA</h2>
               <p>Learns your headset, games, and manual tweaks into a personal sound fingerprint for future automatic recommendations.</p>
             </Panel>
           </section>
-        )}
+        ) : (
+          <SimpleHome
+            analysis={analysis}
+            selectedGame={selectedGame}
+            selectedSourceProfile={selectedSourceProfile}
+            appInviteText={appInviteText}
+            shareProfileText={shareProfileText}
+            shareProfilePayload={shareProfilePayload}
+            cueforgeState={cueforgeState}
+            commandCenterContext={commandCenterContext}
+            onOpen={setActive}
+            onAutoTune={applySimpleAutoTune}
+            onExportSetup={exportSetupPack}
+            onExportReleasePack={exportSeamlessReleasePack}
+            onApplyProfileBrain={applyProfileBrain}
+            onImportProfile={applySharedAudioProfile}
+          />
+        ))}
 
         {active === 'selftest' && <SelfTestRunner />}
 
-        {active === 'dna' && <AudioDnaPage eq={eq} />}
+        {active === 'dna' && <AudioDnaPage eq={eq} cueforgeState={cueforgeState.stateV2} />}
 
-        {active === 'blindmatch' && <BlindMatchPage baseEq={eq} onApply={applyAutoTune} />}
+        {active === 'blindmatch' && (
+          <BlindMatchPage
+            baseEq={eq}
+            onApply={applyAutoTune}
+            onSavePreferenceModel={setSoundPreferenceModel}
+          />
+        )}
 
         {active === 'masking' && <MaskingLabPage eq={eq} onApply={applyAutoTune} />}
 
@@ -490,7 +1142,6 @@ function App() {
             }}
           />
         )}
-
         {active === 'saves' && (
           <GameplaySavePage
             eq={eq}
@@ -510,6 +1161,7 @@ function App() {
             active={active}
             replayNotice={replayNotice}
             uiNotes={uiNotes}
+            cueforgeState={cueforgeState.stateV2}
             onReplay={(state) => {
               setEq(state.eq);
               setSample(state.sample || sample);
@@ -527,12 +1179,14 @@ function App() {
         {active === 'mic' && (
           <section className="grid two">
             <LiveAudioLab />
-            <Panel title="Mic Analyzer" icon={Mic}>
+            <Panel title="Mic Problem Analyzer" icon={Mic}>
+              <p>Type what people heard in Discord or in-game. CueForge turns that plain note into a likely cause and a safe first tweak.</p>
               <label className="field">
-                <span>Describe headset / app / problem</span>
-                <textarea value={sample} onChange={(e) => setSample(e.target.value)} />
+                <span>What happened?</span>
+                <textarea aria-label="What happened?" value={sample} onChange={(e) => setSample(e.target.value)} placeholder="Example: teammates say my mic is boomy in Discord, but game audio sounds fine." />
               </label>
               <button className="primary" onClick={runAnalyzer}><Play size={18} /> Run analysis</button>
+              <p className="callout">For live proof, use Start live mic feedback on the left. This box is for quick notes from teammates or testers.</p>
             </Panel>
             <Panel title="Result" icon={AudioLines}>
               <Metric label="Voice clarity" value={`${analysis.clarity}%`} tone="teal" />
@@ -555,7 +1209,7 @@ function App() {
           </section>
         )}
 
-        {active === 'eq' && (
+        {active === 'eq' && (expertMode ? (
           <section className="grid two">
             <Panel className="wide" title="10-Band EQ Studio" icon={SlidersHorizontal}>
               <div className="eq-board">
@@ -588,7 +1242,20 @@ function App() {
               <pre>{sourceConfig}</pre>
             </Panel>
           </section>
-        )}
+        ) : (
+          <SimpleTunePage
+            eq={eq}
+            selectedSourceProfile={selectedSourceProfile}
+            appInviteText={appInviteText}
+            shareProfileText={shareProfileText}
+            shareProfilePayload={shareProfilePayload}
+            onAutoTune={applySimpleAutoTune}
+            onSaveConfig={downloadConfig}
+            onOpenExpert={() => updateUserSettings({ interfaceMode: 'expert' })}
+            onOpenSoundMatch={() => setActive('blindmatch')}
+            onImportProfile={applySharedAudioProfile}
+          />
+        ))}
 
         {active === 'games' && (
           <section className="grid two">
@@ -613,7 +1280,16 @@ function App() {
           </section>
         )}
 
-        {active === 'detect' && <AutoDetect />}
+        {active === 'detect' && <AutoDetect
+          onApplyProfile={applySetupIntelligenceProfile}
+          onAutoSwitchProfile={autoSwitchDetectedGameProfile}
+          onUpdateChain={({ devices, bridgeReport, autoDetectReport, desktopReady }) => {
+            if (devices) setChainDevices(devices);
+            if (bridgeReport) setChainBridgeReport(bridgeReport);
+            if (autoDetectReport) setChainAutoDetectReport(autoDetectReport);
+            if (typeof desktopReady === 'boolean') setDesktopBridgeReady(desktopReady);
+          }}
+        />}
 
         {active === 'drivers' && <DriverLayerPage apoConfig={apoConfig} />}
 
@@ -645,11 +1321,37 @@ function App() {
           </section>
         )}
 
-        {active === 'inventory' && <Inventory onOpen={setActive} onRerunSetup={rerunSetup} uiNotes={uiNotes} onClearUiNotes={() => {
-          setUiNotes([]);
-          safeSetJson(UI_FEEDBACK_KEY, []);
-          setUiNoteStatus('Developer UI notes cleared from this browser.');
-        }} />}
+        {active === 'inventory' && <Inventory
+          onOpen={setActive}
+          onRerunSetup={rerunSetup}
+          uiNotes={uiNotes}
+          shortcutVault={shortcutVault}
+          onUpdateShortcuts={(next) => {
+            setShortcutVault(next);
+            safeSetJson(SHORTCUT_VAULT_KEY, next);
+          }}
+          onUpdateUiNotes={(next) => {
+            setUiNotes(next);
+            safeSetJson(UI_FEEDBACK_KEY, next);
+          }}
+          onClearUiNotes={() => {
+            setUiNotes([]);
+            safeSetJson(UI_FEEDBACK_KEY, []);
+            setUiNoteStatus('Developer UI notes cleared from this browser.');
+          }}
+        />}
+
+        {active === 'settings' && (
+          <SettingsPage
+            settings={userSettings}
+            onUpdate={updateUserSettings}
+            onReset={resetUserSettings}
+            onRerunSetup={rerunSetup}
+            onOpen={setActive}
+            uiNoteCount={uiNotes.length}
+            shortcutCount={shortcutVault.length}
+          />
+        )}
       </main>
     </div>
   );
@@ -670,10 +1372,47 @@ function describeFeedbackTarget(target) {
 }
 
 function UiNotePopover({ draft, onChange, onCancel, onSave }) {
+  const popoverRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const popover = popoverRef.current;
+      const textarea = textareaRef.current;
+      if (!popover || !textarea) return;
+
+      try {
+        textarea.focus({ preventScroll: true });
+      } catch {
+        textarea.focus();
+      }
+
+      const popoverRect = popover.getBoundingClientRect();
+      const textareaRect = textarea.getBoundingClientRect();
+      const actionsRect = popover.querySelector('.ui-note-actions')?.getBoundingClientRect();
+      const scrollDelta = computeUiNoteFocusScrollDelta({
+        popoverTop: popoverRect.top,
+        popoverBottom: actionsRect?.top || popoverRect.bottom,
+        fieldTop: textareaRect.top,
+        fieldBottom: textareaRect.bottom
+      });
+
+      if (scrollDelta) popover.scrollTop += scrollDelta;
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [draft.position.x, draft.position.y, draft.position.maxHeight]);
+
   return (
     <div
-      className="ui-note-popover"
-      style={{ left: `${draft.position.x}px`, top: `${draft.position.y}px` }}
+      ref={popoverRef}
+      className={`ui-note-popover note-${draft.position.verticalPlacement || 'below'} note-${draft.position.horizontalPlacement || 'center'}`}
+      style={{
+        left: `${draft.position.x}px`,
+        top: `${draft.position.y}px`,
+        width: `${draft.position.width || 340}px`,
+        maxHeight: `${draft.position.maxHeight || 430}px`
+      }}
       role="dialog"
       aria-label="Developer UI note"
     >
@@ -687,6 +1426,9 @@ function UiNotePopover({ draft, onChange, onCancel, onSave }) {
         <span>{draft.target.label}</span>
         <small>{draft.page} / {draft.viewport.xPercent}% x {draft.viewport.yPercent}%</small>
       </div>
+      <small className="ui-note-boundary">
+        {draft.position.verticalPlacement === 'above' ? 'Opened above the click to stay inside the window.' : 'Opened below the click to stay inside the window.'}
+      </small>
       <label className="field">
         <span>Retrieval tag</span>
         <select value={draft.tag} onChange={(event) => onChange({ ...draft, tag: event.target.value })}>
@@ -696,13 +1438,14 @@ function UiNotePopover({ draft, onChange, onCancel, onSave }) {
       <label className="field">
         <span>Note for developer</span>
         <textarea
+          ref={textareaRef}
           value={draft.note}
           onChange={(event) => onChange({ ...draft, note: event.target.value })}
           placeholder="What felt confusing, broken, too small, missing, or annoying?"
           autoFocus
         />
       </label>
-      <div className="live-actions">
+      <div className="live-actions ui-note-actions">
         <button className="primary" onClick={onSave}>Save note</button>
         <button className="ghost" onClick={onCancel}>Cancel</button>
       </div>
@@ -732,7 +1475,7 @@ function evidenceFileExtension(mimeType = '') {
   return 'webm';
 }
 
-function SetupJourney({ onComplete, onSkip }) {
+function SetupJourney({ settings, onComplete, onSkip }) {
   const [step, setStep] = useState(0);
   const [micStatus, setMicStatus] = useState('not checked');
   const [scanStatus, setScanStatus] = useState('not scanned');
@@ -764,7 +1507,22 @@ function SetupJourney({ onComplete, onSkip }) {
     ['Reflection', 'Save the profile and meet the tuned version.']
   ];
   const setupStage = setupSteps[step];
+  const backgroundAudioAllowed = canPlayBackgroundAudio(settings);
   const profileStrength = Math.round((Number(profile.footstepFocus) + Number(profile.commsFocus) + Number(profile.bassControl) + Number(profile.fatigueControl)) / 4 * 10);
+  const setupRecovery = useMemo(() => buildPermissionRecovery({
+    feature: 'setup-mic',
+    state: micStatus,
+    desktopReady: Boolean(window.cueforgeDesktop?.isDesktop)
+  }), [micStatus]);
+  const setupSummary = useMemo(() => [
+    `Game focus: ${profile.gameFocus}`,
+    `Output: ${profile.outputType}`,
+    `Mic: ${profile.micType}`,
+    `Tools: ${Object.values(profile.tools).filter(Boolean).length || 0} selected`,
+    `Permission: ${setupRecovery.status}`,
+    `Devices: ${deviceCount || 'not scanned yet'}`,
+    bridgeFound ? 'Windows bridge: loaded' : 'Windows bridge: optional'
+  ], [profile.gameFocus, profile.outputType, profile.micType, profile.tools, setupRecovery.status, deviceCount, bridgeFound]);
 
   const updateProfile = (key, value) => setProfile((current) => ({ ...current, [key]: value }));
   const updateTool = (key, value) => setProfile((current) => ({
@@ -777,6 +1535,13 @@ function SetupJourney({ onComplete, onSkip }) {
   }, [step]);
 
   useEffect(() => () => stopSetupSoundscape({ immediate: true }), []);
+
+  useEffect(() => {
+    if (!backgroundAudioAllowed && soundRef.current) {
+      stopSetupSoundscape({ immediate: true });
+      setToneStatus('background audio off in Settings');
+    }
+  }, [backgroundAudioAllowed]);
 
   const requestMic = async () => {
     try {
@@ -824,6 +1589,11 @@ function SetupJourney({ onComplete, onSkip }) {
   };
 
   const startSetupSoundscape = async () => {
+    if (!backgroundAudioAllowed) {
+      setToneStatus('background audio is off in Settings');
+      return;
+    }
+
     if (soundRef.current) {
       stopSetupSoundscape();
       return;
@@ -960,7 +1730,7 @@ function SetupJourney({ onComplete, onSkip }) {
           <h1>Walk the bamboo path before you tune.</h1>
           <p>The first run is a guided soundwalk: gear in, devices checked, calibration shaped, then the pond reflection reveals the tuned player CueForge is building around.</p>
           <div className="setup-audio-controls">
-            <button className="primary" onClick={startSetupSoundscape}><Volume2 size={18} /> {soundActive ? 'Stop soundwalk' : 'Start soundwalk'}</button>
+            <button className={backgroundAudioAllowed ? 'primary' : 'ghost'} onClick={startSetupSoundscape}><Volume2 size={18} /> {soundActive ? 'Stop soundwalk' : backgroundAudioAllowed ? 'Start soundwalk' : 'Background audio off'}</button>
             <span>{toneStatus}</span>
           </div>
           <div className="setup-meta-grid" aria-label="Setup safety and status">
@@ -1032,6 +1802,11 @@ function SetupJourney({ onComplete, onSkip }) {
                 <Metric label="Devices" value={String(deviceCount)} tone={deviceCount ? 'teal' : 'amber'} />
                 <Metric label="Bridge" value={bridgeFound ? 'loaded' : 'optional'} tone={bridgeFound ? 'teal' : 'amber'} />
               </div>
+              <div className={`data-card permission-recovery recovery-${setupRecovery.level}`}>
+                <strong>{setupRecovery.title}</strong>
+                <span>{setupRecovery.detail}</span>
+                <small>{formatPermissionRecoverySteps(setupRecovery)}</small>
+              </div>
               <div className="live-actions">
                 <button className="primary" onClick={requestMic}><Mic size={18} /> Grant mic access</button>
                 <button className="ghost" onClick={scanSetup}><Search size={18} /> Scan devices</button>
@@ -1064,6 +1839,11 @@ function SetupJourney({ onComplete, onSkip }) {
                 <div><strong>{profile.gameFocus}</strong><span>{profile.outputType}</span></div>
                 <div><strong>{profile.micType}</strong><span>Mic: {micStatus}</span></div>
                 <div><strong>{deviceCount} devices</strong><span>{bridgeFound ? 'Windows bridge loaded' : 'Browser scan only'}</span></div>
+              </div>
+              <div className="data-card setup-summary-card">
+                <strong>Setup summary</strong>
+                <span>{setupSummary.join(' / ')}</span>
+                <small>{setupRecovery.primaryAction}</small>
               </div>
               <p className="callout">After this, CueForge opens the main app without a setup tab in the sidebar. Rerun the bamboo soundwalk later from System Info.</p>
             </>
@@ -1441,21 +2221,40 @@ function SetupThreeScene({ step }) {
 function PersonalHearingModel() {
   const [ear, setEar] = useState('left');
   const [step, setStep] = useState(0);
-  const [volume, setVolume] = useState(18);
+  const [levelDb, setLevelDb] = useState(-30);
   const [results, setResults] = useState(() => {
     try {
       const saved = localStorage.getItem('cueforge-hearing-results');
-      return saved ? JSON.parse(saved) : createEmptyHearingResults();
+      return saved ? normalizeHearingResults(JSON.parse(saved)) : createEmptyHearingResults();
     } catch {
       return createEmptyHearingResults();
     }
   });
-  const [status, setStatus] = useState('Start quiet. Use the lowest comfortable volume. Mark only what you can clearly hear.');
+  const [status, setStatus] = useState('Start quiet. Keep Windows volume low. Play the tone, then mark what it felt like.');
 
   const frequency = hearingFrequencies[step];
   const compensation = calculateCompensation(results);
   const score = hearingScore(results);
   const apoOverlay = buildHearingApoOverlay(compensation);
+  const currentThreshold = normalizeHearingResults(results)[ear][frequency];
+  const responseLabel = {
+    not_heard: 'Not heard',
+    barely_heard: 'Barely heard',
+    clear: 'Clear',
+    too_sharp: 'Too sharp'
+  };
+
+  const advanceStep = () => {
+    if (step < hearingFrequencies.length - 1) {
+      setStep(step + 1);
+      return;
+    }
+
+    if (ear === 'left') {
+      setEar('right');
+      setStep(0);
+    }
+  };
 
   const playHearingTone = async () => {
     const context = new AudioContext();
@@ -1465,34 +2264,35 @@ function PersonalHearingModel() {
     oscillator.type = 'sine';
     oscillator.frequency.value = frequency;
     panner.pan.value = ear === 'left' ? -1 : 1;
-    const safeGain = clamp(volume / 100, 0.02, 0.28);
+    const safeGain = clamp(Math.pow(10, levelDb / 20) * 0.32, 0.001, 0.18);
     gain.gain.setValueAtTime(0.0001, context.currentTime);
     gain.gain.exponentialRampToValueAtTime(safeGain, context.currentTime + 0.08);
     gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.9);
     oscillator.connect(gain).connect(panner).connect(context.destination);
     oscillator.start();
     oscillator.stop(context.currentTime + 0.95);
-    setStatus(`${ear === 'left' ? 'Left' : 'Right'} ear ${frequency}Hz tone played at ${volume}%.`);
+    setStatus(`${ear === 'left' ? 'Left' : 'Right'} ear ${frequency}Hz tone played at ${levelDb} dB. Keep it comfortable.`);
   };
 
-  const markTone = (heard) => {
+  const markTone = (response) => {
+    const normalized = normalizeHearingResults(results);
+    const updatedEntry = updateThresholdEntry(normalized[ear][frequency], response, levelDb);
     const next = {
-      ...results,
+      ...normalized,
       [ear]: {
-        ...results[ear],
-        [frequency]: heard
+        ...normalized[ear],
+        [frequency]: updatedEntry
       }
     };
+    const nextLevel = nextHearingLevel(response, levelDb);
     setResults(next);
+    setLevelDb(nextLevel);
     safeSetJson('cueforge-hearing-results', next);
 
-    if (step < hearingFrequencies.length - 1) {
-      setStep(step + 1);
-    } else if (ear === 'left') {
-      setEar('right');
-      setStep(0);
+    if (response === 'clear' || response === 'too_sharp') {
+      advanceStep();
     }
-    setStatus(heard ? 'Marked as clearly heard.' : 'Marked as missed or unclear. The model will compensate gently.');
+    setStatus(`${responseLabel[response]} saved. Next tone level is ${nextLevel} dB.`);
   };
 
   const reset = () => {
@@ -1501,7 +2301,8 @@ function PersonalHearingModel() {
     localStorage.removeItem('cueforge-hearing-results');
     setEar('left');
     setStep(0);
-    setStatus('Hearing model reset. Start with left ear at 250Hz.');
+    setLevelDb(-30);
+    setStatus('Hearing model reset. Start with left ear at 125Hz and keep volume low.');
   };
 
   const downloadProfile = () => {
@@ -1511,7 +2312,12 @@ function PersonalHearingModel() {
       score,
       results,
       compensation,
-      equalizerApoOverlay: apoOverlay
+      equalizerApoOverlay: apoOverlay,
+      safety: {
+        ...safetyRules,
+        highBandRule: '6k-12k boosts are clamped and may become cuts if harshness is reported.',
+        preampRule: 'Negative preamp is added whenever any boost exists.'
+      }
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
@@ -1523,10 +2329,13 @@ function PersonalHearingModel() {
 
   return (
     <Panel className="wide" title="Personal Hearing Model" icon={Headphones}>
-      <p>This is a guided IEM/headphone audibility check. It builds a gentle compensation overlay from tones you miss. It is not a medical hearing test.</p>
+      <p>This is a guided IEM/headphone threshold check. Keep volume low, mark when each tone becomes audible, comfortable, or sharp, then CueForge builds a gentle overlay. It is not a medical hearing test.</p>
+      <p className="callout">{playerSafetyWarnings[0]} Hearing boosts are capped at +{safetyRules.maxHearingBoostDb} dB, treble boosts are capped at +{safetyRules.maxTrebleBoostDb} dB, and any boost adds negative preamp.</p>
+      <p className="callout">{playerSafetyWarnings[1]}</p>
       <div className="hearing-status">
         <Metric label="Progress" value={`${score.answered}/${score.total}`} tone={score.complete ? 'teal' : 'amber'} />
-        <Metric label="Heard" value={`${score.percentHeard}%`} tone="teal" />
+        <Metric label="Comfort mapped" value={`${score.percentComfortable}%`} tone="teal" />
+        <Metric label="Confidence" value={`${score.confidence}%`} tone={score.confidence >= 70 ? 'teal' : 'amber'} />
       </div>
       <div className="hearing-controls">
         <div className="source-tabs">
@@ -1540,14 +2349,22 @@ function PersonalHearingModel() {
           </select>
         </label>
         <label className="field">
-          <span>Tone volume: {volume}%</span>
-          <input type="range" min="5" max="35" value={volume} onChange={(event) => setVolume(Number(event.target.value))} />
+          <span>Tone level: {levelDb} dB</span>
+          <input type="range" min="-42" max="-6" value={levelDb} onChange={(event) => setLevelDb(Number(event.target.value))} />
         </label>
+      </div>
+      <div className="threshold-card">
+        <strong>{ear === 'left' ? 'Left' : 'Right'} ear / {frequency} Hz</strong>
+        <span>Audible {currentThreshold.audibleAtDb ?? '--'} dB</span>
+        <span>Comfort {currentThreshold.comfortableAtDb ?? '--'} dB</span>
+        <span>Sharp {currentThreshold.harshAtDb ?? '--'} dB</span>
       </div>
       <div className="live-actions">
         <button className="primary" onClick={playHearingTone}><Play size={18} /> Play {frequency}Hz</button>
-        <button className="ghost" onClick={() => markTone(true)}>Clearly heard</button>
-        <button className="ghost" onClick={() => markTone(false)}>Missed / unclear</button>
+        <button className="ghost" onClick={() => markTone('not_heard')}>Not heard</button>
+        <button className="ghost" onClick={() => markTone('barely_heard')}>Barely heard</button>
+        <button className="ghost" onClick={() => markTone('clear')}>Clear</button>
+        <button className="ghost" onClick={() => markTone('too_sharp')}>Too sharp</button>
         <button className="ghost" onClick={reset}>Reset</button>
       </div>
       <p className="callout">{status}</p>
@@ -1556,7 +2373,7 @@ function PersonalHearingModel() {
           <span
             key={point.frequency}
             title={`${point.frequency}Hz ${point.averageDb}dB`}
-            style={{ height: `${20 + point.averageDb * 22}%` }}
+            style={{ height: `${clamp(20 + Math.abs(point.averageDb) * 18, 8, 100)}%` }}
           />
         ))}
       </div>
@@ -1569,10 +2386,15 @@ function PersonalHearingModel() {
           <h2>Per-Frequency Model</h2>
           <ul className="clean-list">
             {compensation.map((point) => (
-              <li key={point.frequency}>{point.frequency}Hz - L {point.leftDb.toFixed(1)}dB / R {point.rightDb.toFixed(1)}dB</li>
+              <li key={point.frequency}>{point.frequency}Hz - L {point.leftDb.toFixed(1)}dB / R {point.rightDb.toFixed(1)}dB / cap +{point.maxBoostDb.toFixed(1)}dB</li>
             ))}
           </ul>
         </div>
+      </div>
+      <div className="data-card replay-export-status">
+        <strong>Replay-safe export status</strong>
+        <span>{score.answered ? 'Ready to export threshold bands, confidence, safety caps, and APO overlay.' : 'Run at least one tone response before exporting a useful hearing profile.'}</span>
+        <small>This is not medical data. Exports avoid raw device IDs and keep boosts clamped for comfort.</small>
       </div>
       <button className="primary" onClick={downloadProfile}><Download size={18} /> Export hearing profile</button>
     </Panel>
@@ -1594,6 +2416,287 @@ function Metric({ label, value, tone }) {
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
+  );
+}
+
+function HunterRewardsPanel({ className = '' }) {
+  return (
+    <Panel className={className} title="Hunter Rewards" icon={ShieldCheck}>
+      <p>Alpha and beta rewards are proof-based. A reward tier is claimed with a proof code, useful report, replay, or verified retest; spam, fake activity, and private data earn zero points.</p>
+      <div className="metric-row selftest-summary">
+        <Metric label="Reward mode" value="Proof" tone="teal" />
+        <Metric label="Spam points" value="0" tone="red" />
+        <Metric label="Claim needs" value="Proof code" tone="amber" />
+      </div>
+      <div className="module-list">
+        {hunterRewardTiers.map((reward) => (
+          <div className="module-row" key={reward.tier}>
+            <CheckCircle2 size={17} />
+            <div>
+              <strong>{reward.tier}</strong>
+              <span>{reward.claim}</span>
+            </div>
+            <em>{reward.points}</em>
+          </div>
+        ))}
+      </div>
+      <p className="callout">Best finds are the gritty ones: hard repro steps, setup weirdness, audio evidence, and a retest after the fix.</p>
+    </Panel>
+  );
+}
+
+function ShareProfilePanel({
+  className = '',
+  appInviteText,
+  shareProfileText,
+  shareProfilePayload,
+  onImportProfile
+}) {
+  const [status, setStatus] = useState('Copy the app invite or your current audio profile. Nothing uploads.');
+  const [importText, setImportText] = useState('');
+
+  const copyText = async (text, label) => {
+    try {
+      await navigator.clipboard?.writeText(text);
+      setStatus(`${label} copied.`);
+    } catch {
+      setStatus(`${label} is ready below. Select and copy manually if the browser blocks clipboard.`);
+    }
+  };
+
+  const downloadProfile = () => {
+    downloadTextFile('cueforge-shared-audio-profile.json', JSON.stringify(shareProfilePayload, null, 2));
+    setStatus('Audio profile downloaded as JSON.');
+  };
+
+  const importProfile = () => {
+    try {
+      const profile = parseAudioProfileShare(importText);
+      onImportProfile?.(profile);
+      setStatus(`Imported ${profile.sourceProfileName || 'shared CueForge profile'}. Review before exporting.`);
+      setImportText('');
+    } catch (error) {
+      setStatus(error.message || 'Could not read that shared profile.');
+    }
+  };
+
+  return (
+    <Panel className={className} title="Share CueForge" icon={Copy}>
+      <p>Send friends the app or your current sound profile. Shared profiles are plain JSON, local, and safe to review before applying.</p>
+      <div className="live-actions">
+        <button className="primary" onClick={() => copyText(appInviteText, 'App invite')}><Copy size={18} /> Copy invite</button>
+        <button className="ghost" onClick={() => copyText(shareProfileText, 'Audio profile')}><Copy size={18} /> Copy profile</button>
+        <button className="ghost" onClick={downloadProfile}><Download size={18} /> Download profile</button>
+      </div>
+      <div className="data-card">
+        <strong>{shareProfilePayload.sourceProfileName}</strong>
+        <span>{shareProfilePayload.game || 'No game selected'} / {shareProfilePayload.eq.length} EQ bands</span>
+        <small>{shareProfilePayload.note}</small>
+      </div>
+      <label className="field">
+        <span>Paste a friend profile</span>
+        <textarea aria-label="Paste a friend profile" value={importText} onChange={(event) => setImportText(event.target.value)} placeholder="Paste CueForge audio profile JSON here." />
+      </label>
+      <div className="live-actions">
+        <button className="ghost" onClick={importProfile}><SlidersHorizontal size={18} /> Import profile</button>
+      </div>
+      <p className="callout">{status}</p>
+    </Panel>
+  );
+}
+
+function SimpleHome({
+  analysis,
+  selectedGame,
+  selectedSourceProfile,
+  appInviteText,
+  shareProfileText,
+  shareProfilePayload,
+  cueforgeState,
+  commandCenterContext,
+  onOpen,
+  onAutoTune,
+  onExportSetup,
+  onExportReleasePack,
+  onApplyProfileBrain,
+  onImportProfile
+}) {
+  const sourceName = localSourceProfiles[selectedSourceProfile]?.name || 'FPS starter profile';
+  const micStatus = analysis.clipping > 15
+    ? 'Lower mic gain first'
+    : analysis.noise > 48
+      ? 'Clean up room noise'
+      : 'Mic looks usable';
+  const nextMove = analysis.clipping > 15
+    ? 'Run Mic Check before playing.'
+    : 'Run Auto Setup, then use Auto Tune.';
+
+  return (
+    <section className="grid simple-home">
+      <SetupCommandCenter
+        state={cueforgeState}
+        context={commandCenterContext}
+        compact
+        onOpen={onOpen}
+        onApplyProfile={onApplyProfileBrain}
+        onExportPack={onExportReleasePack}
+      />
+
+      <Panel className="wide simple-start-panel" title="Start Here" icon={Gauge}>
+        <div className="simple-hero">
+          <div>
+            <h2>One clean path. No lab clutter.</h2>
+            <p>CueForge can handle the messy audio chain in the background. You only need to walk through setup, mic check, tune, and one real match.</p>
+          </div>
+          <div className="simple-next">
+            <span>Next best move</span>
+            <strong>{nextMove}</strong>
+          </div>
+        </div>
+        <div className="simple-step-grid">
+          <button className="simple-step" onClick={() => onOpen('detect')}>
+            <Search size={22} />
+            <strong>1. Auto setup</strong>
+            <span>Detect or import your gear and audio chain.</span>
+          </button>
+          <button className="simple-step" onClick={() => onOpen('mic')}>
+            <Mic size={22} />
+            <strong>2. Mic check</strong>
+            <span>Make sure Discord and teammates can hear you clearly.</span>
+          </button>
+          <button className="simple-step" onClick={onAutoTune}>
+            <Sparkles size={22} />
+            <strong>3. Auto tune</strong>
+            <span>Apply a safe FPS starting curve without touching drivers.</span>
+          </button>
+          <button className="simple-step" onClick={() => onOpen('trial')}>
+            <Gamepad2 size={22} />
+            <strong>4. Play test</strong>
+            <span>Run one real match and score what changed.</span>
+          </button>
+        </div>
+      </Panel>
+
+      <Panel title="What CueForge Knows" icon={ShieldCheck}>
+        <div className="simple-status-list">
+          <div>
+            <span>Game focus</span>
+            <strong>{selectedGame}</strong>
+          </div>
+          <div>
+            <span>Sound target</span>
+            <strong>{sourceName}</strong>
+          </div>
+          <div>
+            <span>Mic status</span>
+            <strong>{micStatus}</strong>
+          </div>
+        </div>
+        <p className="callout">Simple Mode hides raw graphs, research panels, and developer tools. Expert Mode brings them back when you want the full bench.</p>
+      </Panel>
+
+      <ShareProfilePanel
+        appInviteText={appInviteText}
+        shareProfileText={shareProfileText}
+        shareProfilePayload={shareProfilePayload}
+        onImportProfile={onImportProfile}
+      />
+
+      <Panel title="When Something Feels Wrong" icon={Bug}>
+        <h2>Tell CueForge what happened.</h2>
+        <p>No perfect wording needed. Report the issue, import it later, and replay the exact state instead of guessing.</p>
+        <div className="live-actions">
+          <button className="primary" onClick={() => onOpen('reports')}><Bug size={18} /> Report issue</button>
+          <button className="ghost" onClick={onExportSetup}><Download size={18} /> Export setup</button>
+        </div>
+      </Panel>
+    </section>
+  );
+}
+
+function SimpleTunePage({
+  eq,
+  selectedSourceProfile,
+  appInviteText,
+  shareProfileText,
+  shareProfilePayload,
+  onAutoTune,
+  onSaveConfig,
+  onOpenExpert,
+  onOpenSoundMatch,
+  onImportProfile
+}) {
+  const sourceName = localSourceProfiles[selectedSourceProfile]?.name || 'FPS starter profile';
+  const lowControl = Math.round(72 - Math.max(0, eq[0] + eq[1] + eq[2]) * 3);
+  const cueFocus = Math.round(70 + Math.max(0, eq[6] + eq[7]) * 5);
+  const comfort = Math.round(78 - Math.max(0, eq[8] + eq[9]) * 4);
+
+  return (
+    <section className="grid simple-home">
+      <Panel className="wide simple-start-panel" title="Simple Tune" icon={Sparkles}>
+        <div className="simple-hero">
+          <div>
+            <h2>Safe tune first. Sliders only if you ask.</h2>
+            <p>CueForge keeps the complicated EQ math behind the scenes. Start with an automatic FPS curve, save it, then judge it in one match.</p>
+          </div>
+          <div className="simple-next">
+            <span>Current target</span>
+            <strong>{sourceName}</strong>
+          </div>
+        </div>
+        <div className="simple-step-grid">
+          <button className="simple-step" onClick={onAutoTune}>
+            <Sparkles size={22} />
+            <strong>Auto tune now</strong>
+            <span>Build a safer competitive curve from the current setup target.</span>
+          </button>
+          <button className="simple-step" onClick={onSaveConfig}>
+            <Download size={22} />
+            <strong>Save APO config</strong>
+            <span>Export text you can review before pasting into Equalizer APO or Peace.</span>
+          </button>
+          <button className="simple-step" onClick={onOpenExpert}>
+            <SlidersHorizontal size={22} />
+            <strong>Open expert EQ</strong>
+            <span>Show the 10-band sliders and raw APO text when you want manual control.</span>
+          </button>
+          <button className="simple-step" onClick={onOpenSoundMatch}>
+            <Radio size={22} />
+            <strong>This-or-that test</strong>
+            <span>Play hidden sound rounds and let your ears pick the curve.</span>
+          </button>
+        </div>
+      </Panel>
+
+      <Panel title="Plain Results" icon={ShieldCheck}>
+        <div className="metric-row">
+          <Metric label="Bass control" value={`${clamp(lowControl, 0, 100)}%`} tone="teal" />
+          <Metric label="Cue focus" value={`${clamp(cueFocus, 0, 100)}%`} tone="teal" />
+          <Metric label="Comfort" value={`${clamp(comfort, 0, 100)}%`} tone="amber" />
+        </div>
+        <p className="callout">Play one match before changing more. If footsteps, comms, or fatigue get worse, use Fix Issue instead of guessing.</p>
+      </Panel>
+
+      <Panel title="No Silent Changes" icon={ShieldCheck}>
+        <p>CueForge does not rewrite drivers or Windows routing in Simple Mode. It generates readable settings and keeps apply steps explicit.</p>
+      </Panel>
+
+      <Panel title="Spatial Honesty" icon={Headphones}>
+        <p>{spatialTruthWarning}</p>
+        <div className="data-card">
+          <strong>Default mode</strong>
+          <span>Safe Stereo for competitive clarity. No fake surround, no magic wall reads.</span>
+        </div>
+      </Panel>
+
+      <ShareProfilePanel
+        className="wide"
+        appInviteText={appInviteText}
+        shareProfileText={shareProfileText}
+        shareProfilePayload={shareProfilePayload}
+        onImportProfile={onImportProfile}
+      />
+    </section>
   );
 }
 
@@ -1669,7 +2772,7 @@ function PlayerTrialPage({ eq, selectedGame, selectedSourceProfile }) {
         </div>
         <label className="field">
           <span>Notes</span>
-          <textarea value={feedback.notes} onChange={(event) => setFeedback((current) => ({ ...current, notes: event.target.value }))} />
+          <textarea aria-label="Notes" value={feedback.notes} onChange={(event) => setFeedback((current) => ({ ...current, notes: event.target.value }))} />
         </label>
         <div className="live-actions">
           <button className="primary" onClick={exportTrial}><Download size={18} /> Export tester packet</button>
@@ -1759,6 +2862,7 @@ function GameplaySavePage({ eq, selectedGame, selectedSourceProfile }) {
       settings,
       snapshots
     }, null, 2));
+    setStatus(`Gameplay save pack exported with ${snapshots.length} snapshot${snapshots.length === 1 ? '' : 's'}.`);
   };
 
   return (
@@ -1840,6 +2944,7 @@ function BetaCheckInPage() {
   const [checkIns, setCheckIns] = useState(() => getSavedJson('cueforge-beta-checkins') || []);
   const [evidence, setEvidence] = useState(() => getSavedJson('cueforge-audio-evidence') || []);
   const [recording, setRecording] = useState(false);
+  const [status, setStatus] = useState('Record one before-match or after-match check-in to create a local proof trail.');
   const [audioStatus, setAudioStatus] = useState('Audio evidence is off. Record only when a tester explicitly starts it.');
   const [latestClip, setLatestClip] = useState(null);
   const evidenceRef = useRef(null);
@@ -1877,6 +2982,7 @@ function BetaCheckInPage() {
     const next = [...checkIns, nextCheckIn].slice(-40);
     setCheckIns(next);
     safeSetJson('cueforge-beta-checkins', next);
+    setStatus(`Check-in recorded for ${nextCheckIn.game || 'the current game'}. Proof code ${nextCheckIn.proof} is ready for export.`);
   };
 
   const resetTesterId = () => {
@@ -1885,11 +2991,13 @@ function BetaCheckInPage() {
     localStorage.setItem('cueforge-beta-tester-id', next);
     setCheckIns([]);
     safeSetJson('cueforge-beta-checkins', []);
+    setStatus('Tester ID reset and local beta check-ins cleared for this browser.');
   };
 
   const exportPacket = () => {
     const packet = buildBetaTesterPacket({ testerId, checkIns, notes, evidence });
     downloadTextFile('cueforge-beta-tester-packet.json', JSON.stringify(packet, null, 2));
+    setStatus(`Beta packet exported with ${packet.summary.totalCheckIns} check-in${packet.summary.totalCheckIns === 1 ? '' : 's'} and ${packet.audioEvidence.length} evidence item${packet.audioEvidence.length === 1 ? '' : 's'}.`);
   };
 
   const startAudioEvidence = async () => {
@@ -2065,15 +3173,15 @@ function BetaCheckInPage() {
         <div className="calibration-grid">
           <label className="field">
             <span>Tester handle</span>
-            <input value={handle} onChange={(event) => setHandle(event.target.value)} />
+            <input aria-label="Tester handle" value={handle} onChange={(event) => setHandle(event.target.value)} />
           </label>
           <label className="field">
             <span>Game tested</span>
-            <input value={game} onChange={(event) => setGame(event.target.value)} />
+            <input aria-label="Game tested" value={game} onChange={(event) => setGame(event.target.value)} />
           </label>
           <label className="field wide-field">
             <span>Gear chain</span>
-            <input value={gear} onChange={(event) => setGear(event.target.value)} />
+            <input aria-label="Gear chain" value={gear} onChange={(event) => setGear(event.target.value)} />
           </label>
         </div>
         <div className="live-actions">
@@ -2081,6 +3189,7 @@ function BetaCheckInPage() {
           <button className="ghost" onClick={exportPacket} disabled={checkIns.length === 0}><Download size={18} /> Export beta packet</button>
           <button className="ghost" onClick={resetTesterId}><RotateCcw size={18} /> Reset ID</button>
         </div>
+        <p className="callout">{status}</p>
       </Panel>
       <Panel title="Active Tester Proof" icon={ShieldCheck}>
         <div className="metric-row selftest-summary">
@@ -2090,7 +3199,7 @@ function BetaCheckInPage() {
         </div>
         <label className="field">
           <span>Tester notes for export</span>
-          <textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
+          <textarea aria-label="Tester notes for export" value={notes} onChange={(event) => setNotes(event.target.value)} />
         </label>
         <div className="stack">
           {checkIns.length === 0 && (
@@ -2108,6 +3217,7 @@ function BetaCheckInPage() {
           ))}
         </div>
       </Panel>
+      <HunterRewardsPanel />
       <Panel title="Audio Evidence Logger" icon={Mic}>
         <p>Opt-in local mic clips for before/after proof. CueForge records a short clip only when you press the button, analyzes signal stats, and stores capped metadata locally.</p>
         <div className="live-actions">
@@ -2141,13 +3251,13 @@ function BetaCheckInPage() {
   );
 }
 
-function CommunityHubPage() {
-  const appUrl = 'https://p4nd4907.github.io/cueforge/';
-  const discordUrl = 'https://discord.gg/vyQwyJ49v';
+function CommunityHubPage({ cueforgeState = null }) {
+  const appUrl = publicRelease.app;
+  const discordUrl = socialLinks.Discord;
   const [items, setItems] = useState(() => getSavedJson('cueforge-community-feedback') || []);
   const [source, setSource] = useState('Discord');
   const [platform, setPlatform] = useState('Discord');
-  const [redditMode, setRedditMode] = useState('community');
+  const [redditMode, setRedditMode] = useState('comment');
   const [handle, setHandle] = useState('');
   const [game, setGame] = useState('Tarkov / Siege / COD');
   const [gear, setGear] = useState('IEM/headset + mic');
@@ -2156,7 +3266,15 @@ function CommunityHubPage() {
   const [note, setNote] = useState('');
   const [status, setStatus] = useState('Discord is the main hub. Use this page to keep updates clean and useful.');
   const [approvalQueue, setApprovalQueue] = useState(() => getSavedJson('cueforge-social-approval-queue') || []);
+  const [threads, setThreads] = useState(() => getSavedJson('cueforge-community-threads') || []);
+  const [threadCommunity, setThreadCommunity] = useState('r/buildapc');
+  const [threadTitle, setThreadTitle] = useState('');
+  const [threadUrl, setThreadUrl] = useState('');
+  const [threadSnapshot, setThreadSnapshot] = useState('');
   const summary = summarizeCommunityFeedback(items);
+  const communityPlan = buildCommunityPlan(defaultCommunityWatchlist);
+  const threadSummary = summarizeThreads(threads);
+  const memoryMarkdown = buildCommunityMemoryMarkdown({ communities: defaultCommunityWatchlist, threads });
   const rollCall = buildRollCallPrompt({ focus: type, game, summary });
   const socialDraft = platform === 'Reddit'
     ? buildRedditSafeDraft({ mode: redditMode, summary, appUrl, discordUrl })
@@ -2200,7 +3318,7 @@ function CommunityHubPage() {
     const next = [draft, ...approvalQueue].slice(0, 30);
     setApprovalQueue(next);
     safeSetJson('cueforge-social-approval-queue', next);
-    setStatus(`${destination} draft staged. Copy it, review it, then mark approved or posted after the real account action.`);
+    setStatus(`${destination} reply queued. Copy it, make it sound like the thread you read, then mark replied after the real account action.`);
   };
 
   const updateApprovalDraft = (id, nextStatus) => {
@@ -2217,27 +3335,95 @@ function CommunityHubPage() {
   };
 
   const clearPostedDrafts = () => {
-    const next = approvalQueue.filter((draft) => draft.status !== 'posted');
+    const next = approvalQueue.filter((draft) => !['posted', 'replied'].includes(draft.status));
     setApprovalQueue(next);
     safeSetJson('cueforge-social-approval-queue', next);
-    setStatus('Posted drafts cleared from the local approval queue.');
+    setStatus('Completed replies cleared from the local queue.');
+  };
+
+  const saveThreadMemory = (overrides = {}) => {
+    const parsed = parseRedditSnapshot(threadSnapshot, threadUrl);
+    const thread = createThreadMemory({
+      community: threadCommunity || parsed.community,
+      title: threadTitle || parsed.title,
+      url: threadUrl,
+      snapshot: threadSnapshot,
+      ...overrides
+    });
+    const next = [thread, ...threads.filter((item) => item.id !== thread.id)].slice(0, 40);
+    setThreads(next);
+    safeSetJson('cueforge-community-threads', next);
+    setThreadTitle('');
+    setThreadSnapshot('');
+    setStatus(`Saved ${thread.community} thread memory. Next reply draft is ready.`);
+  };
+
+  const pullPublicThread = async () => {
+    const jsonUrl = buildRedditThreadJsonUrl(threadUrl);
+    if (!jsonUrl) {
+      setStatus('Paste a full Reddit thread URL first. Public pull only works for /r/.../comments/... links.');
+      return;
+    }
+
+    try {
+      const response = await fetch(jsonUrl, { headers: { Accept: 'application/json' } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      const thread = threadFromRedditJson(payload, threadUrl);
+      if (!thread) throw new Error('No thread payload found');
+      const next = [thread, ...threads.filter((item) => item.id !== thread.id)].slice(0, 40);
+      setThreads(next);
+      safeSetJson('cueforge-community-threads', next);
+      setThreadCommunity(thread.community);
+      setThreadTitle(thread.title);
+      setThreadSnapshot(thread.snapshot);
+      setStatus(`Pulled public Reddit thread data for ${thread.community}. Review before replying.`);
+    } catch {
+      setStatus('Public pull was blocked or unavailable. Paste the visible Reddit thread text into Snapshot, then save memory.');
+    }
+  };
+
+  const updateThreadStatus = (id, nextStatus) => {
+    const next = threads.map((thread) => thread.id === id
+      ? { ...thread, status: nextStatus, updatedAt: new Date().toISOString() }
+      : thread);
+    setThreads(next);
+    safeSetJson('cueforge-community-threads', next);
+    setStatus(`Thread marked ${nextStatus}.`);
+  };
+
+  const removeThread = (id) => {
+    const next = threads.filter((thread) => thread.id !== id);
+    setThreads(next);
+    safeSetJson('cueforge-community-threads', next);
+    setStatus('Thread removed from local memory.');
   };
 
   const exportFeedback = () => {
-    const packet = {
-      schema: 'cueforge.community-packet.v1',
-      exportedAt: new Date().toISOString(),
+    const packet = buildCommunityFeedbackPacket({
       summary,
       items,
-      approvalQueue
-    };
+      approvalQueue,
+      threadSummary,
+      threads,
+      cueforgeState
+    });
     downloadTextFile('cueforge-community-feedback.json', JSON.stringify(packet, null, 2));
+  };
+
+  const exportMemoryMarkdown = () => {
+    downloadTextFile('cueforge-community-memory.md', memoryMarkdown);
   };
 
   return (
     <section className="grid two">
-      <Panel className="wide" title="Discord Command Center" icon={Radio}>
-        <p>Use Discord as the main hub, then turn X and Reddit replies into the same clean signal. No hidden tracking, no private account data, no spam posting.</p>
+      <Panel className="wide" title="Community Signal Board" icon={Radio}>
+        <p>Log real tester replies here first. Start with Discord, then add useful X, Reddit, or squad feedback to the same signal board.</p>
+        <div className="data-card quick-path">
+          <strong>Fast path</strong>
+          <span>1. Save the thread. 2. Draft a useful reply. 3. Comment only when the thread deserves it.</span>
+          <small>No hidden tracking, no private account data, no link drops, and no spam posting.</small>
+        </div>
         <div className="community-hero">
           <Metric label="Signals" value={String(summary.total)} tone={summary.total ? 'teal' : 'amber'} />
           <Metric label="Top issue" value={summary.topIssue} tone="teal" />
@@ -2254,15 +3440,15 @@ function CommunityHubPage() {
         <div className="calibration-grid">
           <label className="field">
             <span>Handle or tester name</span>
-            <input value={handle} onChange={(event) => setHandle(event.target.value)} placeholder="optional" />
+            <input aria-label="Handle or tester name" value={handle} onChange={(event) => setHandle(event.target.value)} placeholder="optional" />
           </label>
           <label className="field">
             <span>Game / mode</span>
-            <input value={game} onChange={(event) => setGame(event.target.value)} />
+            <input aria-label="Game / mode" value={game} onChange={(event) => setGame(event.target.value)} />
           </label>
           <label className="field">
             <span>Gear chain</span>
-            <input value={gear} onChange={(event) => setGear(event.target.value)} />
+            <input aria-label="Gear chain" value={gear} onChange={(event) => setGear(event.target.value)} />
           </label>
           <label className="field">
             <span>Issue type</span>
@@ -2277,7 +3463,7 @@ function CommunityHubPage() {
         </div>
         <label className="field">
           <span>What did they actually say?</span>
-          <textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Paste or type the useful part. Emails and phone numbers are redacted on save." />
+          <textarea aria-label="What did they actually say?" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Paste or type the useful part. Emails and phone numbers are redacted on save." />
         </label>
         <div className="live-actions">
           <button className="primary" onClick={addFeedback}><CheckCircle2 size={18} /> Add feedback</button>
@@ -2287,12 +3473,91 @@ function CommunityHubPage() {
         <p className="callout">{status}</p>
       </Panel>
 
+      <HunterRewardsPanel className="wide" />
+
+      <Panel className="wide" title="High-Engagement Watchlist" icon={Search}>
+        <p>Use these as a watch queue, not a blast list. Priority means read/comment when a thread is active and the rules fit.</p>
+        <div className="community-watch-grid">
+          {communityPlan.map((community) => (
+            <div className={`data-card watch-card watch-${community.status}`} key={community.name}>
+              <strong>{community.name}</strong>
+              <span>{community.lane}</span>
+              <div className="watch-meta">
+                <b>{community.score}</b>
+                <small>{community.status}</small>
+              </div>
+              <small>{community.audience}</small>
+              <small>{community.nextMove}</small>
+              <a href={community.url} target="_blank" rel="noreferrer">Open community</a>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel className="wide" title="Thread Memory" icon={ShieldCheck}>
+        <p>Save active discussions before replying. CueForge will keep a local thread memory, draft the next useful reply, and export a GitHub-ready log.</p>
+        <div className="metric-row">
+          <Metric label="Saved threads" value={String(threadSummary.total)} tone={threadSummary.total ? 'teal' : 'amber'} />
+          <Metric label="Priority" value={String(threadSummary.priority)} tone={threadSummary.priority ? 'teal' : 'amber'} />
+          <Metric label="Mode" value={threadSummary.status.replace('-', ' ')} tone="teal" />
+        </div>
+        <div className="calibration-grid">
+          <label className="field">
+            <span>Community</span>
+            <input aria-label="Community" value={threadCommunity} onChange={(event) => setThreadCommunity(event.target.value)} placeholder="r/buildapc" />
+          </label>
+          <label className="field">
+            <span>Thread title</span>
+            <input aria-label="Thread title" value={threadTitle} onChange={(event) => setThreadTitle(event.target.value)} placeholder="Useful thread title" />
+          </label>
+          <label className="field">
+            <span>Thread URL</span>
+            <input aria-label="Thread URL" value={threadUrl} onChange={(event) => setThreadUrl(event.target.value)} placeholder="https://www.reddit.com/r/.../comments/..." />
+          </label>
+          <label className="field">
+            <span>Conversation snapshot</span>
+            <textarea aria-label="Conversation snapshot" value={threadSnapshot} onChange={(event) => setThreadSnapshot(event.target.value)} placeholder="Paste the public thread text, votes/comments, and the part we should answer." />
+          </label>
+        </div>
+        <div className="live-actions">
+          <button className="ghost" onClick={pullPublicThread}>Pull public data</button>
+          <button className="primary" onClick={() => saveThreadMemory()}><Save size={18} /> Save thread</button>
+          <button className="ghost" onClick={() => copyText(memoryMarkdown, 'GitHub memory markdown')}>Copy GitHub memory</button>
+          <button className="ghost" onClick={exportMemoryMarkdown}><Download size={18} /> Export memory</button>
+        </div>
+        <div className="stack thread-list">
+          {threads.length === 0 && (
+            <div className="data-card">
+              <strong>No saved threads yet</strong>
+              <span>Start with one active, relevant discussion. Save it before commenting so follow-ups are not lost.</span>
+            </div>
+          )}
+          {threads.slice(0, 6).map((thread) => (
+            <div className="data-card thread-card" key={thread.id}>
+              <div className="thread-card-head">
+                <strong>{thread.community} - {thread.title}</strong>
+                <span>{thread.engagementScore} score / {thread.status}</span>
+              </div>
+              <small>{thread.comments ?? 'unknown'} comments / {thread.votes ?? 'unknown'} votes / {thread.tags.join(', ') || 'untagged'}</small>
+              <pre>{thread.nextReply}</pre>
+              <div className="live-actions compact-actions">
+                <button className="ghost" onClick={() => copyText(thread.nextReply, 'Next reply')}>Copy reply</button>
+                <button className="ghost" onClick={() => updateThreadStatus(thread.id, 'commented')}>Commented</button>
+                <button className="ghost" onClick={() => updateThreadStatus(thread.id, 'needs-followup')}>Follow up</button>
+                <button className="ghost" onClick={() => updateThreadStatus(thread.id, 'filtered')}>Filtered</button>
+                <button className="ghost" onClick={() => removeThread(thread.id)}>Remove</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
       <Panel title="Roll Call Copy" icon={Activity}>
         <pre>{rollCall}</pre>
         <button className="primary" onClick={() => copyText(rollCall, 'Roll call')}>Copy roll call</button>
       </Panel>
 
-      <Panel title="Post Draft" icon={Bug}>
+      <Panel title="Reply Draft" icon={Bug}>
         <div className="source-tabs">
           {['Discord', 'X', 'Reddit'].map((name) => (
             <button className={platform === name ? 'selected' : ''} key={name} onClick={() => setPlatform(name)}>
@@ -2303,10 +3568,8 @@ function CommunityHubPage() {
         {platform === 'Reddit' && (
           <div className="source-tabs compact-tabs">
             {[
-              ['community', 'Community no-link'],
-              ['profile', 'Profile post'],
-              ['modmail', 'Modmail ask'],
-              ['comment', 'Helpful reply']
+              ['comment', 'Helpful reply'],
+              ['modmail', 'Modmail ask']
             ].map(([id, label]) => (
               <button className={redditMode === id ? 'selected' : ''} key={id} onClick={() => setRedditMode(id)}>
                 {label}
@@ -2316,18 +3579,18 @@ function CommunityHubPage() {
         )}
         <pre>{socialDraft}</pre>
         <div className="live-actions">
-          <button className="primary" onClick={() => copyText(socialDraft, `${platform} draft`)}>Copy draft</button>
-          <button className="ghost" onClick={stageApprovalDraft}><Save size={18} /> Stage for approval</button>
+          <button className="primary" onClick={() => copyText(socialDraft, `${platform} reply draft`)}>Copy reply</button>
+          <button className="ghost" onClick={stageApprovalDraft}><Save size={18} /> Queue reply</button>
         </div>
       </Panel>
 
-      <Panel title="Approval Queue" icon={ShieldCheck}>
-        <p>Owned-account posting stays manual. Stage a draft here, copy it into Discord, X, or Reddit, then mark what actually happened.</p>
+      <Panel title="Reply Queue" icon={ShieldCheck}>
+        <p>Owned-account outreach is comment-first now. Queue a reply here, copy it into the thread you already read, then mark what happened.</p>
         <div className="stack">
           {approvalQueue.length === 0 && (
             <div className="data-card">
-              <strong>No staged posts</strong>
-              <span>Stage the current draft before copying it to a public account.</span>
+              <strong>No queued replies</strong>
+              <span>Save a thread memory first, then queue one useful reply.</span>
             </div>
           )}
           {approvalQueue.slice(0, 5).map((draft) => (
@@ -2338,12 +3601,12 @@ function CommunityHubPage() {
               <div className="live-actions compact-actions">
                 <button className="ghost" onClick={() => copyText(draft.body, `${draft.destination} staged draft`)}>Copy</button>
                 <button className="ghost" onClick={() => updateApprovalDraft(draft.id, 'approved')}>Approved</button>
-                <button className="primary" onClick={() => updateApprovalDraft(draft.id, 'posted')}>Posted</button>
+                <button className="primary" onClick={() => updateApprovalDraft(draft.id, 'replied')}>Replied</button>
               </div>
             </div>
           ))}
         </div>
-        <button className="ghost" onClick={clearPostedDrafts} disabled={!approvalQueue.some((draft) => draft.status === 'posted')}>Clear posted</button>
+        <button className="ghost" onClick={clearPostedDrafts} disabled={!approvalQueue.some((draft) => ['posted', 'replied'].includes(draft.status))}>Clear completed</button>
       </Panel>
 
       <Panel className="wide" title="Latest Signal" icon={ShieldCheck}>
@@ -2396,13 +3659,138 @@ function sectionTitle(id) {
     detect: 'Auto Detect',
     drivers: 'Driver Layer',
     hearing: 'Personal Hearing Model',
-    inventory: 'System Info'
+    inventory: 'System Info',
+    settings: 'Settings'
   }[id];
+}
+
+function SettingsToggle({ label, detail, checked, onChange }) {
+  return (
+    <label className="settings-toggle">
+      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
+      <span aria-hidden="true" />
+      <div>
+        <strong>{label}</strong>
+        <small>{detail}</small>
+      </div>
+    </label>
+  );
+}
+
+function SettingsPage({ settings, onUpdate, onReset, onRerunSetup, onOpen, uiNoteCount = 0, shortcutCount = 0 }) {
+  const normalized = normalizeUserSettings(settings);
+  const audioSummary = buildAudioPolicySummary(normalized);
+  const backgroundAllowed = canPlayBackgroundAudio(normalized);
+  const cinematicAllowed = canPlayCinematicVideoAudio(normalized);
+  const desktopReady = Boolean(window.cueforgeDesktop?.isDesktop);
+
+  return (
+    <section className="grid two settings-page">
+      <Panel className="wide" title="App Behavior" icon={Settings2}>
+        <div className="settings-hero">
+          <div>
+            <h2>Start quiet. Turn sound on only when you mean it.</h2>
+            <p>{audioSummary}</p>
+          </div>
+          <div className="metric-row selftest-summary">
+            <Metric label="Quiet" value={normalized.quietMode ? 'On' : 'Off'} tone={normalized.quietMode ? 'teal' : 'amber'} />
+            <Metric label="Background" value={backgroundAllowed ? 'On' : 'Off'} tone={backgroundAllowed ? 'amber' : 'teal'} />
+            <Metric label="Video audio" value={cinematicAllowed ? 'On' : 'Off'} tone={cinematicAllowed ? 'amber' : 'teal'} />
+            <Metric label="Notes" value={normalized.uiNotesEnabled ? 'On' : 'Off'} tone={normalized.uiNotesEnabled ? 'teal' : 'amber'} />
+            <Metric label="Mode" value={normalized.interfaceMode === 'expert' ? 'Expert' : 'Simple'} tone={normalized.interfaceMode === 'expert' ? 'amber' : 'teal'} />
+          </div>
+        </div>
+      </Panel>
+
+      <Panel title="Player Mode" icon={Gauge}>
+        <p>Simple Mode is the default player path. Expert Mode brings back the full lab, raw proof, system info, and developer repair tools.</p>
+        <div className="mode-choice">
+          <button
+            className={normalized.interfaceMode === 'simple' ? 'selected' : ''}
+            onClick={() => onUpdate({ interfaceMode: 'simple' })}
+          >
+            <Gauge size={18} />
+            <strong>Simple</strong>
+            <span>Guided setup, mic check, tune, play test, report.</span>
+          </button>
+          <button
+            className={normalized.interfaceMode === 'expert' ? 'selected' : ''}
+            onClick={() => onUpdate({ interfaceMode: 'expert' })}
+          >
+            <BrainCircuit size={18} />
+            <strong>Expert</strong>
+            <span>All labs, raw data, repair inbox, exports, and system proof.</span>
+          </button>
+        </div>
+      </Panel>
+
+      <Panel title="Audio Controls" icon={Volume2}>
+        <div className="settings-stack">
+          <SettingsToggle
+            label="Quiet mode"
+            detail="Blocks background soundwalks and cinematic video audio. Mic feedback and headphone checks still require a click."
+            checked={normalized.quietMode}
+            onChange={(value) => onUpdate({ quietMode: value })}
+          />
+          <SettingsToggle
+            label="Allow background soundwalk"
+            detail="Lets the first-run bamboo setup bed play after you press Start soundwalk."
+            checked={normalized.backgroundAudio}
+            onChange={(value) => onUpdate({ backgroundAudio: value })}
+          />
+          <SettingsToggle
+            label="Allow cinematic video audio"
+            detail="Lets the private panda video test page play sound after a direct user action."
+            checked={normalized.cinematicVideoAudio}
+            onChange={(value) => onUpdate({ cinematicVideoAudio: value })}
+          />
+        </div>
+        <p className="callout">Quiet mode wins over the other audio toggles. That keeps CueForge from adding extra sound while Discord, games, music, or desktop audio are already running.</p>
+      </Panel>
+
+      <Panel title="Tester Workflow" icon={Bug}>
+        <div className="settings-stack">
+          <SettingsToggle
+            label="Panda Notes"
+            detail="Right-click any app area to tag local developer notes for reports and repair packets."
+            checked={normalized.uiNotesEnabled}
+            onChange={(value) => onUpdate({ uiNotesEnabled: value })}
+          />
+          <SettingsToggle
+            label="Desktop bridge hints"
+            detail="Show native setup guidance when the browser cannot scan Windows audio devices."
+            checked={normalized.desktopBridgeHints}
+            onChange={(value) => onUpdate({ desktopBridgeHints: value })}
+          />
+        </div>
+        <div className="metric-row selftest-summary">
+          <Metric label="Panda Notes" value={String(uiNoteCount)} tone={uiNoteCount ? 'amber' : 'teal'} />
+          <Metric label="Shortcuts" value={String(shortcutCount)} tone={shortcutCount ? 'teal' : 'amber'} />
+          <Metric label="Desktop" value={desktopReady ? 'Ready' : 'Browser'} tone={desktopReady ? 'teal' : 'amber'} />
+        </div>
+      </Panel>
+
+      <Panel title="Setup And Recovery" icon={ShieldCheck}>
+        <p>Use these when the app feels noisy, stuck, or needs to start over for a new tester.</p>
+        <div className="live-actions">
+          <button className="primary" onClick={onRerunSetup}><RotateCcw size={18} /> Rerun setup</button>
+          <button className="ghost" onClick={() => onOpen('selftest')}><TestTube2 size={18} /> Open Self Test</button>
+          <button className="ghost" onClick={() => onOpen('inventory')}><BrainCircuit size={18} /> Open System Info</button>
+          <button className="ghost" onClick={onReset}><RotateCcw size={18} /> Reset settings</button>
+        </div>
+        <div className="data-card">
+          <strong>Safe default</strong>
+          <span>After reset, CueForge returns to quiet mode with background audio off, cinematic audio off, and developer notes on.</span>
+        </div>
+      </Panel>
+    </section>
+  );
 }
 
 function MaskingLabPage({ eq, onApply }) {
   const [scenarioId, setScenarioId] = useState(maskingScenarios[0].id);
   const tune = createMaskingTune(eq, scenarioId);
+  const maskingConfidence = clamp(Math.round((tune.after + Math.max(0, tune.improvement)) / 2), 0, 100);
 
   const playScenario = async () => {
     const context = new AudioContext();
@@ -2446,6 +3834,17 @@ function MaskingLabPage({ eq, onApply }) {
           <Metric label="Before" value={`${tune.before}`} tone="amber" />
           <Metric label="After" value={`${tune.after}`} tone="teal" />
           <Metric label="Delta" value={`+${Math.max(0, tune.improvement)}`} tone="teal" />
+          <Metric label="Confidence" value={`${maskingConfidence}%`} tone="teal" />
+        </div>
+        <div className="data-card">
+          <strong>Analyzer signal evidence</strong>
+          <span>Masking confidence comes from the selected scenario, current EQ shape, target cue bands, and problem bands. Treat it as local decision support until a real clip or match report confirms it.</span>
+          <small>Evidence: {tune.scenario.targetBands.map((index) => bands[index]).join(', ')} target signal vs {tune.scenario.problemBands.map((index) => bands[index]).join(', ')} masker pressure.</small>
+        </div>
+        <div className="data-card replay-export-status">
+          <strong>Replay-safe export status</strong>
+          <span>Ready when exported. The masking tune stores scenario, score, EQ delta, and target bands so the fix can be replayed without raw audio.</span>
+          <small>No device IDs, paths, emails, phones, or raw mic/game clips are included.</small>
         </div>
         <p className="callout">{tune.summary}</p>
         <div className="live-actions">
@@ -2468,7 +3867,7 @@ function MaskingLabPage({ eq, onApply }) {
   );
 }
 
-function BlindMatchPage({ baseEq, onApply }) {
+function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
   const [roundIndex, setRoundIndex] = useState(0);
   const [choices, setChoices] = useState({});
   const [savedResult, setSavedResult] = useState(() => {
@@ -2478,14 +3877,22 @@ function BlindMatchPage({ baseEq, onApply }) {
       return null;
     }
   });
-  const [status, setStatus] = useState('Pick the sample that actually feels better. No charts first.');
+  const [status, setStatus] = useState('Play This and That, then pick what actually feels better. No charts first.');
 
   const round = blindMatchRounds[roundIndex];
   const result = createBlindMatchResult(choices, baseEq);
+  const complete = result.completedRounds >= result.requiredRounds;
+  const applyReady = Boolean(result.applyReadiness?.ready);
+  const repeatClean = result.repeatChecks.filter((check) => check.consistent === true).length;
+  const sampleLabel = (sampleKey) => {
+    if (sampleKey === SOUND_MATCH_NEUTRAL_CHOICE) return round.neutralLabel;
+    return sampleKey === 'a' ? `A: ${round.labelA}` : `B: ${round.labelB}`;
+  };
 
   const playSample = async (sampleKey) => {
     const sample = round[sampleKey];
-    const context = new AudioContext();
+    const Context = window.AudioContext || window.webkitAudioContext;
+    const context = new Context();
     const master = context.createGain();
     const panner = context.createStereoPanner();
     master.gain.value = 0.0001;
@@ -2497,73 +3904,110 @@ function BlindMatchPage({ baseEq, onApply }) {
       const gain = context.createGain();
       oscillator.type = index === 0 ? 'triangle' : 'sine';
       oscillator.frequency.value = frequency;
-      gain.gain.value = 0.16 / (index + 1);
+      gain.gain.value = (0.13 * (sample.loudnessGain || 0.86)) / Math.sqrt(index + 1);
       oscillator.connect(gain).connect(master);
       oscillator.start(context.currentTime + index * 0.08);
       oscillator.stop(context.currentTime + 0.85 + index * 0.08);
     });
 
-    master.gain.exponentialRampToValueAtTime(0.22, context.currentTime + 0.04);
+    master.gain.exponentialRampToValueAtTime(0.18, context.currentTime + 0.04);
     master.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 1.05);
     setTimeout(() => context.close(), 1200);
-    setStatus(`Played Sample ${sampleKey.toUpperCase()}. Choose based on comfort and detail, not loudness.`);
+    setStatus(`Played ${sampleLabel(sampleKey)}. Pick based on comfort and detail, not loudness.`);
   };
 
   const choose = (sampleKey) => {
     const next = { ...choices, [round.id]: sampleKey };
+    const live = createBlindMatchResult(next, baseEq);
     setChoices(next);
+    safeSetJson('cueforge-preference-model-draft', live.preferenceModel);
+    onSavePreferenceModel?.(live.preferenceModel);
     if (roundIndex < blindMatchRounds.length - 1) {
       setRoundIndex(roundIndex + 1);
     }
-    setStatus(`Locked ${round.label}: Sample ${sampleKey.toUpperCase()}.`);
+    setStatus(sampleKey === SOUND_MATCH_NEUTRAL_CHOICE
+      ? `Marked ${round.label} as too close. That protects the curve from fake certainty.`
+      : `Locked ${round.label}: ${sampleLabel(sampleKey)} felt better.`);
   };
 
   const reset = () => {
     setChoices({});
     setRoundIndex(0);
-    setStatus('Reset. Start the blind rounds again.');
+    localStorage.removeItem('cueforge-preference-model-draft');
+    onSavePreferenceModel?.(savedResult?.preferenceModel || null);
+    setStatus('Reset. Start the this-or-that rounds again.');
   };
 
   const save = () => {
     const next = createBlindMatchResult(choices, baseEq);
     safeSetJson('cueforge-blind-match', next);
+    safeSetJson('cueforge-preference-model', next.preferenceModel);
+    onSavePreferenceModel?.(next.preferenceModel);
     setSavedResult(next);
-    setStatus('Blind Match profile saved.');
+    setStatus(next.applyReadiness.ready
+      ? 'Sound Match profile saved into the Profile Engine.'
+      : 'Sound Match saved as preview evidence. Repeat consistency is needed before direct apply.');
   };
 
   const exportResult = () => {
     const payload = createBlindMatchResult(choices, baseEq);
-    downloadTextFile('cueforge-blind-match.json', JSON.stringify(payload, null, 2));
+    downloadTextFile('cueforge-sound-match.json', JSON.stringify(payload, null, 2));
   };
-
-  const complete = result.completedRounds === blindMatchRounds.length;
 
   return (
     <section className="grid two">
-      <Panel title="Blind Match Tuner" icon={Radio}>
-        <p>CueForge learns from your ears, not a generic preset. Compare hidden A/B samples, pick what works, and it builds your personal curve.</p>
+      <Panel title="Sound Match" icon={Radio}>
+        <p>This is the eye test for your ears. Compare hidden sound pairs, pick what actually works, or mark them too close. CueForge learns a personal curve only when your choices repeat cleanly.</p>
         <div className="dna-hero">
           <strong>{round.label}</strong>
-          <span>Round {roundIndex + 1} of {blindMatchRounds.length}</span>
+          <span>Round {roundIndex + 1} of {result.requiredRounds}</span>
         </div>
         <p className="callout">{round.prompt}</p>
         <div className="blind-actions">
-          <button className="ghost" onClick={() => playSample('a')}><Play size={18} /> Play Sample A</button>
-          <button className="ghost" onClick={() => playSample('b')}><Play size={18} /> Play Sample B</button>
-          <button className="primary" onClick={() => choose('a')}>Choose A</button>
-          <button className="primary" onClick={() => choose('b')}>Choose B</button>
+          <button className="ghost" onClick={() => playSample('a')}><Play size={18} /> Play A</button>
+          <button className="ghost" onClick={() => playSample('b')}><Play size={18} /> Play B</button>
+          <button className="primary" onClick={() => choose('a')}>A: {round.labelA}</button>
+          <button className="primary" onClick={() => choose('b')}>B: {round.labelB}</button>
+          <button className="ghost" onClick={() => choose(SOUND_MATCH_NEUTRAL_CHOICE)}>{round.neutralLabel}</button>
         </div>
         <p>{status}</p>
         <div className="live-actions">
           <button className="ghost" onClick={reset}>Reset rounds</button>
-          <button className="ghost" onClick={save} disabled={!complete}><Save size={18} /> Save Match</button>
-          <button className="ghost" onClick={exportResult} disabled={!complete}><Download size={18} /> Export Match</button>
-          <button className="primary" onClick={() => onApply(result.eq)} disabled={!complete}><CheckCircle2 size={18} /> Apply learned EQ</button>
+          <button className="ghost" onClick={save} disabled={!complete}><Save size={18} /> Save Sound Match</button>
+          <button className="ghost" onClick={exportResult} disabled={!complete}><Download size={18} /> Export Sound Match</button>
+          <button
+            className="primary"
+            onClick={() => {
+              safeSetJson('cueforge-preference-model', result.preferenceModel);
+              onSavePreferenceModel?.(result.preferenceModel);
+              onApply(result.eq);
+            }}
+            disabled={!applyReady}
+          >
+            <CheckCircle2 size={18} /> Apply learned EQ
+          </button>
         </div>
       </Panel>
       <Panel title="Learned Curve" icon={SlidersHorizontal}>
-        <Metric label="Confidence" value={`${result.confidence}%`} tone={complete ? 'teal' : 'amber'} />
+        <Metric label="Confidence" value={`${result.confidence}%`} tone={applyReady ? 'teal' : 'amber'} />
+        <Metric label="Consistency" value={`${repeatClean}/${result.repeatChecks.length || 2}`} tone={applyReady ? 'teal' : 'amber'} />
+        <Metric label="Preference" value={`${Math.round((result.preferenceModel?.confidence || 0) * 100)}%`} tone={complete ? 'teal' : 'amber'} />
         <p>{result.summary}</p>
+        <div className="data-card">
+          <strong>{result.preferenceSummary}</strong>
+          <span>The simple choices are saved as hidden weights so the profile engine can tune EQ, dynamics, and spatial behavior together.</span>
+          <small>Footsteps {result.preferenceModel.footstepPriority || 0} / Comms {result.preferenceModel.voiceClarity || 0} / Bass {result.preferenceModel.bassImpact || 0} / Masking {result.preferenceModel.maskingControl || 0} / Comfort {result.preferenceModel.comfortPriority || 0}</small>
+        </div>
+        <div className="data-card">
+          <strong>{result.applyReadiness.status === 'ready' ? 'Ready for controlled apply' : 'Preview evidence only'}</strong>
+          <span>{result.applyReadiness.reason}</span>
+          <small>{result.whyChips.join(' / ')}</small>
+        </div>
+        <div className="data-card replay-export-status">
+          <strong>Replay-safe export status</strong>
+          <span>{complete ? 'Ready to export choices, repeat checks, preference weights, confidence, and learned EQ.' : 'Complete the standard 9-round flow before the replay-safe export unlocks.'}</span>
+          <small>No raw audio is stored. The export is enough to replay the decision path.</small>
+        </div>
         <div className="eq-preview">
           {result.eq.map((gain, index) => <span key={bands[index]} style={{ height: `${45 + gain * 8}%` }} title={`${bands[index]} ${gain}dB`} />)}
         </div>
@@ -2572,13 +4016,13 @@ function BlindMatchPage({ baseEq, onApply }) {
           {result.picked.map((pick) => <li key={pick}>{pick}</li>)}
         </ul>
       </Panel>
-      <Panel className="wide" title="Saved Blind Match" icon={Save}>
-        {!savedResult && <div className="data-card"><strong>No saved Blind Match yet</strong><span>Complete all rounds and save the result.</span></div>}
+      <Panel className="wide" title="Saved Sound Match" icon={Save}>
+        {!savedResult && <div className="data-card"><strong>No saved Sound Match yet</strong><span>Complete all rounds and save the result.</span></div>}
         {savedResult && (
           <div className="data-card">
             <strong>{savedResult.signature}</strong>
             <span>{savedResult.confidence}% confidence from {savedResult.completedRounds} rounds.</span>
-            <small>{savedResult.summary}</small>
+            <small>{savedResult.preferenceSummary || savedResult.summary}</small>
           </div>
         )}
       </Panel>
@@ -2596,6 +4040,7 @@ function ReportLabPage({
   active,
   replayNotice,
   uiNotes = [],
+  cueforgeState = null,
   onReplay
 }) {
   const [notes, setNotes] = useState('Describe what happened, what game was running, and what you expected to hear.');
@@ -2621,7 +4066,8 @@ function ReportLabPage({
         browserDevices: [],
         selfTestResults: getSavedJson('cueforge-self-test-results') || [],
         uiFeedbackNotes: uiNotes,
-        notes
+        notes,
+        cueforgeState
       });
       setLastReport(report);
       safeSetJson('cueforge-last-issue-report', report);
@@ -2641,7 +4087,8 @@ function ReportLabPage({
         browserDevices: [],
         selfTestResults: [],
         uiFeedbackNotes: uiNotes,
-        notes
+        notes,
+        cueforgeState
       });
       setLastReport(report);
       safeSetJson('cueforge-last-issue-report', report);
@@ -2656,7 +4103,7 @@ function ReportLabPage({
       return;
     }
     downloadTextFile('cueforge-redacted-issue-report.json', JSON.stringify(report, null, 2));
-    setStatus('Report downloaded. It can be imported later to reproduce this setup.');
+    setStatus(`Report downloaded. Replay package includes ${report.reproducibleState.eq.length} EQ bands and ${report.diagnostics.uiFeedbackNotes?.length || 0} UI note${report.diagnostics.uiFeedbackNotes?.length === 1 ? '' : 's'}.`);
   };
 
   const handleImport = async (event) => {
@@ -2667,7 +4114,7 @@ function ReportLabPage({
       const validation = validateIssueReport(parsed);
       if (!validation.ok) throw new Error(validation.reason);
       setImported(parsed);
-      setStatus(validation.reason);
+      setStatus(`${validation.reason} Imported ${parsed.app?.selectedGame || 'saved setup'} for replay review.`);
     } catch (error) {
       setStatus(error.message || 'Could not import that report.');
     } finally {
@@ -2680,11 +4127,21 @@ function ReportLabPage({
       setStatus('Import a report first.');
       return;
     }
+    setStatus(`Replaying imported report for ${imported.app?.selectedGame || 'the saved setup'}.`);
     onReplay(imported.reproducibleState);
   };
 
   const savedReport = getSavedJson('cueforge-last-issue-report');
   const report = lastReport || (validateIssueReport(savedReport).ok ? savedReport : null);
+
+  const replaySavedReport = () => {
+    if (!report) {
+      setStatus('Create or import a report first.');
+      return;
+    }
+    setStatus(`Replaying saved report for ${report.app?.selectedGame || 'the current setup'}.`);
+    onReplay(report.reproducibleState);
+  };
 
   return (
     <section className="grid two">
@@ -2692,12 +4149,12 @@ function ReportLabPage({
         <p>Create a bug report that keeps the useful setup data and removes local identifiers before it leaves the machine.</p>
         <label className="field">
           <span>Issue notes</span>
-          <textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
+          <textarea aria-label="Issue notes" value={notes} onChange={(event) => setNotes(event.target.value)} />
         </label>
         <div className="live-actions">
           <button className="primary" onClick={collectReport}><Bug size={18} /> Create redacted report</button>
           <button className="ghost" onClick={downloadReport}><Download size={18} /> Download report</button>
-          <button className="ghost" onClick={() => report ? onReplay(report.reproducibleState) : setStatus('Create or import a report first.')} disabled={!report}>
+          <button className="ghost" onClick={replaySavedReport} disabled={!report}>
             <RotateCcw size={18} /> Replay last report
           </button>
         </div>
@@ -2706,7 +4163,7 @@ function ReportLabPage({
       </Panel>
       <Panel title="Recover And Reproduce" icon={RotateCcw}>
         <p>Import a player report to restore the EQ, game profile, source target, mic notes, and analyzer state that caused the issue.</p>
-        <input ref={fileInputRef} className="file-input" type="file" accept="application/json,.json" onChange={handleImport} />
+        <input ref={fileInputRef} className="file-input" type="file" accept="application/json,.json" aria-label="Import player report" onChange={handleImport} />
         <div className="live-actions">
           <button className="ghost" onClick={() => fileInputRef.current?.click()}><Download size={18} /> Import report</button>
           <button className="primary" onClick={replayImported} disabled={!imported}><RotateCcw size={18} /> Replay in app</button>
@@ -2725,7 +4182,16 @@ function ReportLabPage({
         )}
       </Panel>
       <Panel className="wide" title="Report Preview" icon={ShieldCheck}>
-        {!report && <div className="data-card"><strong>No report yet</strong><span>Create a report to preview the redacted payload.</span></div>}
+        {!report && (
+          <div className="report-preview">
+            <div className="data-card replay-export-status">
+              <strong>Replay-safe export status</strong>
+              <span>Waiting for a redacted report. Nothing leaves the machine until the player creates and shares one.</span>
+              <small>Create a report to preview replay data, redaction, and restore status.</small>
+            </div>
+            <div className="data-card"><strong>No report yet</strong><span>Create a report to preview the redacted payload.</span></div>
+          </div>
+        )}
         {report && (
           <div className="report-preview">
             <div className="metric-row selftest-summary">
@@ -2733,6 +4199,11 @@ function ReportLabPage({
               <Metric label="Devices" value={String(report.diagnostics.browserDevices.length)} tone="amber" />
               <Metric label="Self tests" value={String(report.diagnostics.selfTestResults.length)} tone="teal" />
               <Metric label="UI notes" value={String(report.diagnostics.uiFeedbackNotes?.length || 0)} tone={report.diagnostics.uiFeedbackNotes?.length ? 'teal' : 'amber'} />
+            </div>
+            <div className="data-card replay-export-status">
+              <strong>Replay-safe export status</strong>
+              <span>Ready. The report can restore EQ, game, source profile, mic notes, analyzer state, and UI notes without exposing raw identifiers.</span>
+              <small>Use Replay last report or import this JSON to reproduce the issue.</small>
             </div>
             <pre>{JSON.stringify(report, null, 2)}</pre>
           </div>
@@ -2768,14 +4239,95 @@ async function getGeneratedBridgeReport() {
     }
   }
 
+  if (window.location.protocol === 'file:') return null;
+
   try {
-    const response = await withTimeout(fetch('/tools/cueforge-audio-setup-report.json', { cache: 'no-store' }), 1800, null);
+    const response = await withTimeout(fetch(publicAssetPath('/tools/cueforge-audio-setup-report.json'), { cache: 'no-store' }), 1800, null);
     if (!response) return null;
     const contentType = response.headers.get('content-type') || '';
     if (!response.ok || !contentType.includes('application/json')) return null;
     return response.json();
   } catch {
     return null;
+  }
+}
+
+async function runDesktopBridgeScanIfAvailable() {
+  if (!window.cueforgeDesktop?.scanAudioSetup) {
+    return { ok: false, unavailable: true, error: 'Desktop Windows scan is only available in the CueForge desktop app.' };
+  }
+
+  try {
+    return await window.cueforgeDesktop.scanAudioSetup();
+  } catch (error) {
+    return { ok: false, error: error?.message || 'Desktop Windows scan failed.' };
+  }
+}
+
+async function captureMicProof({ durationMs = 850 } = {}) {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    return evaluateMicCaptureProof({ streamStarted: false });
+  }
+
+  let stream;
+  let context;
+  try {
+    stream = await withTimeout(
+      navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        }
+      }),
+      5000,
+      null
+    );
+    if (!stream) {
+      return evaluateMicCaptureProof({ streamStarted: false });
+    }
+    context = new AudioContext();
+    const source = context.createMediaStreamSource(stream);
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 2048;
+    source.connect(analyser);
+
+    const frame = new Uint8Array(analyser.fftSize);
+    const startedAt = performance.now();
+    let sumSquares = 0;
+    let sampleCount = 0;
+    let peak = 0;
+    let frameCount = 0;
+
+    while (performance.now() - startedAt < durationMs) {
+      analyser.getByteTimeDomainData(frame);
+      for (const value of frame) {
+        const centered = (value - 128) / 128;
+        sumSquares += centered * centered;
+        peak = Math.max(peak, Math.abs(centered));
+        sampleCount += 1;
+      }
+      frameCount += 1;
+      await new Promise((resolve) => setTimeout(resolve, 58));
+    }
+
+    const track = stream.getAudioTracks()[0];
+    return evaluateMicCaptureProof({
+      streamStarted: true,
+      rms: sampleCount ? Math.sqrt(sumSquares / sampleCount) : 0,
+      peak,
+      sampleRate: context.sampleRate,
+      frameCount,
+      captureMs: performance.now() - startedAt,
+      deviceLabel: track?.label || ''
+    });
+  } catch {
+    return evaluateMicCaptureProof({ streamStarted: false });
+  } finally {
+    stream?.getTracks().forEach((track) => track.stop());
+    if (context?.state !== 'closed') {
+      context?.close?.();
+    }
   }
 }
 
@@ -2804,7 +4356,7 @@ function safeSetJson(key, value) {
   }
 }
 
-function AudioDnaPage({ eq }) {
+function AudioDnaPage({ eq, cueforgeState = null }) {
   const [gameFocus, setGameFocus] = useState('Valorant / CS2');
   const [micProfile, setMicProfile] = useState('hyperx');
   const [bridgeLoaded, setBridgeLoaded] = useState(false);
@@ -2837,12 +4389,15 @@ function AudioDnaPage({ eq }) {
     }
   })();
 
-  const dna = createAudioDna({
+  const dna = createAudioDnaFromState(cueforgeState, {
     eq,
     hearingScore: hearingState,
     micProfile,
     gameFocus,
-    deviceStatus: { bridgeLoaded, apoFound }
+    deviceStatus: {
+      bridgeLoaded: bridgeLoaded || Boolean(cueforgeState?.chain?.activeCompanions?.length),
+      apoFound: apoFound || Boolean(cueforgeState?.chain?.apoDetected)
+    }
   });
 
   const saveDna = () => {
@@ -2924,6 +4479,22 @@ function AudioDnaPage({ eq }) {
 function SelfTestRunner() {
   const [running, setRunning] = useState(false);
   const [results, setResults] = useState([]);
+  const [desktopInfo, setDesktopInfo] = useState(null);
+  const [latestBridgeReport, setLatestBridgeReport] = useState(null);
+
+  useEffect(() => {
+    if (!window.cueforgeDesktop?.info) return;
+    window.cueforgeDesktop.info()
+      .then(setDesktopInfo)
+      .catch(() => setDesktopInfo(null));
+  }, []);
+
+  const desktopBridgePlan = useMemo(() => buildDesktopBridgeFixPlan({
+    desktopAvailable: Boolean(window.cueforgeDesktop?.isDesktop),
+    desktopInfo,
+    bridgeReport: latestBridgeReport
+  }), [desktopInfo, latestBridgeReport]);
+  const desktopBridgeText = useMemo(() => buildDesktopBridgeFixText(desktopBridgePlan), [desktopBridgePlan]);
 
   const addResult = (name, status, detail) => {
     setResults((current) => [...current, { name, status, detail }]);
@@ -2950,14 +4521,42 @@ function SelfTestRunner() {
       record('Device enumeration', 'fail', 'Browser blocked device enumeration.');
     }
 
-    try {
-      const response = await fetch('/tools/cueforge-audio-setup-report.json', { cache: 'no-store' });
-      if (!response.ok) throw new Error('missing report');
-      const report = await response.json();
-      record('Windows bridge report', 'pass', `${report.soundDevices?.length || 0} sound devices, Equalizer APO ${report.tools?.equalizerApo?.installed ? 'found' : 'not found'}, Sonar ${report.tools?.steelSeriesSonar?.installed ? 'found' : 'not found'}.`);
-    } catch {
-      record('Windows bridge report', 'warn', 'No generated report found. Run tools/Scan-AudioSetup.ps1.');
+    const desktopAvailable = Boolean(window.cueforgeDesktop?.isDesktop);
+    record(
+      'Desktop bridge availability',
+      desktopAvailable ? 'pass' : 'warn',
+      desktopAvailable
+        ? `Desktop shell active. Native scan path: ${desktopInfo?.scriptPath || 'ready'}.`
+        : 'Browser mode cannot run a native Windows scan. Use the desktop build for one-click device/tool detection.'
+    );
+
+    let bridgeReport = await getGeneratedBridgeReport();
+    setLatestBridgeReport(bridgeReport);
+    if (!bridgeReport && desktopAvailable) {
+      const scanResult = await runDesktopBridgeScanIfAvailable();
+      if (scanResult?.ok) {
+        bridgeReport = scanResult.report;
+        setLatestBridgeReport(bridgeReport);
+        record('Desktop Windows scan', 'pass', `Native scan completed and saved to ${scanResult.reportPath}.`);
+      } else {
+        record('Desktop Windows scan', 'warn', scanResult?.error || 'Native scan did not return a report.');
+      }
     }
+
+    if (bridgeReport) {
+      record('Windows bridge report', 'pass', formatBridgeReportProof(bridgeReport));
+    } else {
+      record(
+        'Windows bridge report',
+        desktopAvailable ? 'fail' : 'warn',
+        desktopAvailable
+          ? 'Desktop bridge is available, but no Windows setup report could be loaded.'
+          : 'No generated report found. Open the desktop build or run tools/Scan-AudioSetup.ps1, then load the report.'
+      );
+    }
+
+    let generatedExportPack = null;
+    let generatedSetupSummary = '';
 
     try {
       const eq = buildAutoTuneEq({ preset: 'iem', trebleSensitivity: 4, bassPreference: 2, footstepFocus: 8 });
@@ -2969,6 +4568,8 @@ function SelfTestRunner() {
         hearing: null,
         dna: null
       });
+      generatedExportPack = pack;
+      generatedSetupSummary = buildSetupShareText({ devices: [], bridgeReport });
       const exportOk = pack.files['README.txt'].includes('CueForge Setup Pack') && pack.files['equalizer-apo-config.txt'].includes('Filter 10');
       record('Export payloads', exportOk ? 'pass' : 'fail', exportOk ? 'APO config and setup pack files are generated.' : 'Export pack did not include expected files.');
     } catch {
@@ -2976,11 +4577,45 @@ function SelfTestRunner() {
     }
 
     try {
-      const choices = Object.fromEntries(blindMatchRounds.map((round) => [round.id, 'a']));
-      const match = createBlindMatchResult(choices, [-1, 1.5, 0.5, -2, -1, 0.5, 2.5, 3.2, 1.2, -0.5]);
-      record('Blind Match learning', match.eq.length === 10 && match.completedRounds === blindMatchRounds.length ? 'pass' : 'fail', `${match.completedRounds} rounds produce a learned EQ curve.`);
+      const privacyAudit = runPrivacyAudit([
+        { name: 'export pack', payload: generatedExportPack },
+        { name: 'setup summary', payload: generatedSetupSummary },
+        { name: 'self-test results', payload: redactDeep(runLog) }
+      ]);
+      safeSetJson('cueforge-last-privacy-audit', privacyAudit);
+      if (privacyAudit.status === 'pass') {
+        localStorage.setItem('cueforge-privacy-audit-passed', 'yes');
+      } else {
+        localStorage.removeItem('cueforge-privacy-audit-passed');
+      }
+      record(
+        'Privacy export audit',
+        privacyAudit.status === 'pass' ? 'pass' : 'fail',
+        privacyAudit.status === 'pass'
+          ? 'No raw paths, IDs, phones, emails, tokens, passwords, or recovery codes found in generated exports.'
+          : `${privacyAudit.leakCount} possible leak${privacyAudit.leakCount === 1 ? '' : 's'} found. Open System Info > Privacy Audit before release.`
+      );
     } catch {
-      record('Blind Match learning', 'fail', 'Blind Match failed to generate a learned curve.');
+      localStorage.removeItem('cueforge-privacy-audit-passed');
+      record('Privacy export audit', 'fail', 'Privacy audit could not run.');
+    }
+
+    try {
+      const choices = {
+        footstep_vs_comfort: 'a',
+        bass_vs_comms: 'b',
+        wide_vs_center: 'b',
+        detail_vs_fatigue: 'b',
+        direction_vs_body: 'a',
+        masking_cut_vs_cue_boost: 'a',
+        voice_separation_vs_game_body: 'a',
+        repeat_footstep_vs_comfort: 'b',
+        repeat_bass_vs_comms: 'a'
+      };
+      const match = createBlindMatchResult(choices, [-1, 1.5, 0.5, -2, -1, 0.5, 2.5, 3.2, 1.2, -0.5]);
+      record('Sound Match learning', match.eq.length === 10 && match.completedRounds === blindMatchRounds.length && match.applyReadiness.ready ? 'pass' : 'fail', `${match.completedRounds} rounds produce a learned EQ curve with ${match.contradictions} repeat contradictions.`);
+    } catch {
+      record('Sound Match learning', 'fail', 'Sound Match failed to generate a learned curve.');
     }
 
     try {
@@ -3025,13 +4660,8 @@ function SelfTestRunner() {
       record('Headphone tone engine', 'warn', 'Tone engine needs a user gesture or browser audio permission.');
     }
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((track) => track.stop());
-      record('Live mic permission', 'pass', 'Microphone access granted. Live mic feedback can run.');
-    } catch {
-      record('Live mic permission', 'warn', 'Microphone permission is blocked or not granted yet.');
-    }
+    const micProof = await captureMicProof();
+    record('Mic capture proof', micProof.status, micProof.detail);
 
     safeSetJson('cueforge-self-test-results', runLog);
     setRunning(false);
@@ -3045,7 +4675,20 @@ function SelfTestRunner() {
   return (
     <section className="grid two">
       <Panel title="Auto Self Test" icon={TestTube2}>
-        <p>Runs the setup checks automatically: browser audio APIs, device enumeration, Windows bridge report, autotune, hearing model, storage, tone engine, and mic permission.</p>
+        <p>Runs the setup checks automatically: browser audio APIs, device enumeration, Windows bridge report, autotune, privacy export audit, hearing model, storage, tone engine, and mic permission.</p>
+        <div className="data-card">
+          <strong>How this becomes useful</strong>
+          <span>Every check is a signal with evidence. Pass, warning, and fail results build confidence for the next setup decision, and the saved self-test log can be replayed inside a redacted report.</span>
+        </div>
+        <div className="desktop-bridge selftest-bridge-card">
+          <strong>{desktopBridgePlan.title}</strong>
+          <span>{desktopBridgePlan.summary}</span>
+          {desktopInfo && <small>{desktopInfo.reportPath}</small>}
+          {!desktopInfo && <small>Developer fix: run `npm run desktop`, then open Auto Detect and click Run Windows scan.</small>}
+          <div className="live-actions">
+            <button className="ghost" onClick={() => navigator.clipboard?.writeText(desktopBridgeText)}><Copy size={18} /> Copy desktop fix plan</button>
+          </div>
+        </div>
         <button className="primary" onClick={runSelfTest} disabled={running}>
           <TestTube2 size={18} /> {running ? 'Running...' : 'Run full auto test'}
         </button>
@@ -3123,6 +4766,7 @@ function CalibrationWizard({ onApply }) {
     <section className="grid two">
       <Panel title="Autotune Wizard" icon={Sparkles}>
         <p>Build a practical calibration from your IEM/headset target, game focus, hearing comfort, and HyperX mic behavior. This does not silently change Windows; it creates an apply/export profile.</p>
+        <p className="callout">{playerSafetyWarnings[1]} Exported APO configs include safe preamp headroom before any boost.</p>
         <div className="calibration-grid">
           <label className="field">
             <span>Output target</span>
@@ -3322,9 +4966,20 @@ function LiveAudioLab() {
             ? 'Voice signal looks healthy for Discord testing.'
             : 'Speak normally into the mic to populate live readings.'
     );
+  const micPlan = useMemo(() => buildMicPlan({
+    graph: { summary: { inputs: running || level > 0 || noise > 0 || clipRisk > 0 || voicePresence > 0 ? 1 : 0 } },
+    metrics: {
+      level,
+      noiseFloor: noise,
+      clipRisk,
+      voicePresence
+    }
+  }), [running, level, noise, clipRisk, voicePresence]);
+  const micRecommendation = micPlan.recommendation;
 
   return (
     <Panel className="wide" title="Live Mic + IEM Test Bench" icon={Activity}>
+      <p className="callout">Keep your volume low during headphone checks. Test tones only play after you click a button.</p>
       <div className="live-actions">
         <button className="primary" onClick={startMic}>{running ? 'Stop mic feedback' : 'Start live mic feedback'}</button>
         <button className="ghost" onClick={() => playTone(440, -1)}>Left</button>
@@ -3353,6 +5008,18 @@ function LiveAudioLab() {
           <strong>Signal fingerprint</strong>
           <span>{signalAnalysis.spectralCentroidHz}Hz centroid / {signalAnalysis.spectralRolloffHz}Hz rolloff</span>
           <small>Dynamic range {signalAnalysis.dynamicRange}% / flatness {signalAnalysis.spectralFlatness}</small>
+        </div>
+      </div>
+      <div className="analyzer-grid">
+        <div className="data-card">
+          <strong>Mic status</strong>
+          <span>{micRecommendation.micStatus.replace(/^\w/, (char) => char.toUpperCase())}</span>
+          <small>Noise floor: {micRecommendation.noiseFloor} / Clip risk: {micRecommendation.clipRisk}</small>
+        </div>
+        <div className="data-card">
+          <strong>Mic engine plan</strong>
+          <span>{micRecommendation.recommendedAction}</span>
+          <small>{micRecommendation.futureModule}</small>
         </div>
       </div>
       <div className="band-radar" aria-label="live analyzer bands">
@@ -3389,43 +5056,151 @@ function avg(values, start, end) {
   return count ? total / count : 0;
 }
 
-function AutoDetect() {
+function AutoDetect({ onApplyProfile, onAutoSwitchProfile, onUpdateChain }) {
   const [devices, setDevices] = useState([]);
   const [status, setStatus] = useState('Auto scan starts when this page opens.');
   const [bridgeReport, setBridgeReport] = useState(null);
   const [desktopInfo, setDesktopInfo] = useState(null);
   const [desktopBusy, setDesktopBusy] = useState(false);
+  const [permissionState, setPermissionState] = useState('prompt');
+  const [setupGame, setSetupGame] = useState('Tarkov / Siege / COD');
+  const [budgetTier, setBudgetTier] = useState('no-spend');
+  const [deviceAliases, setDeviceAliases] = useState(() => getSavedJson(DEVICE_ALIAS_KEY) || {});
+  const [savedGameProfiles, setSavedGameProfiles] = useState(() => getSavedJson(GAME_PROFILE_KEY) || []);
+  const [autoSwitchEnabled, setAutoSwitchEnabled] = useState(() => localStorage.getItem('cueforge-auto-switch-game-profile') !== 'off');
+  const [gameProfileDraft, setGameProfileDraft] = useState({
+    game: 'Tarkov / Siege / COD',
+    sourceProfile: 'competitiveFps',
+    matchHints: 'tarkov, siege, cod'
+  });
+  const lastAutoSwitchRef = useRef('');
+  const desktopReady = Boolean(desktopInfo || window.cueforgeDesktop?.isDesktop);
+  const deviceRecovery = useMemo(() => buildPermissionRecovery({
+    feature: 'device-scan',
+    state: permissionState,
+    desktopReady
+  }), [permissionState, desktopReady]);
+  const autoDetectReport = useMemo(() => buildAutoDetectReport({
+    browserDevices: devices,
+    bridgeReport,
+    permissionState,
+    desktopReady
+  }), [devices, bridgeReport, permissionState, desktopReady]);
+  const autoDetectSummary = useMemo(() => summarizeAutoDetectReport(autoDetectReport), [autoDetectReport]);
+  const namedDevices = useMemo(() => applyDeviceAliases(devices, deviceAliases), [devices, deviceAliases]);
+  const gameProfileOptions = useMemo(() => mergeGameProfiles(savedGameProfiles), [savedGameProfiles]);
+  const activeGameMatch = useMemo(() => detectActiveGameProfile({
+    bridgeReport,
+    savedProfiles: savedGameProfiles
+  }), [bridgeReport, savedGameProfiles]);
 
   useEffect(() => {
     scanDevices({ auto: true });
     if (window.cueforgeDesktop?.info) {
       window.cueforgeDesktop.info()
-        .then(setDesktopInfo)
+        .then((info) => {
+          setDesktopInfo(info);
+          onUpdateChain?.({
+            autoDetectReport: buildAutoDetectReport({ browserDevices: devices, bridgeReport, permissionState, desktopReady: Boolean(info) }),
+            desktopReady: Boolean(info)
+          });
+        })
         .catch(() => setDesktopInfo(null));
     }
   }, []);
 
+  useEffect(() => {
+    if (!autoSwitchEnabled || !activeGameMatch) return;
+    const switchKey = `${activeGameMatch.game}|${activeGameMatch.sourceProfile}|${activeGameMatch.matchedHint}`;
+    if (lastAutoSwitchRef.current === switchKey) return;
+    lastAutoSwitchRef.current = switchKey;
+    setSetupGame(activeGameMatch.game);
+    onAutoSwitchProfile?.(activeGameMatch);
+    setStatus(`Running game detected: ${activeGameMatch.game}. CueForge switched to ${activeGameMatch.sourceProfile}.`);
+  }, [activeGameMatch, autoSwitchEnabled, onAutoSwitchProfile]);
+
+  const updateAlias = (deviceKey, label) => {
+    setDeviceAliases((current) => {
+      const next = saveDeviceAlias(current, deviceKey, label);
+      safeSetJson(DEVICE_ALIAS_KEY, next);
+      return next;
+    });
+  };
+
+  const updateSetupGame = (nextGame) => {
+    setSetupGame(nextGame);
+    const saved = gameProfileOptions.find((profile) => profile.game === nextGame);
+    setGameProfileDraft({
+      game: nextGame,
+      sourceProfile: saved?.sourceProfile || 'competitiveFps',
+      matchHints: (saved?.matchHints || [nextGame]).join(', ')
+    });
+  };
+
+  const saveGameProfile = () => {
+    const next = upsertGameProfile(savedGameProfiles, {
+      game: gameProfileDraft.game,
+      sourceProfile: gameProfileDraft.sourceProfile,
+      matchHints: gameProfileDraft.matchHints
+    });
+    setSavedGameProfiles(next);
+    safeSetJson(GAME_PROFILE_KEY, next);
+    setSetupGame(gameProfileDraft.game);
+    setStatus(`Saved ${gameProfileDraft.game} profile. CueForge will match it from running-game or process hints.`);
+  };
+
+  const toggleAutoSwitch = (enabled) => {
+    setAutoSwitchEnabled(enabled);
+    localStorage.setItem('cueforge-auto-switch-game-profile', enabled ? 'on' : 'off');
+    setStatus(enabled ? 'Auto-switch is on. CueForge will switch profiles when the Windows scan sees a saved game.' : 'Auto-switch is off. Detected games will show as suggestions only.');
+  };
+
   const scanDevices = async ({ auto = false } = {}) => {
     if (!navigator.mediaDevices?.enumerateDevices) {
+      setPermissionState('unsupported');
       setStatus('This browser does not expose audio device detection.');
       return;
     }
 
     try {
+      setPermissionState('prompt');
       setStatus(auto ? 'Auto-requesting mic permission for real device names.' : 'Requesting mic permission so device names can be read.');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop());
       const found = await navigator.mediaDevices.enumerateDevices();
-      setDevices(found.filter((device) => device.kind.includes('audio')));
+      const audioDevices = found.filter((device) => device.kind.includes('audio'));
+      const nextReport = buildAutoDetectReport({
+        browserDevices: audioDevices,
+        bridgeReport,
+        permissionState: 'granted',
+        desktopReady
+      });
+      setDevices(audioDevices);
+      onUpdateChain?.({ devices: audioDevices, bridgeReport, autoDetectReport: nextReport, desktopReady });
+      setPermissionState('granted');
       setStatus('Scan complete. Device names are read locally in your browser.');
     } catch {
-      const found = await navigator.mediaDevices.enumerateDevices();
-      setDevices(found.filter((device) => device.kind.includes('audio')));
+      let found = [];
+      try {
+        found = await navigator.mediaDevices.enumerateDevices();
+      } catch {
+        found = [];
+      }
+      const audioDevices = found.filter((device) => device.kind.includes('audio'));
+      const nextReport = buildAutoDetectReport({
+        browserDevices: audioDevices,
+        bridgeReport,
+        permissionState: 'blocked',
+        desktopReady
+      });
+      setDevices(audioDevices);
+      onUpdateChain?.({ devices: audioDevices, bridgeReport, autoDetectReport: nextReport, desktopReady });
+      setPermissionState('blocked');
       setStatus('Permission was blocked or skipped, so some device names may be hidden. Use the browser permission icon near the address bar, allow microphone, then scan again.');
     }
   };
 
-  const labels = devices.map((device) => device.label.toLowerCase()).join(' ');
+  const labels = namedDevices.map((device) => device.displayLabel.toLowerCase()).join(' ');
   const hyperx = labels.includes('hyperx') || labels.includes('hyper x');
   const iem = labels.includes('iem') || labels.includes('usb-c') || labels.includes('dac') || labels.includes('headphones');
   const bridgeHyperx = Boolean(bridgeReport?.matches?.hyperx);
@@ -3434,13 +5209,21 @@ function AutoDetect() {
   const peaceInstalled = Boolean(bridgeReport?.tools?.peace?.installed);
   const sonarInstalled = Boolean(bridgeReport?.tools?.steelSeriesSonar?.installed);
   const virtualRouting = Boolean(bridgeReport?.tools?.vbCable?.installed || bridgeReport?.tools?.voicemeeter?.installed || bridgeReport?.matches?.virtualRouting);
-  const setupShareText = useMemo(() => buildSetupShareText({ devices, bridgeReport }), [devices, bridgeReport]);
+  const setupShareText = useMemo(() => buildSetupShareText({ devices: namedDevices, bridgeReport }), [namedDevices, bridgeReport]);
+  const setupIntelligence = useMemo(() => buildSetupIntelligence({
+    devices: namedDevices,
+    bridgeReport,
+    game: setupGame,
+    budgetTier,
+    desktopReady
+  }), [namedDevices, bridgeReport, setupGame, budgetTier, desktopReady]);
+  const setupIntelligenceText = useMemo(() => buildSetupIntelligenceText(setupIntelligence), [setupIntelligence]);
   const redditTesterAsk = useMemo(
     () => buildRedditSafeDraft({
       mode: 'community',
       summary: null,
-      appUrl: 'https://p4nd4907.github.io/cueforge/',
-      discordUrl: 'https://discord.gg/vyQwyJ49v'
+      appUrl: publicRelease.app,
+      discordUrl: socialLinks.Discord
     }),
     []
   );
@@ -3451,7 +5234,14 @@ function AutoDetect() {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
+      const nextReport = buildAutoDetectReport({
+        browserDevices: devices,
+        bridgeReport: parsed,
+        permissionState,
+        desktopReady
+      });
       setBridgeReport(parsed);
+      onUpdateChain?.({ devices, bridgeReport: parsed, autoDetectReport: nextReport, desktopReady });
       setStatus('Imported Windows bridge report locally.');
     } catch {
       setStatus('Could not read that bridge report. Make sure it is the JSON from Scan-AudioSetup.ps1.');
@@ -3462,7 +5252,14 @@ function AutoDetect() {
     try {
       const parsed = await getGeneratedBridgeReport();
       if (!parsed) throw new Error('missing report');
+      const nextReport = buildAutoDetectReport({
+        browserDevices: devices,
+        bridgeReport: parsed,
+        permissionState,
+        desktopReady
+      });
       setBridgeReport(parsed);
+      onUpdateChain?.({ devices, bridgeReport: parsed, autoDetectReport: nextReport, desktopReady });
       setStatus('Loaded generated Windows bridge report locally.');
     } catch {
       setStatus('No generated bridge report found yet. Run tools/Scan-AudioSetup.ps1, then try again.');
@@ -3483,7 +5280,14 @@ function AutoDetect() {
         setStatus(result?.error || 'Desktop scan failed.');
         return;
       }
+      const nextReport = buildAutoDetectReport({
+        browserDevices: devices,
+        bridgeReport: result.report,
+        permissionState,
+        desktopReady: true
+      });
       setBridgeReport(result.report);
+      onUpdateChain?.({ devices, bridgeReport: result.report, autoDetectReport: nextReport, desktopReady: true });
       setStatus(`Desktop scan complete. Report saved to ${result.reportPath}.`);
     } catch {
       setStatus('Desktop scan failed before a report could be created.');
@@ -3506,18 +5310,41 @@ function AutoDetect() {
     }
   };
 
+  const applySuggestedProfile = () => {
+    onApplyProfile?.({
+      game: setupGame,
+      sourceProfile: setupIntelligence.gamePlan.sourceProfile
+    });
+    setStatus(`${setupIntelligence.gamePlan.profile} applied inside CueForge. Review EQ Studio before exporting APO.`);
+  };
+
   return (
     <section className="grid two">
       <Panel title="Connected Device Scanner" icon={Search}>
         <p>{status}</p>
         <button className="primary" onClick={() => scanDevices()}><Search size={18} /> Scan audio devices</button>
+        <div className={`data-card permission-recovery recovery-${deviceRecovery.level}`}>
+          <strong>{deviceRecovery.title}</strong>
+          <span>{deviceRecovery.detail}</span>
+          <small>{formatPermissionRecoverySteps(deviceRecovery)}</small>
+        </div>
         <div className="stack device-list">
           {devices.length === 0 && <div className="data-card"><strong>No scan yet</strong><span>The app auto-scans on open. If nothing appears, click scan and allow microphone permission.</span></div>}
-          {devices.map((device, index) => (
-            <div className="data-card" key={`${device.kind}-${index}`}>
-              <strong>{autoNameDevice(device, index, bridgeReport)}</strong>
-              <span>{device.kind.replace('audio', 'audio ')}</span>
-              <small>{device.label ? 'Real browser device name' : 'Auto-name fallback until permission or bridge report gives the real name'}</small>
+          {namedDevices.map((device, index) => (
+            <div className="data-card device-name-card" key={device.deviceKey}>
+              <strong>{device.displayLabel}</strong>
+              <span>{String(device.kind || '').replace('audio', 'audio ')}</span>
+              <small>{device.needsAlias ? 'Browser hid the exact name. Add a friendly name so testers know which one to use.' : 'Noisy browser/Windows label cleaned locally. Edit it if this is not the right device.'}</small>
+              <label className="field compact-field">
+                <span>Friendly name</span>
+                <input
+                  value={device.alias}
+                  onChange={(event) => updateAlias(device.deviceKey, event.target.value)}
+                  placeholder={device.cleanedLabel}
+                  aria-label={`Friendly name for ${device.cleanedLabel || `device ${index + 1}`}`}
+                />
+              </label>
+              {device.hints.length > 0 && <em>{device.hints.join(' / ')}</em>}
             </div>
           ))}
         </div>
@@ -3543,10 +5370,11 @@ function AutoDetect() {
           <Metric label="Peace UI" value={peaceInstalled ? 'Found' : 'Optional'} tone={peaceInstalled ? 'teal' : 'amber'} />
           <Metric label="Sonar" value={sonarInstalled ? 'Found' : 'Optional'} tone={sonarInstalled ? 'teal' : 'amber'} />
           <Metric label="Virtual routing" value={virtualRouting ? 'Found' : 'Optional'} tone={virtualRouting ? 'teal' : 'amber'} />
+          <Metric label="Enhancers" value={setupIntelligence.detected.companionLayers.length ? `${setupIntelligence.detected.companionLayers.length} seen` : 'Scan'} tone={setupIntelligence.detected.companionLayers.length ? 'teal' : 'amber'} />
         </div>
         <label className="bridge-import">
           <span>Import Windows bridge report</span>
-          <input type="file" accept="application/json,.json" onChange={importBridgeReport} />
+          <input type="file" accept="application/json,.json" aria-label="Import Windows bridge report" onChange={importBridgeReport} />
         </label>
         <button className="ghost" onClick={loadGeneratedBridgeReport}>Load generated bridge report</button>
         {bridgeReport && (
@@ -3570,8 +5398,214 @@ function AutoDetect() {
           <a href="https://vb-audio.com/Cable/" target="_blank" rel="noreferrer">VB-CABLE</a>
         </div>
       </Panel>
-      <Panel className="wide" title="Copy/Paste Setup Kit" icon={Save}>
-        <p>Auto-detected setup text for testers, Discord reports, Reddit replies, and bug reports. It stays redacted: no raw device IDs, group IDs, paths, phone numbers, emails, tokens, or recovery info.</p>
+      <Panel className="wide" title="Auto Detect v2 Report" icon={ShieldCheck}>
+        <p>Normalized setup report. CueForge uses this same shape for Chain Graph, readiness, recommendations, exports, and later desktop/native setup work.</p>
+        <div className="metric-row selftest-summary">
+          <Metric label="Source" value={autoDetectReport.source} tone={autoDetectReport.source.includes('desktop') ? 'teal' : 'amber'} />
+          <Metric label="Confidence" value={`${autoDetectReport.confidence.score}%`} tone={autoDetectReport.confidence.score >= 70 ? 'teal' : 'amber'} />
+          <Metric label="Inputs" value={String(autoDetectReport.devices.browserInputs.length + autoDetectReport.devices.windowsCaptureDevices.length)} tone="teal" />
+          <Metric label="Outputs" value={String(autoDetectReport.devices.browserOutputs.length + autoDetectReport.devices.windowsRenderDevices.length)} tone="teal" />
+          <Metric label="Risks" value={String(autoDetectReport.risks.length)} tone={autoDetectReport.risks.some((risk) => risk.severity === 'high') ? 'red' : 'amber'} />
+        </div>
+        <div className={`data-card evidence-boundary ${autoDetectReport.confidence.requiresExplicitScan ? 'partial' : 'native'}`}>
+          <strong>{autoDetectReport.confidence.requiresExplicitScan ? 'Browser-only partial evidence' : 'Native high-confidence evidence'}</strong>
+          <span>{autoDetectReport.confidence.reasons.join(', ') || 'CueForge is waiting on device evidence.'}</span>
+          <small>{autoDetectReport.confidence.requiresExplicitScan ? 'Run the desktop bridge scan or import the Windows report before calling the chain fully detected.' : 'Windows bridge data is loaded, so endpoint, companion, and route warnings are stronger.'}</small>
+        </div>
+        <div className="copy-grid">
+          <div className="data-card">
+            <strong>Detected</strong>
+            <ul className="clean-list">
+              {autoDetectSummary.detected.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </div>
+          <div className="data-card">
+            <strong>Risk</strong>
+            <ul className="clean-list">
+              {autoDetectSummary.risks.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </div>
+          <div className="data-card">
+            <strong>Recommended</strong>
+            <ul className="clean-list">
+              {autoDetectSummary.recommendations.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </div>
+        </div>
+        <div className="data-card">
+          <strong>Companion detection</strong>
+          <span>
+            {Object.values(autoDetectReport.companions)
+              .filter((companion) => companion.detected === true)
+              .map((companion) => companion.label)
+              .join(', ') || 'No companion audio layer confirmed yet.'}
+          </span>
+          <small>Browser mode cannot prove installed Windows audio apps. Desktop bridge data increases confidence.</small>
+        </div>
+        <div className="live-actions">
+          <button className="primary" onClick={() => copyText(JSON.stringify(autoDetectReport, null, 2), 'Normalized Auto Detect report')}><Copy size={18} /> Copy v2 report</button>
+          <button className="ghost" onClick={() => downloadTextFile('cueforge-auto-detect-report.json', JSON.stringify(autoDetectReport, null, 2))}><Download size={18} /> Export JSON</button>
+        </div>
+      </Panel>
+      <Panel className="wide" title="Setup Intelligence" icon={BrainCircuit}>
+        <p>{setupIntelligence.promise}</p>
+        <div className="setup-intel-controls">
+          <label className="field">
+            <span>Game focus</span>
+            <select value={setupGame} onChange={(event) => updateSetupGame(event.target.value)}>
+              {setupIntelligenceOptions.games.map((game) => <option key={game}>{game}</option>)}
+              {gameProfileOptions
+                .filter((profile) => !setupIntelligenceOptions.games.includes(profile.game))
+                .map((profile) => <option key={profile.id}>{profile.game}</option>)}
+            </select>
+          </label>
+          <label className="field">
+            <span>Budget lane</span>
+            <select value={budgetTier} onChange={(event) => setBudgetTier(event.target.value)}>
+              {setupIntelligenceOptions.budgets.map((budget) => <option key={budget.id} value={budget.id}>{budget.label}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="data-card auto-switch-card">
+          <strong>{activeGameMatch ? `Detected game: ${activeGameMatch.game}` : 'Game auto-switch ready'}</strong>
+          <span>{activeGameMatch ? `Matched ${activeGameMatch.matchedHint}; profile ${activeGameMatch.sourceProfile}.` : 'Run the Windows scan while a game is open, then CueForge can switch to the saved game profile.'}</span>
+          <label>
+            <input type="checkbox" checked={autoSwitchEnabled} onChange={(event) => toggleAutoSwitch(event.target.checked)} />
+            <span>Auto-switch when a saved game is detected</span>
+          </label>
+        </div>
+        <div className="data-card game-profile-editor">
+          <strong>Saved game profile</strong>
+          <span>Map a game or process name to the CueForge profile it should use when detected.</span>
+          <div className="setup-intel-controls">
+            <label className="field">
+              <span>Game/profile name</span>
+              <input
+                value={gameProfileDraft.game}
+                onChange={(event) => setGameProfileDraft({ ...gameProfileDraft, game: event.target.value })}
+                placeholder="Example: Valorant / CS2"
+              />
+            </label>
+            <label className="field">
+              <span>CueForge profile</span>
+              <select
+                value={gameProfileDraft.sourceProfile}
+                onChange={(event) => setGameProfileDraft({ ...gameProfileDraft, sourceProfile: event.target.value })}
+              >
+                {Object.entries(localSourceProfiles).map(([id, profile]) => <option key={id} value={id}>{profile.name}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span>Game/process hints</span>
+              <input
+                value={gameProfileDraft.matchHints}
+                onChange={(event) => setGameProfileDraft({ ...gameProfileDraft, matchHints: event.target.value })}
+                placeholder="valorant, cs2, r5apex"
+              />
+            </label>
+          </div>
+          <div className="live-actions">
+            <button className="primary" onClick={saveGameProfile}><Save size={18} /> Save game profile</button>
+          </div>
+          <div className="module-list game-profile-list">
+            {gameProfileOptions.slice(0, 6).map((profile) => (
+              <div className="module-row" key={profile.id}>
+                <Gamepad2 size={17} />
+                <div>
+                  <strong>{profile.game}</strong>
+                  <span>{localSourceProfiles[profile.sourceProfile]?.name || profile.sourceProfile}</span>
+                  <small>{profile.matchHints.slice(0, 4).join(', ')}</small>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="metric-row selftest-summary">
+          <Metric label="Confidence" value={`${setupIntelligence.confidence}%`} tone={setupIntelligence.confidence >= 70 ? 'teal' : 'amber'} />
+          <Metric label="Mic/input" value={setupIntelligence.detected.namedMic} tone={setupIntelligence.detected.inputs ? 'teal' : 'amber'} />
+          <Metric label="Output" value={setupIntelligence.detected.namedOutput} tone={setupIntelligence.detected.outputs ? 'teal' : 'amber'} />
+          <Metric label="Layers" value={String(setupIntelligence.detected.companionLayers.length)} tone={setupIntelligence.detected.companionLayers.length ? 'teal' : 'amber'} />
+        </div>
+        <div className="setup-intel-map">
+          {setupIntelligence.chainStages.map((stage) => (
+            <div className={`setup-stage stage-${stage.status}`} key={stage.id}>
+              <span>{stage.label}</span>
+              <strong>{stage.status}</strong>
+              <small>{stage.detail}</small>
+              <em>{stage.action}</em>
+            </div>
+          ))}
+        </div>
+        <div className="copy-grid">
+          <div className="data-card">
+            <strong>{setupIntelligence.gamePlan.profile}</strong>
+            <span>{setupIntelligence.gamePlan.goal}</span>
+            <small>{setupIntelligence.gamePlan.caution}</small>
+          </div>
+          <div className="data-card">
+            <strong>{setupIntelligence.budgetPlan.label}</strong>
+            <span>{setupIntelligence.budgetPlan.plan}</span>
+            <small>{setupIntelligence.budgetPlan.proof}</small>
+          </div>
+        </div>
+        <div className="recommendation-grid">
+          {setupIntelligence.recommendationCards.map((card) => (
+            <div className="data-card" key={card.id}>
+              <strong>{card.title}</strong>
+              <span>{card.detail}</span>
+              <small>{card.proof}</small>
+            </div>
+          ))}
+        </div>
+        <div className="proof-gate-grid">
+          {setupIntelligence.proofGates.map((gate) => (
+            <div className={`proof-gate ${gate.ready ? 'ready' : 'needed'}`} key={gate.id}>
+              <span>{gate.label}</span>
+              <strong>{gate.status}</strong>
+              <small>{gate.action}</small>
+            </div>
+          ))}
+        </div>
+        <div className="module-list">
+          {setupIntelligence.actions.map((action) => (
+            <div className="module-row" key={action}>
+              <CheckCircle2 size={17} />
+              <div>
+                <strong>Next move</strong>
+                <span>{action}</span>
+              </div>
+            </div>
+          ))}
+          {setupIntelligence.riskFlags.map((warning) => (
+            <div className={`module-row warning-row severity-${warning.severity}`} key={warning.id}>
+              <ShieldCheck size={17} />
+              <div>
+                <strong>{warning.title}</strong>
+                <span>{warning.detail}</span>
+                <small>{warning.action}</small>
+              </div>
+              <em>{warning.severity}</em>
+            </div>
+          ))}
+        </div>
+        <div className="data-card">
+          <strong>Proof label</strong>
+          <span>{setupIntelligence.testedProof}</span>
+          <small>Recommendations stay marked as starter guidance until local scan plus real match feedback prove the setup.</small>
+        </div>
+        <div className="live-actions">
+          <button className="primary" onClick={applySuggestedProfile}><SlidersHorizontal size={18} /> Apply starting profile</button>
+          <button className="primary" onClick={() => copyText(setupIntelligenceText, 'Setup intelligence plan')}><Copy size={18} /> Copy setup plan</button>
+          <button className="ghost" onClick={() => downloadTextFile('cueforge-setup-intelligence.txt', setupIntelligenceText)}><Download size={18} /> Export plan</button>
+        </div>
+      </Panel>
+      <Panel className="wide" title="Redacted Setup Summary" icon={Save}>
+        <p>Share this when someone asks what setup was tested. It uses browser scan data plus the Windows bridge report when available.</p>
+        <div className="data-card quick-path">
+          <strong>What to do</strong>
+          <span>1. Scan devices or run the Windows scan. 2. Check the summary. 3. Copy only the redacted text below.</span>
+          <small>No raw device IDs, group IDs, local paths, phone numbers, emails, tokens, or recovery info.</small>
+        </div>
         <div className="copy-grid">
           <div className="data-card">
             <strong>Detected setup summary</strong>
@@ -3634,6 +5668,9 @@ function DriverLayerPage({ apoConfig }) {
     'Equalizer APO': Boolean(bridgeReport?.tools?.equalizerApo?.installed),
     'Peace UI': Boolean(bridgeReport?.tools?.peace?.installed),
     'SteelSeries Sonar': Boolean(bridgeReport?.tools?.steelSeriesSonar?.installed),
+    'FxSound / OEM enhancers': Boolean(bridgeReport?.tools?.fxSound?.installed || bridgeReport?.tools?.nahimic?.installed || bridgeReport?.tools?.realtekAudio?.installed),
+    'Spatial layers': Boolean(bridgeReport?.tools?.razerThx?.installed || bridgeReport?.tools?.dolbyAccess?.installed || bridgeReport?.tools?.dtsSoundUnbound?.installed),
+    'Mic processors': Boolean(bridgeReport?.tools?.nvidiaBroadcast?.installed || bridgeReport?.tools?.elgatoWaveLink?.installed || bridgeReport?.tools?.logitechGHub?.installed || bridgeReport?.tools?.corsairIcue?.installed || bridgeReport?.tools?.voicemod?.installed),
     'VB-CABLE / Voicemeeter': Boolean(bridgeReport?.tools?.vbCable?.installed || bridgeReport?.tools?.voicemeeter?.installed || bridgeReport?.matches?.virtualRouting),
     'CueForge Native APO': false
   };
@@ -3660,6 +5697,18 @@ function DriverLayerPage({ apoConfig }) {
         <p className="callout">{draftStatus}</p>
         <pre>{apoConfig}</pre>
       </Panel>
+      <Panel className="wide" title="Spatial Honesty" icon={Headphones}>
+        <p>{spatialTruthWarning}</p>
+        <div className="recommendation-grid">
+          {honestSpatialModes.map((mode) => (
+            <div className="data-card" key={mode.id}>
+              <strong>{mode.label}</strong>
+              <span>{mode.promise}</span>
+              <small>{mode.futureOnly ? 'Future SDK path' : mode.bestFor.join(', ')}</small>
+            </div>
+          ))}
+        </div>
+      </Panel>
       {driverLayers.map((layer) => (
         <Panel title={layer.name} icon={SlidersHorizontal} key={layer.name}>
           <div className="data-card">
@@ -3676,25 +5725,6 @@ function DriverLayerPage({ apoConfig }) {
       ))}
     </section>
   );
-}
-
-function autoNameDevice(device, index, bridgeReport) {
-  if (device.label) {
-    if (/hyperx|hyper x/i.test(device.label)) return `${device.label} - HyperX mic candidate`;
-    if (/iem|dac|usb audio|headphone|headset/i.test(device.label)) return `${device.label} - IEM/output candidate`;
-    return device.label;
-  }
-
-  const bridgeDevices = [...(bridgeReport?.soundDevices || []), ...(bridgeReport?.mediaDevices || [])];
-  const bridgeMatch = bridgeDevices[index]?.Name || bridgeDevices.find((item) => {
-    if (device.kind === 'audioinput') return /mic|microphone|hyperx|hyper x/i.test(item.Name || '');
-    return /headphone|headset|dac|usb audio|iem|speaker/i.test(item.Name || '');
-  })?.Name;
-
-  if (bridgeMatch) return `${bridgeMatch} - from Windows bridge`;
-  if (device.kind === 'audioinput') return `Microphone input ${index + 1} - permission needed for real name`;
-  if (device.kind === 'audiooutput') return `Headphone/output ${index + 1} - permission needed for real name`;
-  return `Audio device ${index + 1} - permission needed for real name`;
 }
 
 function PandaNotesPage({ uiNotes = [], onOpen, onClearUiNotes }) {
@@ -3856,17 +5886,73 @@ function PandaNotesPage({ uiNotes = [], onOpen, onClearUiNotes }) {
   );
 }
 
-function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
+function Inventory({ onOpen, onRerunSetup, uiNotes = [], shortcutVault = [], onUpdateShortcuts, onUpdateUiNotes, onClearUiNotes }) {
   const selfTests = getSavedJson('cueforge-self-test-results') || [];
   const evidence = getSavedJson('cueforge-audio-evidence') || [];
   const checkIns = getSavedJson('cueforge-beta-checkins') || [];
   const snapshots = getSavedJson('cueforge-gameplay-snapshots') || [];
+  const communityItems = getSavedJson('cueforge-community-feedback') || [];
   const lastReport = getSavedJson('cueforge-last-issue-report');
-  const uiSummary = summarizeUiFeedback(uiNotes);
-  const repairCheck = useMemo(() => buildUiFeedbackRepairCheck(uiNotes), [uiNotes]);
-  const repairPacket = useMemo(() => buildUiFeedbackRepairPacket(uiNotes), [uiNotes]);
-  const [repairStatus, setRepairStatus] = useState('Auto repair check runs from saved Panda Notes.');
   const desktopReady = Boolean(window.cueforgeDesktop?.isDesktop);
+  const [privacyAudit, setPrivacyAudit] = useState(() => getSavedJson('cueforge-last-privacy-audit'));
+  const [shortcutDraft, setShortcutDraft] = useState({ label: '', value: '', kind: 'link' });
+  const [shortcutStatus, setShortcutStatus] = useState('Safe shortcuts are saved locally. Code-looking shortcuts lock before export.');
+  const uiSummary = summarizeUiFeedback(uiNotes);
+  const shortcutSummary = useMemo(() => summarizeShortcutVault(shortcutVault), [shortcutVault]);
+  const shortcutExportText = useMemo(() => buildShortcutExportText(shortcutVault), [shortcutVault]);
+  const repairCheck = useMemo(() => buildUiFeedbackRepairCheck(uiNotes), [uiNotes]);
+  const displayedRepairActions = useMemo(() => repairCheck.actions.map((action) => {
+    const displayTitle = rewriteLegacyUiCopy(action.title);
+    const legacyFixed = displayTitle !== action.title;
+    return {
+      ...action,
+      legacyFixed,
+      displayTitle,
+      displayFix: legacyFixed
+        ? 'Copy was rewritten in this build. Re-test the target page, then clear the note when it passes.'
+        : rewriteLegacyUiCopy(action.suggestedFix),
+      displayTestPlan: rewriteLegacyUiCopy(action.testPlan)
+    };
+  }), [repairCheck.actions]);
+  const openRepairActions = displayedRepairActions.filter((action) => !action.legacyFixed);
+  const fixedRepairActions = displayedRepairActions.filter((action) => action.legacyFixed);
+  const repairPacket = useMemo(() => buildUiFeedbackRepairPacket(uiNotes), [uiNotes]);
+  const privacyAuditText = useMemo(() => buildPrivacyAuditText(privacyAudit), [privacyAudit]);
+  const issueMemory = useMemo(() => buildIssuePatternMemory({
+    lastReport,
+    uiNotes,
+    checkIns,
+    communityItems,
+    selfTests,
+    evidence
+  }), [lastReport, uiNotes, checkIns, communityItems, selfTests, evidence]);
+  const issueMemoryText = useMemo(() => buildIssuePatternMemoryText(issueMemory), [issueMemory]);
+  const systemDesktopPlan = useMemo(() => buildDesktopBridgeFixPlan({
+    desktopAvailable: desktopReady,
+    desktopInfo: null,
+    bridgeReport: lastReport?.diagnostics?.bridgeReport || null
+  }), [desktopReady, lastReport]);
+  const systemDesktopPlanText = useMemo(() => buildDesktopBridgeFixText(systemDesktopPlan), [systemDesktopPlan]);
+  const scopeBoundary = useMemo(() => buildScopeBoundarySummary(), []);
+  const nativeRoadmap = useMemo(() => summarizeNativeEngineRoadmap(), []);
+  const [repairStatus, setRepairStatus] = useState('Auto repair check runs from saved Panda Notes.');
+  const releaseProof = useMemo(() => buildReleaseProofState({
+    selfTests,
+    evidence,
+    checkIns,
+    snapshots,
+    lastReport,
+    uiNotes,
+    desktopReady,
+    privacyAuditPassed: privacyAudit?.status === 'pass' || localStorage.getItem('cueforge-privacy-audit-passed') === 'yes',
+    publicBuildVerified: localStorage.getItem('cueforge-public-build-verified') === 'yes',
+    patternMemoryReady: issueMemory.matchedPatterns.some((pattern) => pattern.automationReady)
+  }), [selfTests, evidence, checkIns, snapshots, lastReport, uiNotes, desktopReady, privacyAudit, issueMemory]);
+  const releaseSummary = useMemo(() => summarizeReleaseQueue({
+    testerCount: checkIns.length,
+    proof: releaseProof
+  }), [checkIns.length, releaseProof]);
+  const releaseDraft = useMemo(() => buildReleaseUpdateDraft(releaseSummary), [releaseSummary]);
   const passedTests = selfTests.filter((item) => item.status === 'pass').length;
   const totalTests = selfTests.length;
   const healthScore = clamp(
@@ -3899,9 +5985,89 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
   };
 
   const runRepairCheck = () => {
-    setRepairStatus(repairCheck.actionCount
-      ? `Auto check found ${repairCheck.actionCount} repair action${repairCheck.actionCount === 1 ? '' : 's'}. Top fix: ${repairCheck.topAction.title}.`
+    setRepairStatus(openRepairActions.length
+      ? `Auto check found ${openRepairActions.length} open repair action${openRepairActions.length === 1 ? '' : 's'}. Top fix: ${openRepairActions[0].displayTitle}.`
+      : fixedRepairActions.length
+        ? `${fixedRepairActions.length} saved copy note${fixedRepairActions.length === 1 ? '' : 's'} already map to repaired wording. Re-test, then clear the notes.`
       : 'No Panda Notes found yet. Right-click a broken/confusing area, save a note, then this check will build the repair queue.');
+  };
+
+  const updateNotes = (next, message) => {
+    onUpdateUiNotes?.(next);
+    setRepairStatus(message);
+  };
+
+  const markAllNotes = (status) => {
+    const next = markUiFeedbackNotes(uiNotes, 'all', status);
+    updateNotes(next, `Panda Notes marked ${status}. ${status === 'fixed' ? 'Run browser QA, then clear fixed notes.' : 'Keep the loop moving from this inbox.'}`);
+  };
+
+  const clearFixedNotes = () => {
+    const next = cleanupUiFeedbackNotes(uiNotes);
+    updateNotes(next, `Cleared ${uiNotes.length - next.length} fixed or archived note${uiNotes.length - next.length === 1 ? '' : 's'}.`);
+  };
+
+  const updateShortcutVault = (next, message) => {
+    onUpdateShortcuts?.(next);
+    setShortcutStatus(message);
+  };
+
+  const saveShortcutDraft = () => {
+    if (!shortcutDraft.label.trim() || !shortcutDraft.value.trim()) {
+      setShortcutStatus('Add a name and link/action first, then save it.');
+      return;
+    }
+
+    const next = saveShortcut(shortcutVault, shortcutDraft);
+    const savedShortcut = next[next.length - 1];
+    updateShortcutVault(next, savedShortcut.locked
+      ? 'Saved and locked. That shortcut will show as redacted in public exports.'
+      : 'Saved. It will be included in the safe shortcut kit.');
+    setShortcutDraft({ label: '', value: '', kind: 'link' });
+  };
+
+  const lockShortcutCodes = () => {
+    const next = lockSensitiveShortcuts(shortcutVault);
+    const locked = summarizeShortcutVault(next).locked;
+    updateShortcutVault(next, `${locked} code shortcut${locked === 1 ? '' : 's'} locked and redacted for export.`);
+  };
+
+  const copyShortcutKit = async () => {
+    try {
+      await navigator.clipboard?.writeText(shortcutExportText);
+      setShortcutStatus('Safe shortcut kit copied. Locked code shortcuts stayed redacted.');
+    } catch {
+      setShortcutStatus('Shortcut kit is ready, but clipboard access was blocked. Export it instead.');
+    }
+  };
+
+  const runPrivacyAuditNow = () => {
+    const apo = buildApoConfig(baseEq);
+    const sampleExportPack = buildExportPack({
+      apoConfig: apo,
+      calibration: { eq: baseEq, equalizerApoConfig: apo },
+      hearing: null,
+      dna: null,
+      uiFeedbackNotes: uiNotes,
+      shortcuts: shortcutVault
+    });
+    const audit = runPrivacyAudit([
+      { name: 'last issue report', payload: lastReport || { status: 'no report saved yet' } },
+      { name: 'setup export pack', payload: sampleExportPack },
+      { name: 'setup summary', payload: buildSetupShareText({ devices: [], bridgeReport: null }) },
+      { name: 'self-test results', payload: redactDeep(selfTests) },
+      { name: 'panda notes', payload: uiNotes },
+      { name: 'shortcut vault', payload: buildShortcutExportText(shortcutVault) }
+    ]);
+    setPrivacyAudit(audit);
+    safeSetJson('cueforge-last-privacy-audit', audit);
+    if (audit.status === 'pass') {
+      localStorage.setItem('cueforge-privacy-audit-passed', 'yes');
+      setRepairStatus('Privacy audit passed. Exports are clear for the next controlled tester update.');
+    } else {
+      localStorage.removeItem('cueforge-privacy-audit-passed');
+      setRepairStatus(`Privacy audit found ${audit.leakCount} possible leak${audit.leakCount === 1 ? '' : 's'}. Fix before posting a tester update.`);
+    }
   };
 
   return (
@@ -3963,6 +6129,221 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
         </div>
       </Panel>
 
+      <Panel title="Native Engine Roadmap" icon={Gauge}>
+        <p>Post-v0.2 direction stays staged: sandbox first, preview second, Windows integration later, and no hidden system changes.</p>
+        <div className="data-card native-next-card">
+          <strong>{nativeRoadmap.next.version} - {nativeRoadmap.next.codename}</strong>
+          <span>{nativeRoadmap.next.goal}</span>
+          <small>{nativeRoadmap.next.deliverables.slice(0, 3).join(' / ')}</small>
+        </div>
+        <div className="module-list native-roadmap-list">
+          {nativeRoadmap.releaseLadder.map((milestone) => (
+            <div className="module-row" key={milestone.version}>
+              <span className={`status-dot ${milestone.version === nativeRoadmap.next.version ? 'ready' : ''}`} />
+              <div>
+                <strong>{milestone.version} - {milestone.codename}</strong>
+                <span>{milestone.goal}</span>
+                <small>Proof: {milestone.proofGates.slice(0, 2).join(' / ')}</small>
+              </div>
+              <em>{milestone.lane}</em>
+            </div>
+          ))}
+        </div>
+        <p className="callout">{nativeRoadmap.principles[0]} {nativeRoadmap.principles[3]}</p>
+      </Panel>
+
+      <Panel title="Desktop Bridge Fix Path" icon={Download}>
+        <p>{systemDesktopPlan.summary}</p>
+        <div className="metric-row selftest-summary">
+          <Metric label="Mode" value={desktopReady ? 'Desktop' : 'Browser'} tone={desktopReady ? 'teal' : 'amber'} />
+          <Metric label="Bridge" value={systemDesktopPlan.status.replaceAll('-', ' ')} tone={systemDesktopPlan.status === 'desktop-ready' ? 'teal' : 'amber'} />
+        </div>
+        <div className="data-card">
+          <strong>{systemDesktopPlan.title}</strong>
+          <span>{systemDesktopPlan.boundary}</span>
+          <small>{systemDesktopPlan.playerSteps.slice(0, 2).join(' ')}</small>
+        </div>
+        <div className="module-list">
+          {systemDesktopPlan.proofChecks.slice(0, 4).map((check) => (
+            <div className="module-row" key={check}>
+              <CheckCircle2 size={17} />
+              <div>
+                <strong>{check}</strong>
+                <span>{check.includes('APO') ? 'Safe draft only; no direct system write.' : 'Required before calling desktop setup solved.'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="live-actions">
+          <button className="ghost" onClick={() => navigator.clipboard?.writeText(systemDesktopPlanText)}><Copy size={18} /> Copy desktop plan</button>
+          <button className="ghost" onClick={() => downloadTextFile('cueforge-desktop-bridge-plan.txt', systemDesktopPlanText)}><Download size={18} /> Export plan</button>
+        </div>
+      </Panel>
+
+      <Panel title="Shortcut Vault" icon={Save}>
+        <p>Save player shortcuts for setup, support, feedback, and release notes. Code shortcuts lock locally and export as redacted placeholders.</p>
+        <div className="metric-row selftest-summary">
+          <Metric label="Saved" value={String(shortcutSummary.total)} tone={shortcutSummary.total ? 'teal' : 'amber'} />
+          <Metric label="Public" value={String(shortcutSummary.exportable)} tone={shortcutSummary.exportable ? 'teal' : 'amber'} />
+          <Metric label="Locked" value={String(shortcutSummary.locked)} tone={shortcutSummary.locked ? 'amber' : 'teal'} />
+        </div>
+        <div className="shortcut-builder">
+          <label className="field">
+            <span>Name</span>
+            <input
+              value={shortcutDraft.label}
+              onChange={(event) => setShortcutDraft({ ...shortcutDraft, label: event.target.value })}
+              placeholder="Example: Open web app"
+            />
+          </label>
+          <label className="field">
+            <span>Type</span>
+            <select value={shortcutDraft.kind} onChange={(event) => setShortcutDraft({ ...shortcutDraft, kind: event.target.value })}>
+              <option value="link">Link</option>
+              <option value="action">Action</option>
+              <option value="command">Command</option>
+              <option value="code">Code / locked</option>
+              <option value="note">Note</option>
+            </select>
+          </label>
+          <label className="field shortcut-value-field">
+            <span>Shortcut</span>
+            <input
+              value={shortcutDraft.value}
+              onChange={(event) => setShortcutDraft({ ...shortcutDraft, value: event.target.value })}
+              placeholder="Paste a link, action, or code"
+            />
+          </label>
+        </div>
+        <div className="live-actions">
+          <button className="primary" onClick={saveShortcutDraft}><Save size={18} /> Save shortcut</button>
+          <button className="ghost" onClick={lockShortcutCodes}><ShieldCheck size={18} /> Lock code shortcuts</button>
+          <button className="ghost" onClick={copyShortcutKit}><Copy size={18} /> Copy safe shortcuts</button>
+          <button className="ghost" onClick={() => downloadTextFile('cueforge-shortcut-kit.txt', shortcutExportText)}><Download size={18} /> Export shortcut kit</button>
+        </div>
+        <p className="callout">{shortcutStatus}</p>
+        <div className="module-list shortcut-list">
+          {shortcutVault.slice(0, 6).map((shortcut) => (
+            <div className="module-row" key={shortcut.id}>
+              <span className={`status-dot ${shortcut.locked ? '' : 'ready'}`} />
+              <div>
+                <strong>{shortcut.label}</strong>
+                <span>{shortcut.locked ? '[locked]' : shortcut.value}</span>
+                <small>{shortcut.kind} / {shortcut.scope}</small>
+              </div>
+              <em>{shortcut.locked ? 'locked' : 'saved'}</em>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel title="Issue Pattern Memory" icon={BrainCircuit}>
+        <p>CueForge is for Windows players using IEMs, headsets, USB mics, Discord, Equalizer APO, Peace, Sonar, and real-world audio chains that never behave perfectly.</p>
+        <div className="metric-row selftest-summary">
+          <Metric label="Signals" value={String(issueMemory.totalSignals)} tone={issueMemory.totalSignals ? 'teal' : 'amber'} />
+          <Metric label="Patterns" value={String(issueMemory.matchedCount)} tone={issueMemory.matchedCount ? 'teal' : 'amber'} />
+          <Metric label="Auto-ready" value={String(issueMemory.matchedPatterns.filter((pattern) => pattern.automationReady).length)} tone={issueMemory.matchedPatterns.some((pattern) => pattern.automationReady) ? 'teal' : 'amber'} />
+        </div>
+        {issueMemory.topPattern ? (
+          <div className="data-card">
+            <strong>{issueMemory.topPattern.label}</strong>
+            <span>{issueMemory.topPattern.debugPlaybook[0]}</span>
+            <small>{issueMemory.topPattern.confidence}% confidence / {issueMemory.topPattern.source} / {issueMemory.topPattern.evidenceCount} signal{issueMemory.topPattern.evidenceCount === 1 ? '' : 's'}</small>
+          </div>
+        ) : (
+          <div className="data-card">
+            <strong>No repeated pattern yet</strong>
+            <span>Collect a redacted report, Panda Note, check-in, or community signal after a real match.</span>
+            <small>Pattern memory stays local and suggests debug playbooks only.</small>
+          </div>
+        )}
+        <div className="module-list">
+          {issueMemory.matchedPatterns.slice(0, 3).map((pattern) => (
+            <div className="module-row" key={pattern.id}>
+              <span className={`status-dot ${pattern.automationReady ? 'ready' : ''}`} />
+              <div>
+                <strong>{pattern.label}</strong>
+                <span>{pattern.debugPlaybook.slice(0, 2).join(' ')}</span>
+                <small>Later: {pattern.futureAutomation}</small>
+              </div>
+              <em>{pattern.confidence}%</em>
+            </div>
+          ))}
+        </div>
+        <div className="live-actions">
+          <button className="ghost" onClick={() => navigator.clipboard?.writeText(issueMemoryText)}><Copy size={18} /> Copy playbook</button>
+          <button className="ghost" onClick={() => downloadTextFile('cueforge-issue-pattern-memory.txt', issueMemoryText)}><Download size={18} /> Export memory</button>
+        </div>
+        <p className="callout">{issueMemory.boundary}</p>
+      </Panel>
+
+      <Panel title="Target-Gated Release Queue" icon={Gauge}>
+        <p>Updates stay queued until the tester target and proof gates are both ready. That keeps CueForge moving fast without shipping half-proof hype.</p>
+        <div className="metric-row selftest-summary">
+          <Metric label="Local tester signals" value={String(releaseSummary.testerCount)} tone={releaseSummary.testerCount ? 'teal' : 'amber'} />
+          <Metric label="Active target" value={`${releaseSummary.active.testerTarget}`} tone={releaseSummary.active.targetMet ? 'teal' : 'amber'} />
+          <Metric label="Proof gaps" value={String(releaseSummary.active.missingProof.length)} tone={releaseSummary.active.proofReady ? 'teal' : 'amber'} />
+        </div>
+        <div className="data-card">
+          <strong>{releaseSummary.active.label}</strong>
+          <span>{releaseSummary.active.theme}</span>
+          <small>{releaseSummary.nextAction}</small>
+        </div>
+        <div className="module-list">
+          {releaseSummary.targets.map((target) => (
+            <div className="module-row" key={target.id}>
+              <span className={`status-dot ${target.status === 'ready-to-release' ? 'ready' : ''}`} />
+              <div>
+                <strong>{target.label}</strong>
+                <span>{target.ship.slice(0, 2).join(' / ')}</span>
+                <small>{target.missingProof.length ? `Waiting on: ${target.missingProof.join(', ')}` : target.releaseWhen}</small>
+              </div>
+              <em>{target.status}</em>
+            </div>
+          ))}
+        </div>
+        <div className="live-actions">
+          <button className="ghost" onClick={() => navigator.clipboard?.writeText(releaseDraft)}><Copy size={18} /> Copy update draft</button>
+          <button className="ghost" onClick={() => downloadTextFile('cueforge-next-release-update.txt', releaseDraft)}><Download size={18} /> Export draft</button>
+        </div>
+      </Panel>
+
+      <HunterRewardsPanel />
+
+      <Panel title="Privacy Export Audit" icon={ShieldCheck}>
+        <p>Run this before any controlled tester update. It checks saved reports, export packs, setup summaries, self-test logs, and Panda Notes for private data.</p>
+        <div className="metric-row selftest-summary">
+          <Metric label="Audit" value={privacyAudit?.status || 'Run'} tone={privacyAudit?.status === 'pass' ? 'teal' : 'amber'} />
+          <Metric label="Leaks" value={String(privacyAudit?.leakCount ?? 0)} tone={privacyAudit?.leakCount ? 'red' : 'teal'} />
+        </div>
+        <div className="data-card">
+          <strong>{privacyAudit?.status === 'pass' ? 'Clear for controlled update' : 'Needs proof before posting'}</strong>
+          <span>{privacyAudit?.status === 'pass'
+            ? 'No raw private identifiers were found in the checked payloads.'
+            : 'Run the audit after Self Test and before copying any public tester update.'}</span>
+          <small>{privacyAudit?.checkedItems?.join(', ') || 'No audit run saved yet.'}</small>
+        </div>
+        <div className="live-actions">
+          <button className="primary" onClick={runPrivacyAuditNow}><ShieldCheck size={18} /> Run privacy audit</button>
+          <button className="ghost" onClick={() => navigator.clipboard?.writeText(privacyAuditText)} disabled={!privacyAudit}><Copy size={18} /> Copy audit</button>
+          <button className="ghost" onClick={() => downloadTextFile('cueforge-privacy-audit.txt', privacyAuditText)} disabled={!privacyAudit}><Download size={18} /> Export audit</button>
+        </div>
+        {privacyAudit?.leaks?.length > 0 && (
+          <div className="module-list">
+            {privacyAudit.leaks.slice(0, 4).map((leak, index) => (
+              <div className="module-row" key={`${leak.path}-${index}`}>
+                <span className="status-dot" />
+                <div>
+                  <strong>{leak.type}</strong>
+                  <span>{leak.path}</span>
+                </div>
+                <em>fix</em>
+              </div>
+            ))}
+          </div>
+        )}
+      </Panel>
+
       <Panel title="Safety Boundary" icon={ShieldCheck}>
         <div className="safety-list">
           <div>
@@ -3978,6 +6359,22 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
             <span>Mic clips, redacted reports, device summaries, check-ins, and gameplay snapshots.</span>
           </div>
         </div>
+        <div className="scope-boundary-card">
+          <strong>Not in v0.2.0</strong>
+          <span>These stay blocked so CueForge remains trusted, explicit, and away from anti-cheat or hidden-driver risk.</span>
+        </div>
+        <div className="module-list compact-scope-list">
+          {scopeBoundary.blocked.map((item) => (
+            <div className="module-row warning-row severity-high" key={item.id}>
+              <ShieldCheck size={17} />
+              <div>
+                <strong>{item.label}</strong>
+                <span>{item.reason}</span>
+              </div>
+              <em>blocked</em>
+            </div>
+          ))}
+        </div>
       </Panel>
 
       <Panel title="Fast Path" icon={Search}>
@@ -3987,23 +6384,32 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
           <button className="ghost" onClick={() => onOpen('mic')}><Mic size={18} /> Open analyzer</button>
           <button className="ghost" onClick={() => onOpen('beta')}><Activity size={18} /> Record check-in</button>
           <button className="ghost" onClick={() => onOpen('reports')}><Bug size={18} /> Create report</button>
+          <button className="ghost" onClick={runPrivacyAuditNow}><ShieldCheck size={18} /> Audit exports</button>
           <button className="ghost" onClick={onRerunSetup}><RotateCcw size={18} /> Rerun setup</button>
         </div>
         <p className="callout">{lastReport ? 'A replayable report exists locally. Import/export can prove the current state.' : 'Create one report after the next real test so failures can be replayed.'}</p>
       </Panel>
 
-      <Panel title="Developer UI Notes" icon={Bug}>
-        <p>Right-click notes are private to the local report/export loop. They are not posted publicly and they do not leave the machine unless a tester sends the packet.</p>
+      <Panel title="Panda Notes Inbox" icon={Bug}>
+        <p>Review tester UI notes here. Triage them, mark the repair state, copy the fix packet, then clear fixed notes after QA passes.</p>
+        <div className="data-card quick-path">
+          <strong>Fix loop</strong>
+          <span>1. Read the latest note. 2. Run repair check. 3. Mark reviewed or needs retest. 4. Clear only after the fix is proven.</span>
+          <small>Notes stay local unless a tester chooses to send a report or export packet.</small>
+        </div>
         <div className="metric-row selftest-summary">
           <Metric label="Captured" value={String(uiSummary.total)} tone={uiSummary.total ? 'teal' : 'amber'} />
+          <Metric label="Open" value={String(uiSummary.open)} tone={uiSummary.open ? 'amber' : 'teal'} />
+          <Metric label="Retest" value={String(uiSummary.needsRetest)} tone={uiSummary.needsRetest ? 'amber' : 'teal'} />
+          <Metric label="Fixed" value={String(uiSummary.fixed)} tone={uiSummary.fixed ? 'teal' : 'amber'} />
           <Metric label="Top tag" value={uiSummary.topTag} tone={uiSummary.total ? 'teal' : 'amber'} />
-          <Metric label="Repair actions" value={String(repairCheck.actionCount)} tone={repairCheck.actionCount ? 'teal' : 'amber'} />
+          <Metric label="Open fixes" value={String(openRepairActions.length)} tone={openRepairActions.length ? 'amber' : 'teal'} />
         </div>
         {uiSummary.latest ? (
           <div className="data-card">
-            <strong>{uiSummary.latest.tag} / {uiSummary.latest.page}</strong>
-            <span>{uiSummary.latest.note}</span>
-            <small>{uiSummary.latest.target.panel || uiSummary.latest.target.label}</small>
+            <strong>{rewriteLegacyUiCopy(uiSummary.latest.tag)} / {rewriteLegacyUiCopy(uiSummary.latest.page)}</strong>
+            <span>{rewriteLegacyUiCopy(uiSummary.latest.note)}</span>
+            <small>{uiSummary.latest.status} / {rewriteLegacyUiCopy(uiSummary.latest.target.panel || uiSummary.latest.target.label)}</small>
           </div>
         ) : (
           <div className="data-card">
@@ -4013,9 +6419,13 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
         )}
         <div className="live-actions">
           <button className="primary" onClick={runRepairCheck}><Sparkles size={18} /> Run repair check</button>
+          <button className="ghost" onClick={() => markAllNotes('reviewed')} disabled={!uiNotes.length}><CheckCircle2 size={18} /> Mark reviewed</button>
+          <button className="ghost" onClick={() => markAllNotes('needs-retest')} disabled={!uiNotes.length}><RotateCcw size={18} /> Needs retest</button>
+          <button className="ghost" onClick={() => markAllNotes('fixed')} disabled={!uiNotes.length}><ShieldCheck size={18} /> Mark fixed</button>
           <button className="ghost" onClick={copyRepairPacket} disabled={!uiNotes.length}><Copy size={18} /> Copy fix packet</button>
           <button className="ghost" onClick={() => downloadTextFile('cueforge-ui-feedback-notes.json', JSON.stringify(uiNotes, null, 2))} disabled={!uiNotes.length}><Download size={18} /> Export notes</button>
           <button className="ghost" onClick={() => downloadTextFile('cueforge-ui-repair-packet.txt', repairPacket)} disabled={!uiNotes.length}><Download size={18} /> Export fix packet</button>
+          <button className="ghost" onClick={clearFixedNotes} disabled={!uiNotes.some((note) => ['fixed', 'archived'].includes(note.status))}><RotateCcw size={18} /> Clear fixed</button>
           <button className="ghost" onClick={onClearUiNotes} disabled={!uiNotes.length}><RotateCcw size={18} /> Clear notes</button>
         </div>
         <p className="callout">{repairStatus}</p>
@@ -4024,7 +6434,7 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
           <span>{repairCheck.boundary}</span>
         </div>
         <div className="module-list repair-action-list">
-          {repairCheck.actions.length === 0 && (
+          {displayedRepairActions.length === 0 && (
             <div className="module-row">
               <span className="status-dot" />
               <div>
@@ -4034,15 +6444,15 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
               <em>idle</em>
             </div>
           )}
-          {repairCheck.actions.slice(0, 4).map((action) => (
+          {displayedRepairActions.slice(0, 4).map((action) => (
             <div className="module-row" key={action.id}>
-              <span className={`status-dot ${action.priority >= 78 ? 'ready' : ''}`} />
+              <span className={`status-dot ${action.legacyFixed || action.priority >= 78 ? 'ready' : ''}`} />
               <div>
-                <strong>{action.title}</strong>
-                <span>{action.suggestedFix}</span>
-                <small>{action.page} / {action.count} note{action.count === 1 ? '' : 's'} / test: {action.testPlan}</small>
+                <strong>{action.legacyFixed ? 'Repaired copy: ' : ''}{action.displayTitle}</strong>
+                <span>{action.displayFix}</span>
+                <small>{rewriteLegacyUiCopy(action.page)} / {action.count} note{action.count === 1 ? '' : 's'} / test: {action.displayTestPlan}</small>
               </div>
-              <em>{action.priority}</em>
+              <em>{action.legacyFixed ? 'fixed' : action.priority}</em>
             </div>
           ))}
         </div>
@@ -4051,4 +6461,371 @@ function Inventory({ onOpen, onRerunSetup, uiNotes = [], onClearUiNotes }) {
   );
 }
 
-createRoot(document.getElementById('root')).render(<App />);
+function VideoStarterPage() {
+  const [settings] = useState(() => readUserSettingsFromStorage());
+  const [uploads, setUploads] = useState({});
+  const [showFullCut, setShowFullCut] = useState(false);
+  const [copiedShot, setCopiedShot] = useState('');
+  const [soundStage, setSoundStage] = useState('panic');
+  const [soundUnlocked, setSoundUnlocked] = useState(false);
+  const [audioPolicyStatus, setAudioPolicyStatus] = useState(() => buildAudioPolicySummary(settings));
+  const [motionPass, setMotionPass] = useState(motionPassFallback);
+  const [motionApproval, setMotionApproval] = useState(readMotionPassApproval);
+  const [motionRefreshTick, setMotionRefreshTick] = useState(0);
+  const heroVideoRef = useRef(null);
+  const fullCutRef = useRef(null);
+  const motionApproved = motionApproval?.revision === motionPass.revision;
+  const motionRevision = motionApproved
+    ? `approved-${motionApproval.revision}`
+    : `${motionPass.revision || 'pending'}-${motionRefreshTick}`;
+  const assets = useMemo(() => {
+    const rawAssets = { ...pandaVideoAssets, ...pandaStoryAssets, ...uploads };
+    return Object.fromEntries(Object.entries(rawAssets).map(([key, asset]) => [
+      key,
+      asset?.url ? { ...asset, url: appendAssetRevision(asset.url, motionRevision) } : asset
+    ]));
+  }, [uploads, motionRevision]);
+  const isPanicStage = soundStage === 'panic';
+  const cinematicAudioAllowed = canPlayCinematicVideoAudio(settings);
+  const stageAssets = isPanicStage
+    ? {
+        webm: assets.setupWebm,
+        mp4: assets.setupMp4,
+        poster: assets.setupPoster,
+        mobile: assets.setupMp4
+      }
+    : {
+        webm: assets.enhancedWebm,
+        mp4: assets.enhancedMp4,
+        poster: assets.poster,
+        mobile: assets.enhancedMobile
+      };
+  const heroKey = [soundStage, stageAssets.webm.url, stageAssets.mp4.url, stageAssets.mobile.url, stageAssets.poster.url].join('|');
+  const stageCopy = isPanicStage
+    ? {
+        eyebrow: 'Panda Soundwalk',
+        title: 'Hear the unseen.',
+        body: 'Forest noise ripples outward, bends through bamboo and fog, then resolves into directional hearing.',
+        pill: `Live cut ${motionPass.revision || 'pending'}`
+      }
+    : {
+        eyebrow: 'Panda Soundwalk',
+        title: 'Hear the unseen.',
+        body: 'Sparse cues travel from their source, reach the acoustic ears, and fade as the signal locks into place.',
+        pill: `Live cut ${motionPass.revision || 'pending'}`
+      };
+
+  useEffect(() => {
+    if (motionApproved) return undefined;
+    let active = true;
+    const loadMotionPass = async () => {
+      try {
+        const response = await fetch(publicAssetPath(`/media/panda-motion-pass-status.json?cache=${Date.now()}`), { cache: 'no-store' });
+        if (!response.ok) return;
+        const next = await response.json();
+        if (!active) return;
+        setMotionPass({ ...motionPassFallback, ...next });
+        setMotionRefreshTick((current) => current + 1);
+      } catch {
+        if (active) setMotionRefreshTick((current) => current + 1);
+      }
+    };
+    loadMotionPass();
+    const interval = window.setInterval(loadMotionPass, 8000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [motionApproved]);
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+    video.muted = !soundUnlocked || !cinematicAudioAllowed;
+    video.volume = isPanicStage ? 0.58 : 0.5;
+    if (soundUnlocked && cinematicAudioAllowed) {
+      video.play().catch(() => {});
+    }
+  }, [heroKey, isPanicStage, soundUnlocked, cinematicAudioAllowed]);
+
+  useEffect(() => {
+    if (!showFullCut) return;
+    const video = fullCutRef.current;
+    if (!video) return;
+    video.muted = !cinematicAudioAllowed;
+    video.volume = 0.55;
+    video.currentTime = 0;
+    if (cinematicAudioAllowed) video.play().catch(() => {});
+  }, [showFullCut, assets.storyFull.url, cinematicAudioAllowed]);
+
+  useEffect(() => () => {
+    Object.values(uploads).forEach((asset) => {
+      if (asset?.objectUrl) URL.revokeObjectURL(asset.objectUrl);
+    });
+  }, [uploads]);
+
+  const addUpload = (key, file) => {
+    if (!file) return;
+    setUploads((current) => {
+      if (current[key]?.objectUrl) URL.revokeObjectURL(current[key].objectUrl);
+      const objectUrl = URL.createObjectURL(file);
+      const baseAsset = pandaVideoAssets[key] || pandaStoryAssets[key] || { label: key };
+      return {
+        ...current,
+        [key]: {
+          ...baseAsset,
+          url: objectUrl,
+          objectUrl,
+          meta: `${file.name} / live override`
+        }
+      };
+    });
+  };
+
+  const exportList = [
+    ['setupMp4', 'Opening MP4', 'video/mp4,.mp4'],
+    ['enhancedMp4', 'Listening Reveal MP4', 'video/mp4,.mp4'],
+    ['setupPoster', 'Opening Poster', 'image/jpeg,image/png,.jpg,.jpeg,.png'],
+    ['poster', 'Hero Poster', 'image/jpeg,image/png,.jpg,.jpeg,.png'],
+    ['storyFull', 'Full Soundwalk Cut', 'video/mp4,.mp4']
+  ];
+
+  const playHeroWithSound = (volume) => {
+    if (!cinematicAudioAllowed) {
+      setSoundUnlocked(false);
+      setAudioPolicyStatus('Cinematic video audio is off in Settings. The preview stays muted.');
+      return;
+    }
+
+    setSoundUnlocked(true);
+    setAudioPolicyStatus('Cinematic video audio live.');
+    window.setTimeout(() => {
+      const video = heroVideoRef.current;
+      if (!video) return;
+      video.muted = false;
+      video.volume = volume;
+      video.play().catch(() => {});
+    }, 0);
+  };
+
+  const startSetupAudio = () => {
+    setSoundStage('panic');
+    playHeroWithSound(0.58);
+  };
+
+  const completeSetup = () => {
+    setSoundStage('enhanced');
+    playHeroWithSound(0.5);
+  };
+
+  const approveMotionPass = () => {
+    const approval = {
+      revision: motionPass.revision,
+      approvedAt: new Date().toISOString()
+    };
+    localStorage.setItem(MOTION_PASS_APPROVAL_KEY, JSON.stringify(approval));
+    setMotionApproval(approval);
+  };
+
+  const resumeMotionPass = () => {
+    localStorage.removeItem(MOTION_PASS_APPROVAL_KEY);
+    setMotionApproval(null);
+    setMotionRefreshTick((current) => current + 1);
+  };
+
+  const replaySetup = () => {
+    setSoundStage('panic');
+    setSoundUnlocked(false);
+    window.setTimeout(() => {
+      const video = heroVideoRef.current;
+      if (!video) return;
+      video.muted = true;
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    }, 0);
+  };
+
+  const copyShotPrompt = async (shot) => {
+    const text = `${shot.prompt}\n\nNegative prompt: cartoon, anime, mascot suit, plush toy, horror, scary, monster, demon, glowing red eyes, aggressive roar, gore, blood, extra limbs, distorted face, deformed panda, duplicate panda, broken paws, paws clipping through ground, limbs passing through bamboo, ears morphing or duplicating, waveform slicing through fur eyes or body, sparks passing through body bamboo or paws, glowing feet, amber foot rings, magic light under paws, cheap sci-fi HUD, text, logo, watermark, plastic fur, toy-like panda, oversaturated neon, comedy, childish, low resolution, flickering, jittery camera, broken continuity, uncanny animal movement, clumsy biped walk, human costume, rubber body`;
+    await navigator.clipboard?.writeText(text);
+    setCopiedShot(shot.id);
+    window.setTimeout(() => setCopiedShot(''), 1800);
+  };
+
+  return (
+    <main className="video-starter-page">
+      <section className={`video-hero-preview ${isPanicStage ? 'panic-stage' : 'enhanced-stage'}`}>
+        <video
+          ref={heroVideoRef}
+          key={heroKey}
+          className="video-hero-media"
+          autoPlay
+          muted={!soundUnlocked}
+          loop
+          playsInline
+          controls
+          preload="metadata"
+          poster={stageAssets.poster.url}
+          aria-label="Panda Soundwalk hero video preview"
+        >
+          <source media="(max-width: 720px)" src={stageAssets.mobile.url} type="video/mp4" />
+          <source src={stageAssets.mp4.url} type="video/mp4" />
+          <source src={stageAssets.webm.url} type="video/webm" />
+        </video>
+        <SoundwaveOverlay stage={soundStage} videoRef={heroVideoRef} />
+        <div className="video-hero-shade" />
+        <div className="video-hero-copy">
+          <span>{stageCopy.eyebrow}</span>
+          <h1>{stageCopy.title}</h1>
+          <p>{stageCopy.body}</p>
+          <div className="video-actions">
+            {isPanicStage ? (
+              <>
+                <button className="primary" onClick={startSetupAudio}><Volume2 size={18} /> Play soundwalk</button>
+                <button className="ghost" onClick={completeSetup}><ShieldCheck size={18} /> Show tuned moment</button>
+              </>
+            ) : (
+              <>
+                <button className="primary" onClick={() => setShowFullCut(true)}><Play size={18} /> Watch full cut</button>
+                <button className="ghost" onClick={replaySetup}><RotateCcw size={18} /> Replay opening</button>
+              </>
+            )}
+            <a className="ghost button-link" href={stageAssets.mp4.url} download><Download size={18} /> Download video</a>
+          </div>
+          <div className="setup-signal-strip">
+            <span>{stageCopy.pill}</span>
+            <i>{soundUnlocked && cinematicAudioAllowed ? 'Audio live' : 'Muted preview'}</i>
+          </div>
+          <p className="video-audio-policy">{audioPolicyStatus}</p>
+        </div>
+      </section>
+
+      <section className="video-build-console">
+        <div className="video-build-head">
+          <div>
+            <span className="eyebrow">Live Video Test Bay</span>
+            <h2>One hero video, two directing beats</h2>
+            <p>The page copy stays clean while the director notes track the opening pressure beat and the tuned listening reveal behind the scenes.</p>
+          </div>
+          <div className="video-status-pill">Soundwave overlay online</div>
+        </div>
+
+        <div className="video-upload-grid">
+          {exportList.map(([key, label, accept]) => (
+            <label className="video-upload-tile" key={key}>
+              <span>{label}</span>
+              <strong>{assets[key].label}</strong>
+              <small>{assets[key].meta}</small>
+              <input
+                type="file"
+                accept={accept}
+                onChange={(event) => addUpload(key, event.target.files?.[0])}
+              />
+            </label>
+          ))}
+        </div>
+
+        <div className="video-direction-grid">
+          <div>
+            <h3>Director beat A</h3>
+            <p>The opening beat should feel like a cluttered wild forest: insects, rain, bamboo snaps, distant predator pressure, and movement in the dark.</p>
+          </div>
+          <div>
+            <h3>Do not accept</h3>
+            <p>Cartoon panda, mascot suit, plastic fur, horror face, glowing feet, amber foot rings, waveform slicing through eyes or fur, phantom sparks, limb or bamboo clipping, jitter, text, logo, watermark, or goofy biped motion.</p>
+          </div>
+          <div>
+            <h3>Director beat B</h3>
+            <p>The listening reveal should show soundwaves originating from the forest, conforming around bamboo and fog, touching the ears, then dissipating.</p>
+          </div>
+        </div>
+
+        <div className="flow-shot-panel">
+          <div className="video-build-head compact">
+            <div>
+              <span className="eyebrow">Next: Flow/Veo Motion Pass</span>
+              <h2>Generate a cleaner style-board motion pass, then approve it here</h2>
+              <p>HeyGen is connected, but it is avatar-focused and does not fit this wildlife shot. Keep using Flow/OpenArt-style generation for the panda footage; this page keeps refreshing the pending media until you approve the revision.</p>
+            </div>
+            <div className={`video-status-pill ${motionApproved ? 'approved' : 'pending'}`}>
+              {motionApproved ? 'Motion approved' : 'Auto-refreshing'}
+            </div>
+          </div>
+          <div className={`motion-review-card ${motionApproved ? 'approved' : 'pending'}`}>
+            <div>
+              <span className="eyebrow">Motion pass {motionPass.revision}</span>
+              <strong>{motionPass.summary}</strong>
+              <small>{motionPass.blurFix}</small>
+              <small>{motionPass.audio}</small>
+              <em>{motionApproved ? `Approved ${new Date(motionApproval.approvedAt).toLocaleString()}` : `Pending review / refresh ${motionRefreshTick}`}</em>
+            </div>
+            <div className="motion-review-actions">
+              <button className="primary" onClick={approveMotionPass} disabled={motionApproved}><CheckCircle2 size={18} /> Approve motion pass</button>
+              <button className="ghost" onClick={resumeMotionPass} disabled={!motionApproved}><RotateCcw size={18} /> Resume auto-update</button>
+            </div>
+          </div>
+          <div className="flow-shot-grid">
+            {pandaFlowShotQueue.map((shot) => (
+              <article className="flow-shot-card" key={shot.id}>
+                <div>
+                  <span>{shot.label}</span>
+                  <strong>{shot.file}</strong>
+                  <small>{shot.duration}</small>
+                </div>
+                <p>{shot.prompt}</p>
+                <button className="ghost" onClick={() => copyShotPrompt(shot)}>
+                  <Copy size={16} /> {copiedShot === shot.id ? 'Copied' : 'Copy prompt'}
+                </button>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <div className="video-qa-strip">
+          {[
+            'Opening beat uses wild nature/predator audio, not panda vocal noise',
+            'Tuned beat swaps the preview to focused directional hearing',
+            'Live overlay shows soundwave source, travel path, ear contact, and dissipation',
+            'Full soundwalk cut crossfades forest clutter into clean focus',
+            'Opening and listening clips are exported as WebM plus MP4 with audio',
+            'Battle scars are subtle and healed, with no blood or horror',
+            'Bat-like acoustic ears now keep one matched silhouette through the cut',
+            'Teal radar lines are synchronized to left, right, and center predator cues',
+            'Added foot-light rings are removed; paw glow is suppressed',
+            'Ugly OpenArt close-crop is no longer the hero first impression',
+            'Remaining issue: setup visual suggests pressure more than a literal pursuer',
+            'Hero audio starts only after the user clicks setup audio or enters'
+          ].map((item) => (
+            <span key={item}><CheckCircle2 size={16} /> {item}</span>
+          ))}
+        </div>
+      </section>
+
+      {showFullCut && (
+        <div className="video-modal" role="dialog" aria-modal="true" aria-label="Full Panda Soundwalk cut">
+          <div className="video-modal-panel">
+            <button className="ghost close-modal" onClick={() => setShowFullCut(false)}>Close</button>
+            <video ref={fullCutRef} src={assets.storyFull.url} poster={assets.poster.url} controls autoPlay={cinematicAudioAllowed} muted={!cinematicAudioAllowed} playsInline preload="auto" className="full-cut-player" />
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}
+
+function RootShell() {
+  const [hash, setHash] = useState(window.location.hash);
+
+  useEffect(() => {
+    const handleHashChange = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  return hash === '#video' ? <VideoStarterPage /> : <App />;
+}
+
+const rootElement = document.getElementById('root');
+const cueforgeRoot = window.__cueforgeRoot || createRoot(rootElement);
+window.__cueforgeRoot = cueforgeRoot;
+cueforgeRoot.render(<RootShell />);

@@ -1,0 +1,11 @@
+{
+  "schema": "cueforge.ui-repair-check.v1",
+  "generatedAt": "2026-05-25T08:04:54.126Z",
+  "status": "no-notes-yet",
+  "totalNotes": 0,
+  "actionableNotes": 0,
+  "actionCount": 0,
+  "topAction": null,
+  "actions": [],
+  "boundary": "CueForge can auto-triage local notes and generate a repair packet. Source edits still need a developer or explicit desktop automation review."
+}

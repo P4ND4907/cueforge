@@ -1,0 +1,33 @@
+{
+  "schema": "cueforge.swarm-job.v1",
+  "jobId": "release-candidate",
+  "label": "Release candidate swarm proof",
+  "trigger": "release candidate",
+  "command": "npm.cmd run test:playwright:web && npm.cmd run qa:release-readiness && npm.cmd run qa:preflight",
+  "seed": "release-version-seed",
+  "routes": [
+    "setup-command-center",
+    "auto-detect",
+    "self-test",
+    "report-lab"
+  ],
+  "outputs": [
+    "docs/repair/RELEASE_READINESS.md",
+    "docs/repair/PRE_RELEASE_QA_RUN.md",
+    "qa/playwright/report"
+  ],
+  "gates": {
+    "canModifySystemState": false,
+    "canPostPublicly": false,
+    "maxNotesBeforeFail": 0,
+    "maxConsoleErrors": 0,
+    "maxRawLeakCount": 0
+  },
+  "privacy": {
+    "allowRawAudioExport": false,
+    "allowCloudUpload": false,
+    "redactDeviceIds": true,
+    "redactUserPaths": true,
+    "summaryOnlyReports": true
+  }
+}

@@ -1,3 +1,6 @@
+import { evidencePrivacyBlock, redactPublicEvidenceText } from './core/evidencePrivacyPolicy.js';
+import { buildExportFingerprint } from './exportFingerprints.js';
+
 export function createAudioEvidenceSummary({
   durationMs = 0,
   frames = 0,
@@ -31,31 +34,33 @@ export function createAudioEvidenceSummary({
     signalAnalysis: normalizeSignalAnalysis(signalAnalysis),
     recommendation: buildEvidenceRecommendation({ level, voicePresence, noise, clipRisk }),
     suggestedTweak: buildSuggestedTweak({ level, voicePresence, noise, clipRisk }),
-    privacy: {
-      rawAudioIncluded: false,
+    privacy: evidencePrivacyBlock({
       uploaded: false,
-      localOnly: true
-    }
+      localOnly: true,
+      evidenceType: 'derived-audio-metrics'
+    })
   };
 }
 
 export function buildAudioEvidencePacket({ testerId, handle = '', game = '', gear = '', evidence = [], now = new Date() }) {
+  const testerFingerprint = buildExportFingerprint({ testerId }, { namespace: 'cueforge.audio-evidence.tester' });
   return {
     schema: 'cueforge.audio-evidence-packet.v1',
     exportedAt: now.toISOString(),
-    testerId,
-    handle: String(handle || '').trim().slice(0, 48),
-    game: String(game || '').trim().slice(0, 80),
-    gear: String(gear || '').trim().slice(0, 140),
+    testerFingerprint,
+    testerId: testerFingerprint,
+    handle: handle ? '[redacted-username]' : '',
+    game: redactPublicEvidenceText(game).trim().slice(0, 80),
+    gear: redactPublicEvidenceText(gear).trim().slice(0, 140),
     evidence: evidence.slice(-20).map(stripUnsafeEvidenceFields),
-    privacy: {
-      rawAudioIncluded: false,
+    privacy: evidencePrivacyBlock({
       uploaded: false,
+      publicPacket: true,
       containsPassword: false,
       containsPhone: false,
       containsDob: false,
       containsRawDeviceIds: false
-    }
+    })
   };
 }
 
@@ -72,11 +77,11 @@ function stripUnsafeEvidenceFields(item) {
     signalAnalysis: normalizeSignalAnalysis(item.signalAnalysis),
     recommendation: item.recommendation,
     suggestedTweak: item.suggestedTweak,
-    privacy: {
-      rawAudioIncluded: false,
+    privacy: evidencePrivacyBlock({
       uploaded: false,
-      localOnly: true
-    }
+      localOnly: true,
+      evidenceType: 'derived-audio-metrics'
+    })
   };
 }
 

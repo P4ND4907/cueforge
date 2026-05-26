@@ -1,0 +1,61 @@
+{
+  "schema": "cueforge.swarm-route.v1",
+  "routeId": "report-lab",
+  "label": "Report Lab replay and privacy flow",
+  "entrySurface": "/?qa=swarm-report-lab",
+  "personaFocus": ["tester triage", "privacy guardian", "feedback operator"],
+  "requiredSelectors": [
+    ".report-lab-page",
+    ".report-preview",
+    ".redaction-status",
+    ".replay-state",
+    ".export-report"
+  ],
+  "expectedStateTransitions": [
+    {
+      "from": "empty report",
+      "action": "create redacted issue report",
+      "to": "report preview",
+      "expected": "Report preview shows setup, issue, and replay state without raw IDs, paths, emails, or phones."
+    },
+    {
+      "from": "report preview",
+      "action": "import replay report",
+      "to": "reconstructed app state",
+      "expected": "EQ/readiness/report context reconstructs and marks replay-safe status."
+    }
+  ],
+  "requiredNativeApis": [
+    "localStorage:browser",
+    "window.cueforgeSetupAssessment:required-local",
+    "window.cueforgeDesktop.saveApoDraft:optional-explicit"
+  ],
+  "fixtureIds": [
+    "redacted-issue-report",
+    "report-replay-flow",
+    "feedback-contract",
+    "panda-notes-repair"
+  ],
+  "analyzerThresholds": {
+    "maxConsoleErrors": 0,
+    "maxHorizontalOverflowPx": 0,
+    "maxRawLeakCount": 0,
+    "maxHarmRate": 0,
+    "minDiagnosisAccuracy": 90
+  },
+  "privacy": {
+    "allowRawAudioExport": false,
+    "allowCloudUpload": false,
+    "redactDeviceIds": true,
+    "redactUserPaths": true,
+    "summaryOnlyReports": true
+  },
+  "failureOwner": "feedback-loop",
+  "safeAutoRepairActions": [
+    "add-redacted-report-fixture",
+    "open-feedback-contract-ticket",
+    "repair-copy-only",
+    "add-replay-regression"
+  ],
+  "escalationLevel": "release-blocker"
+}

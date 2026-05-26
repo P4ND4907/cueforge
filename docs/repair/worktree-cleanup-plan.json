@@ -1,0 +1,2219 @@
+{
+  "schema": "cueforge.worktree-cleanup-plan.v1",
+  "generatedAt": "2026-05-24T11:37:14.726Z",
+  "branch": "main",
+  "head": "d8f4b3c",
+  "totals": {
+    "total": 427,
+    "modified": 43,
+    "deleted": 2,
+    "untracked": 382
+  },
+  "lanes": [
+    {
+      "id": "release-ci",
+      "title": "Release / CI gates",
+      "intent": "Keep this lane tight: workflows, package scripts, Playwright configs, release-readiness tools, and the RC acceptance contract.",
+      "count": 44,
+      "entries": [
+        {
+          "status": "M",
+          "path": "package-lock.json",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "package.json",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "vite.config.js",
+          "kind": "modified"
+        },
+        {
+          "status": "??",
+          "path": ".github/copilot-instructions.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": ".github/workflows/release-gate.yml",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "playwright.config.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "playwright.electron.config.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/audio/analyzers/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/audio/baselines/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/audio/fixtures/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/audio/manifests/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/audio/manifests/clean-apo-audio-regression.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/audio/manifests/complex-routing-vm-lab.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/audio/manifests/machine-play-lab-full-coverage.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/audio/manifests/setup-command-center-smoke.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/audio/policies/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/audio/policies/eq-render-a-b.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/audio/reports/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/hardware-profiles/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/hardware-profiles/win-realtek-hyperx-sonar.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/hardware-profiles/win-usb-dac-apo-clean.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/hardware-profiles/win-voicemeeter-vbcable-complex.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/hardware-profiles/win-wireless-chat-game-split.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/playwright/electron-report/index.html",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/playwright/electron/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/playwright/electron/desktop-bridge-smoke.spec.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/playwright/web/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "qa/playwright/web/command-center-smoke.spec.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/data/releaseAcceptanceChecklist.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/releaseAcceptanceChecklist.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/Run-AudioFixtureRegression.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/Run-FeedbackContract.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/Run-HumanSwarmCdp.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/Run-HumanSwarmQa.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/Run-PandaNotesRepair.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/Run-PreReleaseQa.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/Run-ReleaseReadiness.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/Run-RouteGraphLab.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/Run-ScreenshotUpdate.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/Run-VirtualMachinePlayerLab.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/Run-WorktreeAudit.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/run-checks.ps1",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/run-checks.sh",
+          "kind": "untracked"
+        }
+      ]
+    },
+    {
+      "id": "repair-evidence",
+      "title": "Generated QA / repair evidence",
+      "intent": "Evidence from local runs. Useful, but should be curated before public commits.",
+      "count": 54,
+      "entries": [
+        {
+          "status": "??",
+          "path": "docs/repair/AUDIO_FIXTURE_REGRESSION.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/BROWSER_HUMAN_SWARM_QA_RUN.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/BROWSER_HUMAN_SWARM_WAVE_1.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/COMPACT_HUMAN_WAVE_QA.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/FEEDBACK_CONTRACT.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN_accessibility-privacy-guardians.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN_alpha-beta-hunters.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN_audio-science-reviewers.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN_community-growth-operators.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN_competitive-fps-coaches.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN_curious-thinkers.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN_design-reviewers.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN_desktop-release-engineers.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN_final-flow-qol.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN_logic-council.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN_standard.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/HUMAN_SWARM_CDP_QA_RUN_stress-breakers.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/PANDA_NOTES_REPAIR_PACKET.txt",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/PANDA_NOTES_REPAIR_QUEUE.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/PRE_RELEASE_QA_RUN.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/RELEASE_READINESS.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/ROUTE_GRAPH_LAB.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/SCREENSHOT_SMOKE_RUN.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/VIRTUAL_MACHINE_PLAYER_LAB.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/WORKTREE_CLEANUP_PLAN.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/audio-fixture-regression.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/browser-human-swarm-state.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/feedback-contract.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary-accessibility-privacy-guardians.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary-alpha-beta-hunters.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary-audio-science-reviewers.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary-community-growth-operators.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary-competitive-fps-coaches.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary-curious-thinkers.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary-design-reviewers.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary-desktop-release-engineers.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary-final-flow-qol.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary-logic-council.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary-standard.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary-stress-breakers.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/human-swarm-cdp-summary.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/panda-notes-repair-check.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/panda-notes-repair-run.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/release-readiness.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/route-graph-lab-summary.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/screenshots/auto-detect.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/screenshots/blind-match.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/screenshots/command-center-mobile.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/screenshots/command-center.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/screenshots/hearing.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/screenshots/masking-lab.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/screenshots/report-lab.png",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/repair/worktree-cleanup-plan.json",
+          "kind": "untracked"
+        }
+      ]
+    },
+    {
+      "id": "public-bundle",
+      "title": "GitHub Pages bundle / public media",
+      "intent": "Generated public site assets and media. Commit only when the matching build is intended.",
+      "count": 24,
+      "entries": [
+        {
+          "status": "D",
+          "path": "docs/assets/index-BxPEiPXz.js",
+          "kind": "deleted"
+        },
+        {
+          "status": "D",
+          "path": "docs/assets/index-XoWzmCus.css",
+          "kind": "deleted"
+        },
+        {
+          "status": "M",
+          "path": "docs/index.html",
+          "kind": "modified"
+        },
+        {
+          "status": "??",
+          "path": "docs/assets/index-Bor0kfVL.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/assets/index-BvVn950a.css",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/assets/index-Bx-rX8yI.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/assets/index-CFF8cdNJ.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/assets/index-CIDHKmR0.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/assets/index-CunSi33e.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/assets/index-DU5iWuql.css",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/assets/index-cMafSHsk.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-motion-pass-status.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-soundwalk-enhanced-clean.mp4",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-soundwalk-enhanced-clean.webm",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-soundwalk-enhanced-mobile.mp4",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-soundwalk-full-cut.mp4",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-soundwalk-hero-desktop.mp4",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-soundwalk-hero-desktop.webm",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-soundwalk-hero-mobile.mp4",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-soundwalk-poster.jpg",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-soundwalk-setup-chaos.mp4",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-soundwalk-setup-chaos.webm",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-soundwalk-setup-poster.jpg",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/media/panda-soundwalk-story-full.mp4",
+          "kind": "untracked"
+        }
+      ]
+    },
+    {
+      "id": "social-discord",
+      "title": "Social / Discord / outreach",
+      "intent": "Community docs, Discord bot changes, social memory, and outreach queues should stay separate from release gates.",
+      "count": 18,
+      "entries": [
+        {
+          "status": "M",
+          "path": "discord-bot/README.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "discord-bot/src/index.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "docs/DISCORD_FINAL_BUILDOUT.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "docs/REDDIT_PROFILE_AND_OUTREACH.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "docs/X_OUTREACH_QUEUE.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/communityHub.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/communityHub.test.js",
+          "kind": "modified"
+        },
+        {
+          "status": "??",
+          "path": "docs/DISCORD_ROLE_PICKER_AND_NITRO_BACK_POCKET.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/social/2026-05-23-update-004-rollout-log.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/social/2026-05-24-social-command-center.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/social/COMMUNITY_MEMORY.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/social/REDDIT_COMMENT_QUEUE_2026-05-23.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/social/REPLY_ONLY_PLAYBOOK.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/social/X_SIGNAL_WATCHLIST.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/social/community-watchlist.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/socialMemory.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/socialMemory.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/Update-CommunityMemory.mjs",
+          "kind": "untracked"
+        }
+      ]
+    },
+    {
+      "id": "docs-product",
+      "title": "Product docs / roadmap",
+      "intent": "Architecture, roadmap, privacy, release notes, and public truth docs.",
+      "count": 37,
+      "entries": [
+        {
+          "status": "M",
+          "path": "FILE_INVENTORY.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "README.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "docs/ARCHITECTURE.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "docs/DRIVER_LAYER.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "docs/HIGH_END_ANALYZER_PLAN.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "docs/MASTER_PLAN.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "docs/OPEN_TASK_QUEUE.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "docs/PRIVACY.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "docs/RELEASE_CHECKLIST.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "docs/SOCIAL_POSTING_PLAN.md",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "docs/research/audio-platform-notes.md",
+          "kind": "modified"
+        },
+        {
+          "status": "??",
+          "path": "docs/ACCEPTANCE_CHECKLIST_v0.2.0.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/AGENTS.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/BUILD_QOL_AUTOMATION_RELEASE_QUEUE.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/CUEFORGE_DIFFERENTIATOR.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/IMPLEMENTATION_BACKLOG.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/NATIVE_ENGINE_ROADMAP.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/OPEN_SOURCE_STACK.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/PRE_RELEASE_NOTE_CADENCE.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/QA_EVIDENCE_PIPELINE.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/RUNBOOK.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/SECURITY_PRIVACY_RELEASE_GATE.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/STATE_V2_CONTRACT.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/TEST_MATRIX.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/architecture/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/architecture/REPO_LAYOUT.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/prompts/CODEX_NEXT_STEPS.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/prompts/GITHUB_COPILOT_DESKTOP_FOUNDATION.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/qa/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/research/COMMON_PROBLEMS_AND_BETTER_SOLUTIONS.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/research/GAME_AUDIO_ENGINE_DEEP_DIVE.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/research/STATE_OF_ART_GAP_ANALYSIS.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/updates/2026-05-22-alpha-2-hardening.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/updates/2026-05-22-update-003.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/updates/2026-05-23-update-004-cueforge-brain.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/updates/2026-05-23-v0.2.0-alpha.3.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "docs/updates/2026-05-24-update-005-chain-graph-proof.md",
+          "kind": "untracked"
+        }
+      ]
+    },
+    {
+      "id": "desktop-native",
+      "title": "Desktop / native bridge",
+      "intent": "Electron bridge, Windows scanner, native harness stubs, and desktop permission boundaries.",
+      "count": 18,
+      "entries": [
+        {
+          "status": "M",
+          "path": "electron/main.mjs",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "electron/preload.cjs",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "tools/Scan-AudioSetup.ps1",
+          "kind": "modified"
+        },
+        {
+          "status": "??",
+          "path": "native/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "native/windows/apo/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "native/windows/bridge/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "native/windows/probes/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "native/windows/wasapi-harness/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/desktopBridgePlan.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/desktopBridgePlan.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/native/electron/main.mjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/native/electron/preload.cjs",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/native/harness/nativeCaptureHarness.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/native/helper/collect-default-endpoints.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/native/helper/collect-enhancements.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/native/helper/collect-sessions.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/native/helper/collect-wasapi.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/native/helper/manifest-schema.json",
+          "kind": "untracked"
+        }
+      ]
+    },
+    {
+      "id": "app-product",
+      "title": "App product code",
+      "intent": "Main CueForge app, UI, state, analyzer, privacy, setup intelligence, tests, and feature modules.",
+      "count": 217,
+      "entries": [
+        {
+          "status": "M",
+          "path": ".gitignore",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/audioDna.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/audioEvidence.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/audioEvidence.test.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/autoTune.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/autoTune.test.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/blindMatch.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/blindMatch.test.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/exportPack.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/exportPack.test.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/hearingModel.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/hearingModel.test.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/main.jsx",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/reportPack.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/reportPack.test.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/styles.css",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/uiFeedback.js",
+          "kind": "modified"
+        },
+        {
+          "status": "M",
+          "path": "src/uiFeedback.test.js",
+          "kind": "modified"
+        },
+        {
+          "status": "??",
+          "path": "src/app/components/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/app/hooks/useCueForgeState.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/app/routes/AutoDetectPage.tsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/app/routes/BlindMatchPage.tsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/app/routes/CommandCenter.tsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/app/routes/HearingPage.tsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/app/routes/MaskingLabPage.tsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/app/routes/PlayerTrialPage.tsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/app/routes/ReportLabPage.tsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/app/routes/SelfTestPage.tsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/appSettings.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/appSettings.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/audio-science/gameAudioProblems.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/audio-science/gameEngineMap.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/audioTargets.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/autoDetectReport.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/chain/buildChainGraph.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/chain/evidence.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/chain/evidenceGraph.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/chain/inferReadiness.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/chain/inferRouteWarnings.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/chain/types.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/chainGraph.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/commandCenterFlow.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/conflictDetector.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/cueforgeBrain.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/cueforgeState.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/evidencePrivacyPolicy.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/exportSchema.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/exports/exportPolicy.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/exports/reportPack.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/gameTaxonomy.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/hearingModelV2.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/manifests/nativeEngineManifest.schema.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/manifests/validateNativeEngineManifest.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/personalizationLabInputs.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/preferenceModel.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/profileEngine.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/readinessScore.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/safetyRules.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/scopeGuard.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/scoring/confidence.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/scoring/readinessV2.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/setupAssessmentSnapshot.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/core/stateAdapters.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/data/companionRepoIntegration.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/data/genreProfiles.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/data/hardwareProfiles.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/data/implementationBacklog.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/data/knownCompanions.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/data/nativeEngineRoadmap.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/data/openSourceStack.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/data/releaseShipBars.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/data/releaseToolBacklog.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/data/setupPresets.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/data/testFixtures.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/detection/assessMachine.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/detection/browser/collectBrowserAudioCaps.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/detection/browser/collectBrowserDevices.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/detection/heuristics/detectChatGameSplit.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/detection/heuristics/detectDoubleEq.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/detection/heuristics/detectWrongDefaultDevice.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/detection/native/detectEqualizerLayers.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/detection/native/detectVirtualRouting.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/detection/native/mergeBridgeEvidence.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/echoSceneInference.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/electronHardening.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/engine/audioMetricsEngine.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/engine/audioMetricsEngine.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/engine/benchmarkMetrics.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/engine/stateOfArtEvaluator.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/engine/stateOfArtEvaluator.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/engine/temporalEvidenceAccumulator.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/engines/dspPlan.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/engines/dynamicsPlan.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/engines/eqMath.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/engines/micPlan.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/engines/nativeEngineManifest.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/engines/spatialPlan.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/exportFingerprints.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/exportFingerprints.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/autodetect/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/autodetect/index.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/blind-match/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/blind-match/index.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/hearing/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/hearing/index.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/machine-play-lab-ui/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/machine-play-lab-ui/index.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/player-trial/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/player-trial/index.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/report-lab/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/report-lab/index.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/selftest/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/selftest/index.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/setup-command-center/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/features/setup-command-center/index.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/hardwareProof.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/hardwareProof.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/issuePatternMemory.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/issuePatternMemory.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/fixtures/bridge/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/fixtures/browser/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/fixtures/chains/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/fixtures/clips/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/fixtures/hearing/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/generators/commsBed.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/generators/explosionMasker.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/generators/footsteps.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/generators/pinkNoise.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/harness/renderOfflineFixture.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/harness/runBlindMatchFixture.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/harness/runMaskingFixture.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/lab/harness/runSignalAnalysisFixture.ts",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/pandaNotesRepairRunner.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/pandaNotesRepairRunner.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/permissionRecovery.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/permissionRecovery.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/privacyAudit.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/privacyAudit.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/profileShare.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/profileShare.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/releaseQueue.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/releaseQueue.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/security/electronPolicy.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/securityPrivacyGate.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/securityPrivacyGate.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/setupIntelligence.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/setupIntelligence.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/shared/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/shared/audio/index.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/shared/privacy/index.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/shared/schemas/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/shared/schemas/audioRegressionPolicy.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/shared/schemas/hardwareProfile.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/shared/schemas/index.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/shared/schemas/labManifest.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/shared/schemas/swarmManifest.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/shared/state/index.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/shortcutVault.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/shortcutVault.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/stateConsumers.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/architectureScaffold.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/audioRegressionPolicy.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/autoDetectReport.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/chainGraph.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/commandCenterFlow.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/companionRepoIntegration.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/conflictDetector.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/contracts/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/cueforgeBrain.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/cueforgeState.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/desktop/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/evidencePrivacyPolicy.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/exportSchema.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/fixtures/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/hardwareProfiles.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/hearingModelV2.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/implementationBacklog.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/integration/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/labManifests.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/micPlan.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/nativeCaptureHarness.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/nativeEngineManifest.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/nativeEngineRoadmap.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/openSourceStack.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/personalizationLabInputs.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/preferenceModel.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/profileEngine.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/readinessScore.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/releaseReadinessMatrix.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/releaseScenarios.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/releaseShipBars.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/releaseToolBacklog.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/repoLayout.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/safetyRules.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/scopeGuard.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/setupAssessmentSnapshot.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/spatialPlan.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/swarmManifests.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/uiAcceptanceCriteria.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/unit/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/v020Acceptance.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/tests/visual/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/ui/ChainGraphView.jsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/ui/ConflictFixPanel.jsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/ui/EnginePreviewPanel.jsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/ui/ProfileRecommendationCard.jsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/ui/ReadinessCard.jsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/ui/SetupCommandCenter.jsx",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/uiNotePosition.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/uiNotePosition.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/virtualBetaLab.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/virtualBetaLab.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/virtualMachinePlayerLab.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/virtualMachinePlayerLab.test.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/wavFeatureExtractor.js",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "src/wavFeatureExtractor.test.js",
+          "kind": "untracked"
+        }
+      ]
+    },
+    {
+      "id": "swarm-lab",
+      "title": "Swarm / lab manifests",
+      "intent": "Checked-in persona routes, jobs, repair rules, and lab manifests.",
+      "count": 15,
+      "entries": [
+        {
+          "status": "??",
+          "path": "swarm/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "swarm/jobs/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "swarm/jobs/daily-smoke.job.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "swarm/jobs/nightly-audio-regression.job.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "swarm/jobs/release-candidate.job.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "swarm/repair/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "swarm/repair/panda-notes.repair.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "swarm/repair/route-regressions.repair.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "swarm/routes/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "swarm/routes/auto-detect.route.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "swarm/routes/report-lab.route.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "swarm/routes/self-test.route.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "swarm/routes/setup-command-center.route.json",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/ffmpeg/README.md",
+          "kind": "untracked"
+        },
+        {
+          "status": "??",
+          "path": "tools/scripts/README.md",
+          "kind": "untracked"
+        }
+      ]
+    }
+  ],
+  "policy": [
+    "Do not revert sprint work just to make the status clean.",
+    "Commit or review changes by lane so CI/docs, app product work, desktop/native work, social work, and generated artifacts do not get mixed accidentally.",
+    "Generated repair reports and screenshots are evidence artifacts; decide intentionally which ones belong in GitHub before adding them.",
+    "Release candidate gates should be committed with their tests and docs before any public release work."
+  ]
+}

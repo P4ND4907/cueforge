@@ -1,0 +1,103 @@
+{
+  "schema": "cueforge.audio-fixture-regression.v1",
+  "generatedAt": "2026-05-24T10:47:04.528Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "spectral-cue-region",
+      "status": "PASS",
+      "detail": "Cue/presence delta 7.41dB."
+    },
+    {
+      "id": "louder-but-not-clearer-guard",
+      "status": "PASS",
+      "detail": "Low-mask delta 0dB, loudness delta 1.61dB."
+    },
+    {
+      "id": "clipping-risk",
+      "status": "PASS",
+      "detail": "Clipping risk 100/100."
+    },
+    {
+      "id": "phase-inversion",
+      "status": "PASS",
+      "detail": "Stereo polarity inversion is detected as a fail state."
+    },
+    {
+      "id": "ffmpeg-reference-plan",
+      "status": "PASS",
+      "detail": "FFmpeg astats, ebur128, aphasemeter, and axcorrelate references are declared."
+    },
+    {
+      "id": "eq-render-a-b-policy",
+      "status": "PASS",
+      "detail": "Policy locks WASAPI loopback, +/-1 LUFS, phase > 0.95, cue +1.5 to +3dB, no DC offset, and no clipping."
+    },
+    {
+      "id": "usable-signal",
+      "status": "PASS",
+      "detail": "Chain integrity pass."
+    }
+  ],
+  "thresholds": {
+    "minCueDeltaDb": 5,
+    "maxLowMaskDeltaDb": 1.5,
+    "eqRenderAB": {
+      "schema": "cueforge.audio-regression-policy-summary.v1",
+      "id": "eq-render-a-b",
+      "test": "eq-render-a-b",
+      "fixture": "cue_steps_reference.wav",
+      "capture": "wasapi-loopback on active-default-render",
+      "expected": [
+        "integrated loudness delta within +/-1 LUFS of baseline",
+        "phase average > 0.95",
+        "cue-band gain increase 1.5-3 dB",
+        "no DC offset warning",
+        "no clipping event"
+      ],
+      "failIf": [
+        "outputDeviceChangedMidTest",
+        "communicationsEndpointHijacksRenderPath",
+        "doubleProcessingSignatureDetected"
+      ]
+    },
+    "minClippingRiskForClippedFixture": 80,
+    "phaseInversionMustFail": true
+  },
+  "metrics": {
+    "targetDeltaDb": 7.41,
+    "lowMaskDeltaDb": 0,
+    "loudnessDeltaDb": 1.61,
+    "clippingRisk": 100,
+    "phaseStatus": "fail",
+    "eqRenderAB": {
+      "integratedLoudnessDeltaLufs": 0.73,
+      "phaseAverage": 1,
+      "cueBandGainIncreaseDb": 1.76,
+      "dcOffsetWarning": false,
+      "clippingEvent": false
+    }
+  },
+  "policies": {
+    "eqRenderAB": {
+      "schema": "cueforge.audio-regression-policy-result.v1",
+      "policyId": "eq-render-a-b",
+      "test": "eq-render-a-b",
+      "ok": true,
+      "status": "PASS",
+      "failures": [],
+      "metrics": {
+        "integratedLoudnessDeltaLufs": 0.73,
+        "phaseAverage": 1,
+        "cueBandGainIncreaseDb": 1.76,
+        "dcOffsetWarning": false,
+        "clippingEvent": false
+      },
+      "boundaries": {
+        "captureMethod": "wasapi-loopback",
+        "captureEndpoint": "active-default-render",
+        "allowSystemMutation": false
+      }
+    }
+  }
+}

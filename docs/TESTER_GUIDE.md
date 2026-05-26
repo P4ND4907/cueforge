@@ -13,7 +13,7 @@ CueForge is not a preset pack from a big company. It is a player-built audio lab
 
 ## Test Session
 
-1. Open the web app or Windows alpha build.
+1. Open the web app.
 2. Open `Community Hub` and copy the roll call if you are coordinating feedback in Discord.
 3. Run `Self Test`.
 4. Open `Auto Detect` and import or auto-detect your setup.

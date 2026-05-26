@@ -1,8 +1,11 @@
-export function createAudioDna({ eq, hearingScore, micProfile, gameFocus, deviceStatus }) {
-  const avgGain = eq.reduce((sum, gain) => sum + gain, 0) / eq.length;
-  const cueLift = (eq[6] + eq[7]) / 2;
-  const lowWeight = (eq[0] + eq[1] + eq[2]) / 3;
-  const trebleRisk = Math.max(eq[8], eq[9]);
+import { attachStateAnchor, recommendedEqFromState, STATE_CONSUMERS } from './core/stateAdapters.js';
+
+export function createAudioDna({ eq, hearingScore, micProfile, gameFocus, deviceStatus, cueforgeState = null }) {
+  const safeEq = Array.isArray(eq) && eq.length ? eq : Array(10).fill(0);
+  const avgGain = safeEq.reduce((sum, gain) => sum + gain, 0) / safeEq.length;
+  const cueLift = (safeEq[6] + safeEq[7]) / 2;
+  const lowWeight = (safeEq[0] + safeEq[1] + safeEq[2]) / 3;
+  const trebleRisk = Math.max(safeEq[8], safeEq[9]);
   const identity = [
     cueLift > 2 ? 'Tactical Cue Hunter' : 'Balanced Listener',
     lowWeight < -0.5 ? 'Low-Bloom Control' : 'Full-Body Output',
@@ -22,13 +25,13 @@ export function createAudioDna({ eq, hearingScore, micProfile, gameFocus, device
     )
   );
 
-  return {
+  return attachStateAnchor({
     id: identity.join(' / '),
     confidence,
     traits: identity,
     gameFocus,
     snapshot: {
-      eq,
+      eq: safeEq,
       averageGain: Number(avgGain.toFixed(2)),
       cueLift: Number(cueLift.toFixed(2)),
       lowWeight: Number(lowWeight.toFixed(2)),
@@ -38,7 +41,33 @@ export function createAudioDna({ eq, hearingScore, micProfile, gameFocus, device
       apoFound: Boolean(deviceStatus?.apoFound)
     },
     recommendations: buildRecommendations({ cueLift, lowWeight, trebleRisk, hearingScore, deviceStatus })
+  }, cueforgeState, STATE_CONSUMERS.audioDna);
+}
+
+export function createAudioDnaFromState(state, overrides = {}) {
+  const eq = recommendedEqFromState(state, overrides.eq || []);
+  const hearingProfile = state?.calibration?.hearingModel;
+  const hearingScore = overrides.hearingScore || hearingProfile?.score || {
+    complete: Boolean(hearingProfile),
+    answered: Boolean(hearingProfile) ? 1 : 0,
+    total: 12
   };
+  const inputLabel = String(state?.devices?.input || '').toLowerCase();
+  const micProfile = overrides.micProfile || (inputLabel.includes('hyperx') ? 'hyperx' : 'generic');
+  const deviceStatus = {
+    bridgeLoaded: Boolean(state?.chain?.activeCompanions?.length || state?.chain?.apoDetected),
+    apoFound: Boolean(state?.chain?.apoDetected),
+    ...(overrides.deviceStatus || {})
+  };
+
+  return createAudioDna({
+    eq,
+    hearingScore,
+    micProfile,
+    gameFocus: overrides.gameFocus || state?.selectedGame?.title || 'Tarkov / Siege / COD',
+    deviceStatus,
+    cueforgeState: state
+  });
 }
 
 function buildRecommendations({ cueLift, lowWeight, trebleRisk, hearingScore, deviceStatus }) {

@@ -1,0 +1,26 @@
+{
+  "schema": "cueforge.hardware-profile.v1",
+  "profileId": "win-usb-dac-apo-clean",
+  "label": "Windows USB DAC / standalone mic / clean APO chain",
+  "os": "windows",
+  "input": {
+    "kind": "usb-mic",
+    "matchHints": ["USB Microphone", "HyperX", "QuadCast", "SoloCast", "Yeti"]
+  },
+  "output": {
+    "kind": "usb-dac-output",
+    "matchHints": ["USB DAC", "Headphones", "IEM", "Speakers"]
+  },
+  "companions": {
+    "equalizerApo": "expected",
+    "peace": "optional",
+    "sonar": "forbidden",
+    "voicemeeter": "forbidden",
+    "vbCable": "forbidden"
+  },
+  "expectations": {
+    "communicationsEndpointSeparate": false,
+    "loopbackCaptureRequired": false,
+    "maxRoundTripLatencyMs": 60
+  }
+}

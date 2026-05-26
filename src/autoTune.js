@@ -1,5 +1,7 @@
+import { clampEqToSafety, safetyRules } from './core/safetyRules.js';
+
 export function clampGain(value) {
-  return Math.max(-6, Math.min(6, value));
+  return Math.max(-safetyRules.maxTotalBoostDb, Math.min(safetyRules.maxTotalBoostDb, value));
 }
 
 export function buildAutoTuneEq({ preset, trebleSensitivity, bassPreference, footstepFocus }) {
@@ -9,10 +11,12 @@ export function buildAutoTuneEq({ preset, trebleSensitivity, bassPreference, foo
     balanced: [-0.6, 0, 0, -0.2, 0, 0.2, 0.7, 0.5, 0, 0.2]
   };
 
-  return (presetCurves[preset] || presetCurves.iem).map((gain, index) => {
+  const rawEq = (presetCurves[preset] || presetCurves.iem).map((gain, index) => {
     const low = index <= 2 ? bassPreference * 0.08 : 0;
     const cue = index >= 6 && index <= 7 ? footstepFocus * 0.08 : 0;
     const treble = index >= 8 ? -trebleSensitivity * 0.08 : 0;
     return clampGain(Number((gain + low + cue + treble).toFixed(1)));
   });
+
+  return clampEqToSafety(rawEq, [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]);
 }

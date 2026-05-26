@@ -1,0 +1,25 @@
+{
+  "schema": "cueforge.lab-manifest.v1",
+  "manifestId": "machine-play-lab-full-coverage",
+  "profileId": "win-usb-dac-apo-clean",
+  "tests": [
+    { "id": "redaction-scoring-graph-signal-unit", "type": "unit" },
+    { "id": "desktop-helper-ui-wiring", "type": "integration" },
+    { "id": "first-run-setup-export-apo-draft", "type": "e2e" },
+    { "id": "cue-region-before-after-render", "type": "ab-audio-render" },
+    { "id": "seeded-blind-match-stability", "type": "blind-match-automation" },
+    { "id": "safe-hearing-threshold-consistency", "type": "hearing-model-automation" },
+    { "id": "wrong-defaults-apo-bind-enhancers", "type": "chain-graph-verification" },
+    { "id": "sonar-apo-discord-enhancement-overlap", "type": "conflict-detection" },
+    { "id": "impulse-chirp-roundtrip-latency", "type": "latency-regression" },
+    { "id": "deterministic-peq-limiter-transform", "type": "bit-exact-dsp-regression" },
+    { "id": "mic-clip-noise-agc-rnnoise-ab", "type": "mic-pipeline" }
+  ],
+  "privacy": {
+    "allowRawAudioExport": false,
+    "redactDeviceIds": true,
+    "redactUserPaths": true,
+    "allowCloudUpload": false,
+    "summaryOnlyReports": true
+  }
+}

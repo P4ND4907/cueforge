@@ -4,15 +4,28 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  electronContentSecurityPolicy,
+  getSecureWebPreferences,
+  isSafeExternalUrl,
+  isTrustedCueForgeUrl,
+  validateIpcSender
+} from '../src/security/electronPolicy.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+app.enableSandbox();
+
 function appRoot() {
+  return app.isPackaged ? app.getAppPath() : path.join(__dirname, '..');
+}
+
+function resourceRoot() {
   return app.isPackaged ? process.resourcesPath : path.join(__dirname, '..');
 }
 
 function scriptPath() {
-  return path.join(appRoot(), 'tools', 'Scan-AudioSetup.ps1');
+  return path.join(resourceRoot(), 'tools', 'Scan-AudioSetup.ps1');
 }
 
 function reportPath() {
@@ -42,36 +55,79 @@ function createWindow() {
     minHeight: 720,
     title: 'CueForge',
     backgroundColor: '#071112',
-    webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      preload: path.join(__dirname, 'preload.cjs')
-    }
+    webPreferences: getSecureWebPreferences(path.join(__dirname, 'preload.cjs'))
+  });
+
+  win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [electronContentSecurityPolicy]
+      }
+    });
   });
 
   win.webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
-    callback(permission === 'media');
+    callback(webContents.id === win.webContents.id && permission === 'media');
   });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    if (isSafeExternalUrl(url)) shell.openExternal(url);
     return { action: 'deny' };
   });
 
-  win.loadFile(path.join(appRoot(), 'dist', 'index.html'));
+  win.webContents.on('will-navigate', (event, url) => {
+    if (isTrustedCueForgeUrl(url)) return;
+    event.preventDefault();
+    if (isSafeExternalUrl(url)) shell.openExternal(url);
+  });
+
+  const indexPath = path.join(appRoot(), 'dist', 'index.html');
+  win.loadFile(indexPath).catch((error) => {
+    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(`
+      <html>
+        <body style="margin:0;background:#071112;color:#edf8f7;font-family:Arial,sans-serif;display:grid;place-items:center;min-height:100vh;">
+          <main style="max-width:720px;padding:32px;">
+            <h1>CueForge could not load</h1>
+            <p>The desktop shell could not open the bundled app UI.</p>
+            <pre style="white-space:pre-wrap;color:#9fb1b4;">${escapeHtml(error.message)}
+${escapeHtml(indexPath)}</pre>
+          </main>
+        </body>
+      </html>
+    `)}`);
+  });
 }
 
-ipcMain.handle('cueforge:desktop-info', () => ({
+function escapeHtml(value = '') {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function trustedIpc(handler) {
+  return async (event, ...args) => {
+    if (!validateIpcSender(event)) {
+      return { ok: false, error: 'Blocked untrusted CueForge desktop IPC sender.' };
+    }
+    return handler(event, ...args);
+  };
+}
+
+ipcMain.handle('cueforge:desktop-info', trustedIpc(() => ({
   platform: process.platform,
   reportPath: reportPath(),
   scriptPath: scriptPath(),
   apoDraftFolder: apoDraftFolder(),
   packaged: app.isPackaged
-}));
+})));
 
-ipcMain.handle('cueforge:read-bridge-report', async () => readReport());
+ipcMain.handle('cueforge:read-bridge-report', trustedIpc(async () => readReport()));
 
-ipcMain.handle('cueforge:scan-audio-setup', async () => {
+ipcMain.handle('cueforge:scan-audio-setup', trustedIpc(async () => {
   const script = scriptPath();
   const output = reportPath();
 
@@ -113,15 +169,15 @@ ipcMain.handle('cueforge:scan-audio-setup', async () => {
       }
     );
   });
-});
+}));
 
-ipcMain.handle('cueforge:open-bridge-folder', async () => {
+ipcMain.handle('cueforge:open-bridge-folder', trustedIpc(async () => {
   await mkdir(path.dirname(reportPath()), { recursive: true });
   await shell.openPath(path.dirname(reportPath()));
   return { ok: true, folder: path.dirname(reportPath()) };
-});
+}));
 
-ipcMain.handle('cueforge:save-apo-draft', async (event, payload = {}) => {
+ipcMain.handle('cueforge:save-apo-draft', trustedIpc(async (_event, payload = {}) => {
   const configText = String(payload.configText || '').trim();
   if (!configText) {
     return { ok: false, error: 'No APO config text was provided.' };
@@ -144,13 +200,13 @@ ipcMain.handle('cueforge:save-apo-draft', async (event, payload = {}) => {
 
   await writeFile(file, body, 'utf8');
   return { ok: true, file, folder: apoDraftFolder() };
-});
+}));
 
-ipcMain.handle('cueforge:open-apo-draft-folder', async () => {
+ipcMain.handle('cueforge:open-apo-draft-folder', trustedIpc(async () => {
   await mkdir(apoDraftFolder(), { recursive: true });
   await shell.openPath(apoDraftFolder());
   return { ok: true, folder: apoDraftFolder() };
-});
+}));
 
 app.whenReady().then(createWindow);
 

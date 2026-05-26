@@ -1,8 +1,41 @@
 # CueForge Master Plan
 
-Last updated: May 22, 2026.
+Last updated: May 24, 2026.
 
-CueForge is building toward one clear promise: make FPS audio testing repeatable. Players should be able to test a setup, play a real match, export useful evidence, and know whether the issue is CueForge tuning, the game mix, the server, Discord, Windows routing, mic gain, or the headset/IEM chain.
+CueForge is building toward one clear promise: become the audio chain verifier + personal sound engine for gamers. Players should be able to prove what their setup is doing, learn what their ears prefer, play a real match, export useful evidence, and know whether the issue is CueForge tuning, the game mix, the server, Discord, Windows routing, mic gain, or the headset/IEM chain.
+
+The differentiator is tracked by the CueForge Brain: chain verification, personal sound identity, conflict doctor, game intent, safe export/apply, local evidence, and native-engine readiness. Every major build should improve at least one of those pillars.
+
+Latest public update pack: `docs/updates/2026-05-23-update-004-cueforge-brain.md`.
+
+## Next Release Foundation
+
+The next stronger release should stay focused on four foundation moves before adding more surface features:
+
+1. Refactor the monolith so route wrappers and shared UI/core modules own more of the app.
+2. Formalize the native/helper manifest and chain graph as the source of truth for detection, warnings, readiness, and exports.
+3. Expand fixture-driven harness tests for browser evidence, bridge evidence, signal analysis, Blind Match, Masking Lab, hearing repeatability, and report replay.
+4. Keep visual and desktop CI as release blockers so first-run UI, packaged app startup, privacy export, and replay artifacts are always proven.
+
+This keeps the self-contained tier excellent while leaving room for a later native/helper tier and a future game or middleware integration tier.
+
+The named proof target is Machine Play Lab: a local-first, Windows-first lab that moves from Setup Command Center to Device Discovery, Chain Graph, Conflict Detector, Test Manifest Runner, Fixture Generator, offline/native render paths, WASAPI loopback, mic capture, Audio Metrics Engine, Regression Oracle, User Assessment, Safe Actions, Redacted Feedback Packet, Feedback Automation, GitHub CI Gate, and Release Decision.
+
+Machine Play Lab rule: measure first, verify second, suggest third, and only stage reviewed writes later.
+
+The implementation backlog is tracked in `src/data/implementationBacklog.js` and summarized in `docs/IMPLEMENTATION_BACKLOG.md`. It is the current build order for feature extraction, canonical chain schema, native endpoint proof, WASAPI loopback, fixture packs, FFmpeg/libebur128 analyzers, conflict rules, Playwright smoke, hardware profiles, feedback ingestion, scheduled maintenance, commit/readiness smoke, and reproducible swarm manifests.
+
+## Version Ship Bars
+
+These are the version-name rules. A release can have tester targets and community goals, but the version does not earn its label unless this minimum bar is true.
+
+| Release | Theme | Minimum ship bar |
+| --- | --- | --- |
+| v0.2.0 | Foundations | Setup Command Center is default, feature modules are extracted, Playwright web and Electron smoke are release-blocking, hardware profile manifests validate, and the route graph schema exists. |
+| v0.3.0 | Proof | WASAPI loopback helper is live, FFmpeg/libebur128 regression is live, conflict detector is wired into assessment, latency/phase tests are live, and redacted feedback ingestion is wired. |
+| v0.4.0 | Production readiness | Nightly Machine Play Lab runs on real Windows hardware, release gating is enforced, swarm manifests are checked in, redaction is audited, and user-facing assessment summaries are trustworthy. |
+
+The code-facing version of this table lives in `src/data/releaseShipBars.js` and is validated by `npm.cmd run validate:manifest`.
 
 ## Master Map
 
@@ -26,6 +59,14 @@ mindmap
         Replay State
         Repro Notes
     Audio Engine
+      CueForge Brain
+        Chain Verification
+        Personal Sound Identity
+        Conflict Doctor
+        Game Intent
+        Safe Export Apply
+        Local Evidence
+        Native Readiness
       Mic Lab
         Level
         Noise
@@ -79,6 +120,13 @@ mindmap
         Native Detect
         Explicit Apply
         Local Backups
+      Machine Play Lab
+        Test Manifest Runner
+        Fixture Generator
+        WASAPI Loopback
+        Mic Capture
+        Audio Metrics Engine
+        Regression Oracle
       Proof
         Tests
         Smoke Runs
@@ -230,6 +278,54 @@ Auto tuning produces a curve, explains why, and can be applied to EQ Studio.
 No feature claims medical accuracy.
 ```
 
+### Sound-Scene Intelligence
+
+Breakdown:
+
+```text
+WAV import
+PCM decode
+STFT / FFT
+Band energy
+Transient score
+Stereo pan / width
+Temporal evidence
+Echo-scene inference
+Scene graph
+Coach output
+```
+
+Ready standard:
+
+```text
+CueForge can analyze real WAV evidence and produce a conservative coach report.
+The app clearly says post-mix inference is not true game-world object tracking.
+```
+
+### Native Engine Ladder
+
+Purpose: move from exportable recommendations to real native audio processing without breaking trust.
+
+Breakdown:
+
+```text
+v0.3.0 Native DSP Sandbox - miniaudio, PEQ, limiter, WAV renderer, latency experiments, manifest import
+v0.4.0 Desktop Real-Time Preview - local A/B preview through the app, no driver install
+v0.5.0 Windows User-Mode Engine Path - APO-like/service-backed adapter research, signing, installer hardening
+v0.6.0 Mic Enhancement Pack - RNNoise adapter, Discord-safe mic profiles, streamer mode
+v0.7.0 Spatial Research Pack - libmysofa HRTF loader, Steam Audio research sandbox, immersive experiments
+v1.0.0 Signed Public Beta - paid-ready desktop build, stable setup health, real player testing, trusted local-first release
+```
+
+Ready standard:
+
+```text
+Offline DSP proof comes before real-time preview.
+Real-time preview comes before any system-wide apply path.
+Every native step has visible approval, rollback, and proof.
+No hidden drivers, anti-cheat-adjacent hooks, game memory reads, or exact enemy-position claims.
+```
+
 ## Workstream 3 - Game Intelligence
 
 Goal: never assume every audio problem is an EQ problem.
@@ -272,6 +368,27 @@ Ready standard:
 
 ```text
 The app and Discord templates push players to diagnose the cause, not just complain that "audio is bad."
+```
+
+### Research Track
+
+DCASE 2026 points at the bigger lane: semantic acoustic imaging and spatial semantic segmentation of sound scenes. CueForge should learn from that direction while staying honest about what a local player tool can see.
+
+Build direction:
+
+```text
+Rendered game audio
+Feature extraction
+Temporal evidence
+Masking / routing / scene inference
+Conservative tuning decision
+Player validation
+```
+
+Boundary:
+
+```text
+Do not claim true source position, room geometry, occlusion, or source labels without metadata, surround/object input, or validated inference.
 ```
 
 ## Workstream 4 - Community Loop
@@ -406,6 +523,8 @@ Reddit-safe outreach check
 ```
 
 ## Release Timeline
+
+CueForge releases are now target-gated. A release can be queued early, but it should ship only after the tester target and proof gates both pass. The detailed build/QOL/automation ladder lives in `docs/BUILD_QOL_AUTOMATION_RELEASE_QUEUE.md` and the in-app System Info page.
 
 ### Alpha 1 - Public Testable Core
 

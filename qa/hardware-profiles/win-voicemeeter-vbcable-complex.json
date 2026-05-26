@@ -1,0 +1,27 @@
+{
+  "schema": "cueforge.hardware-profile.v1",
+  "profileId": "win-voicemeeter-vbcable-complex",
+  "label": "Windows Voicemeeter / VB-CABLE complex route",
+  "os": "windows",
+  "input": {
+    "kind": "virtual-mixed-input",
+    "matchHints": ["Voicemeeter", "CABLE Output", "VB-Audio"]
+  },
+  "output": {
+    "kind": "virtual-mixed-output",
+    "matchHints": ["Voicemeeter Input", "CABLE Input", "VB-Audio"]
+  },
+  "companions": {
+    "equalizerApo": "optional",
+    "peace": "optional",
+    "sonar": "forbidden",
+    "voicemeeter": "expected",
+    "vbCable": "expected"
+  },
+  "expectations": {
+    "communicationsEndpointSeparate": true,
+    "loopbackCaptureRequired": true,
+    "maxRoundTripLatencyMs": 120,
+    "manualRouteVerificationRequired": true
+  }
+}

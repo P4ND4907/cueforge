@@ -1,4 +1,7 @@
 import { sanitizeUiFeedbackNotes } from './uiFeedback.js';
+import { buildStateAnchor, sanitizeStateForReport, STATE_CONSUMERS } from './core/stateAdapters.js';
+import { buildDeviceExportFingerprint, buildStateExportFingerprints } from './exportFingerprints.js';
+import { evidencePrivacyBlock } from './core/evidencePrivacyPolicy.js';
 
 const REPORT_SCHEMA = 'cueforge.issue-report.v1';
 
@@ -23,6 +26,9 @@ const SENSITIVE_KEY_PATTERNS = [/device.*id/i, /group.*id/i, /instance.*id/i, /c
 export function redactText(value, fallback = 'redacted') {
   if (typeof value !== 'string') return value;
   const lower = value.toLowerCase();
+  if (/\b(?:raw[-_ ]*)?(?:device|group|instance|container|serial|machine)[-_ ]?id[-_ :=]*[a-z0-9-]+/i.test(value)) {
+    return '[redacted-id]';
+  }
   const hint = PRODUCT_HINTS.find((item) => lower.includes(item));
   if (hint) return `${capitalize(hint)} device`;
   if (!value.trim()) return fallback;
@@ -31,6 +37,7 @@ export function redactText(value, fallback = 'redacted') {
 
 export function sanitizeUserText(value) {
   return String(value || '')
+    .replace(/\b(?:raw[-_ ]*)?(?:device|group|instance|container|serial|machine)[-_ ]?id[-_ :=]*[a-z0-9-]+/gi, '[redacted-id]')
     .replace(/[A-Z]:\\(?:[^\\\s]+\\)*[^\\\s]*/gi, '[redacted-path]')
     .replace(/\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/gi, '[redacted-email]')
     .replace(/\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g, '[redacted-phone]')
@@ -42,6 +49,7 @@ export function redactDeep(value, key = '') {
   if (Array.isArray(value)) return value.map((item) => redactDeep(item));
   if (!value || typeof value !== 'object') {
     if (typeof value === 'string' && SENSITIVE_KEYS.has(key)) return redactText(value);
+    if (typeof value === 'string') return sanitizeUserText(value);
     return value;
   }
 
@@ -64,6 +72,7 @@ export function summarizeDevices(devices = []) {
     slot: index + 1,
     kind: device.kind || device.type || 'audio',
     label: redactText(device.label || device.name || '', `${device.kind || 'audio'} ${index + 1}`),
+    fingerprint: buildDeviceExportFingerprint(device),
     hasRealName: Boolean(device.label || device.name),
     source: device.source || 'browser-or-bridge'
   }));
@@ -83,14 +92,17 @@ export function buildIssueReport({
   browserDevices,
   selfTestResults,
   uiFeedbackNotes = [],
-  notes = ''
+  notes = '',
+  cueforgeState = null
 }) {
   const safeDevices = summarizeDevices(browserDevices);
   const redactedBridge = bridgeReport ? redactDeep(bridgeReport) : null;
+  const safeState = sanitizeStateForReport(cueforgeState);
 
   return {
     schema: REPORT_SCHEMA,
     generatedAt: new Date().toISOString(),
+    stateAnchor: buildStateAnchor(cueforgeState, STATE_CONSUMERS.reportLab),
     app: {
       name: 'CueForge',
       currentPage,
@@ -107,7 +119,8 @@ export function buildIssueReport({
       sample: sanitizeUserText(sample),
       analysis,
       hearing,
-      dna
+      dna,
+      cueforgeStateV2: safeState
     },
     diagnostics: {
       audioApi: Boolean(window.AudioContext && navigator.mediaDevices?.enumerateDevices),
@@ -115,8 +128,19 @@ export function buildIssueReport({
       localStorage: hasLocalStorage(),
       browserDevices: safeDevices,
       bridgeReport: redactedBridge,
-      selfTestResults: selfTestResults || [],
+      exportFingerprints: buildStateExportFingerprints({
+        devices: { suspectedHardware: safeDevices },
+        chainGraph: cueforgeState?.chainGraph || null,
+        chain: cueforgeState?.chain || null
+      }),
+      selfTestResults: redactDeep(selfTestResults || []),
       uiFeedbackNotes: sanitizeUiFeedbackNotes(uiFeedbackNotes)
+    },
+    privacy: {
+      ...evidencePrivacyBlock(),
+      redactedExports: true,
+      hashedFingerprints: true,
+      publicPacket: true
     },
     notes: sanitizeUserText(notes)
   };

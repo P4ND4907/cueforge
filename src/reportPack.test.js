@@ -64,6 +64,9 @@ describe('issue report pack', () => {
     expect(report.reproducibleState.sample).not.toContain('carls');
     expect(report.reproducibleState.equalizerApoConfig).toContain('Preamp');
     expect(report.diagnostics.browserDevices[0].label).toBe('Usb device');
+    expect(report.diagnostics.browserDevices[0].fingerprint).toMatch(/^cfp_[a-f0-9]{20}$/);
+    expect(report.privacy).toMatchObject({ localFirst: true, noSilentUpload: true, rawAudioIncluded: false, hashedFingerprints: true });
+    expect(report.diagnostics.exportFingerprints.schema).toBe('cueforge.export-fingerprints.v1');
     expect(report.diagnostics.uiFeedbackNotes).toHaveLength(1);
     expect(report.diagnostics.uiFeedbackNotes[0].note).toContain('[redacted-phone]');
     expect(JSON.stringify(report)).not.toContain('secret');
@@ -81,6 +84,7 @@ describe('issue report pack', () => {
       slot: 1,
       kind: 'audiooutput',
       label: 'Steelseries device',
+      fingerprint: expect.stringMatching(/^cfp_[a-f0-9]{20}$/),
       hasRealName: true,
       source: 'browser-or-bridge'
     });

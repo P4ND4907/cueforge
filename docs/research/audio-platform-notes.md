@@ -18,3 +18,15 @@ The browser build is intentionally controlled: it can detect, test, generate, an
 ## Current Decision
 
 Keep the web build as the stable tester and GitHub version. Build a desktop shell only for native Windows actions such as endpoint scanning, config backup/write, and routing helpers.
+
+## Sound-Scene Intelligence Direction
+
+CueForge should become a local sound-scene intelligence engine, not just a gaming EQ panel.
+
+The new file-analysis lane starts with WAV evidence:
+
+```text
+WAV -> PCM -> STFT / FFT -> band energy -> transient score -> stereo pan/width -> detector -> temporal evidence -> echo-scene inference -> coach
+```
+
+The next native lane is Windows WASAPI loopback. Endpoint loopback can capture the rendered output mix; process-specific loopback is the safer later target for game-only capture. Both must stay opt-in and local.

@@ -1,0 +1,26 @@
+{
+  "schema": "cueforge.hardware-profile.v1",
+  "profileId": "win-wireless-chat-game-split",
+  "label": "Windows wireless headset with chat/game split",
+  "os": "windows",
+  "input": {
+    "kind": "wireless-headset-mic",
+    "matchHints": ["Wireless", "Microphone", "Chat"]
+  },
+  "output": {
+    "kind": "wireless-game-output",
+    "matchHints": ["Wireless", "Game", "Headset"]
+  },
+  "companions": {
+    "equalizerApo": "optional",
+    "peace": "optional",
+    "sonar": "optional",
+    "voicemeeter": "forbidden",
+    "vbCable": "forbidden"
+  },
+  "expectations": {
+    "communicationsEndpointSeparate": true,
+    "loopbackCaptureRequired": true,
+    "maxRoundTripLatencyMs": 100
+  }
+}

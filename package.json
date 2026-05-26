@@ -1,6 +1,6 @@
 {
   "name": "cueforge",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.3",
   "private": true,
   "description": "Local-first FPS audio testing and tuning suite.",
   "author": "P4ND4907",
@@ -9,10 +9,31 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "desktop": "npm run build && electron .",
-    "desktop:dir": "npm run build && electron-builder --dir",
-    "desktop:package": "npm run build && electron-builder --win portable --x64",
+    "build:desktop": "vite build --base=./",
+    "desktop": "npm run build:desktop && electron .",
+    "desktop:dir": "npm run build:desktop && electron-builder --dir",
+    "desktop:package": "npm run build:desktop && electron-builder --win portable --x64",
+    "notes:repair": "node tools/Run-PandaNotesRepair.mjs",
+    "qa:preflight": "node tools/Run-PreReleaseQa.mjs",
+    "qa:vm-lab": "node tools/Run-VirtualMachinePlayerLab.mjs",
+    "qa:swarm": "node tools/Run-HumanSwarmCdp.mjs",
+    "qa:audio-fixture-regression": "node tools/Run-AudioFixtureRegression.mjs",
+    "qa:feedback-contract": "node tools/Run-FeedbackContract.mjs",
+    "qa:route-graph-lab": "node tools/Run-RouteGraphLab.mjs",
+    "qa:release-readiness": "node tools/Run-ReleaseReadiness.mjs",
+    "repo:worktree-audit": "node tools/Run-WorktreeAudit.mjs",
+    "validate:swarm": "vitest run src/tests/swarmManifests.test.js",
+    "validate:manifest": "vitest run src/tests/nativeEngineManifest.test.js src/tests/nativeCaptureHarness.test.js src/tests/architectureScaffold.test.js src/tests/releaseToolBacklog.test.js src/tests/implementationBacklog.test.js src/tests/releaseShipBars.test.js src/tests/releaseAcceptanceChecklist.test.js src/tests/setupAssessmentSnapshot.test.js src/tests/companionRepoIntegration.test.js",
+    "validate:fixtures": "vitest run src/tests/releaseReadinessMatrix.test.js src/tests/autoDetectReport.test.js src/tests/chainGraph.test.js src/tests/hardwareProfiles.test.js src/tests/labManifests.test.js src/tests/audioRegressionPolicy.test.js src/tests/swarmManifests.test.js",
+    "test:harness": "vitest run src/tests/nativeCaptureHarness.test.js src/engine/audioMetricsEngine.test.js src/tests/audioRegressionPolicy.test.js src/tests/personalizationLabInputs.test.js src/tests/architectureScaffold.test.js src/tests/releaseReadinessMatrix.test.js src/signalAnalyzer.test.js src/maskingLab.test.js",
+    "test:ui": "vitest run src/tests/commandCenterFlow.test.js src/tests/uiAcceptanceCriteria.test.js src/tests/releaseReadinessMatrix.test.js",
+    "test:playwright:web": "playwright test --config=playwright.config.mjs",
+    "test:playwright:electron": "playwright test --config=playwright.electron.config.mjs",
+    "test:desktop-smoke": "npm run test:playwright:electron && node tools/Run-VirtualMachinePlayerLab.mjs --count 1 --featureDepth 6",
+    "export:redaction-check": "vitest run src/securityPrivacyGate.test.js src/tests/evidencePrivacyPolicy.test.js src/exportFingerprints.test.js src/privacyAudit.test.js src/reportPack.test.js src/audioEvidence.test.js src/exportPack.test.js",
+    "screenshots:update": "node tools/Run-ScreenshotUpdate.mjs",
     "preview": "vite preview --host 127.0.0.1",
+    "social:update": "node tools/Update-CommunityMemory.mjs",
     "test": "vitest run"
   },
   "build": {
@@ -24,16 +45,14 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "tools/**/*",
+      "src/security/electronPolicy.js",
+      "tools/Scan-AudioSetup.ps1",
       "package.json"
     ],
     "extraResources": [
       {
-        "from": "tools",
-        "to": "tools",
-        "filter": [
-          "**/*"
-        ]
+        "from": "tools/Scan-AudioSetup.ps1",
+        "to": "tools/Scan-AudioSetup.ps1"
       }
     ],
     "win": {
@@ -51,9 +70,11 @@
     "react-dom": "^18.3.1",
     "three": "^0.184.0",
     "typescript": "^5.7.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "electron": "^42.2.0",
     "electron-builder": "^26.8.1",
     "vitest": "^4.1.7"

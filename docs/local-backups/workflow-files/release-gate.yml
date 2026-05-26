@@ -1,0 +1,348 @@
+name: CueForge CI Gates
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  pull_request:
+  schedule:
+    - cron: '37 11 * * *'
+  release:
+    types:
+      - prereleased
+      - published
+  workflow_dispatch:
+    inputs:
+      release_candidate:
+        description: 'Run release-candidate readiness gates.'
+        required: false
+        type: boolean
+        default: false
+      run_route_graph_lab:
+        description: 'Run self-hosted Windows route graph lab when repo variable CUEFORGE_ROUTE_GRAPH_LAB is true.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cueforge-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 22
+
+jobs:
+  lint-and-unit:
+    name: lint-and-unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    if: ${{ github.event_name != 'schedule' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+  build-web:
+    name: build-web
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ github.event_name != 'schedule' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+  playwright-web:
+    name: playwright-web
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    if: ${{ github.event_name != 'schedule' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Playwright web smoke
+        run: npm run test:playwright:web
+        env:
+          PLAYWRIGHT_CHROME_CHANNEL: bundled
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cueforge-playwright-web
+          path: |
+            test-results/**
+            qa/playwright/report/**
+          if-no-files-found: ignore
+
+  electron-smoke:
+    name: electron-smoke
+    runs-on: windows-latest
+    timeout-minutes: 25
+    if: ${{ github.event_name != 'schedule' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build unpacked desktop app
+        run: npm run desktop:dir
+
+      - name: Desktop smoke test
+        run: npm run test:desktop-smoke
+
+      - name: Upload desktop smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cueforge-electron-smoke
+          path: |
+            docs/repair/VIRTUAL_MACHINE_PLAYER_LAB.md
+            docs/repair/cueforge-vm-player-lab-results.json
+            docs/repair/cueforge-vm-player-lab-ui-feedback-notes.json
+          if-no-files-found: ignore
+
+  redaction-contract:
+    name: redaction-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    if: ${{ github.event_name != 'schedule' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Export redaction check
+        run: npm run export:redaction-check
+
+  feedback-contract:
+    name: feedback-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Tester feedback contract
+        run: npm run qa:feedback-contract
+
+      - name: Upload feedback contract report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cueforge-feedback-contract
+          path: |
+            docs/repair/FEEDBACK_CONTRACT.md
+            docs/repair/feedback-contract.json
+          if-no-files-found: ignore
+
+  swarm-contract:
+    name: swarm-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Swarm manifest validation
+        run: npm run validate:swarm
+
+  audio-fixture-regression:
+    name: audio-fixture-regression
+    runs-on: windows-latest
+    timeout-minutes: 15
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'release' || startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.release_candidate) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audio fixture regression
+        run: npm run qa:audio-fixture-regression
+
+      - name: Upload audio fixture regression report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cueforge-audio-fixture-regression
+          path: |
+            docs/repair/AUDIO_FIXTURE_REGRESSION.md
+            docs/repair/audio-fixture-regression.json
+          if-no-files-found: ignore
+
+  route-graph-lab:
+    name: route-graph-lab
+    runs-on:
+      - self-hosted
+      - Windows
+      - cueforge-route-lab
+    timeout-minutes: 20
+    if: ${{ (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_route_graph_lab)) && vars.CUEFORGE_ROUTE_GRAPH_LAB == 'true' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Active endpoint route graph lab
+        run: npm run qa:route-graph-lab
+
+      - name: Upload route graph lab report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cueforge-route-graph-lab
+          path: |
+            docs/repair/ROUTE_GRAPH_LAB.md
+            docs/repair/route-graph-lab-summary.json
+          if-no-files-found: ignore
+
+  release-readiness:
+    name: release-readiness
+    runs-on: windows-latest
+    timeout-minutes: 18
+    if: ${{ always() && (github.event_name == 'release' || startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.release_candidate)) }}
+    needs:
+      - lint-and-unit
+      - build-web
+      - playwright-web
+      - electron-smoke
+      - redaction-contract
+      - feedback-contract
+      - swarm-contract
+      - audio-fixture-regression
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Release readiness metadata
+        run: npm run qa:release-readiness
+        env:
+          NEEDS_JSON: ${{ toJson(needs) }}
+          CUEFORGE_RELEASE_CANDIDATE: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.release_candidate) }}
+          CUEFORGE_REAL_LOOPBACK_PROOF: ${{ vars.CUEFORGE_REAL_LOOPBACK_PROOF || 'false' }}
+
+      - name: Pre-release QA
+        run: npm run qa:preflight
+
+      - name: Upload release readiness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cueforge-release-readiness
+          path: |
+            docs/repair/RELEASE_READINESS.md
+            docs/repair/release-readiness.json
+            docs/repair/PRE_RELEASE_QA_RUN.md
+            docs/repair/PANDA_NOTES_REPAIR_QUEUE.md
+            docs/repair/panda-notes-repair-check.json
+          if-no-files-found: ignore

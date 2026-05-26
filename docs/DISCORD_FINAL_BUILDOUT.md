@@ -18,6 +18,14 @@ Bamboo Mod: moderation permissions enabled without Administrator
 Read-only pages verified: start-here, rules, lab-updates, faq-roadmap
 ```
 
+May 24 social update queue:
+
+```text
+Use `docs/social/2026-05-24-social-command-center.md` for the current #lab-updates post, short pinned reminder, profile copy, and timeline.
+Core message: CueForge is the audio chain verifier and personal sound engine for gamers.
+Safe claim boundary: no magic surround, no exact enemy position claims, no public-release-ready claim until real Windows loopback proof passes.
+```
+
 Onboarding default path:
 
 ```text
@@ -119,11 +127,19 @@ Sapphire, Dyno, or Carl-bot
 Use for:
 
 ```text
-Reaction roles
 AutoMod helpers
 Welcome messages
 Slowmode/mod logs
 Basic anti-spam
+```
+
+Role picker update:
+
+```text
+Use the custom CueForge Panda Guide for role picking first.
+The /roles command posts both buttons and matching reactions.
+It stores role-panel message ids locally so reaction roles keep working after restarts.
+MEE6/Carl-bot/Dyno stay in the back pocket only if moderation or anti-spam needs outgrow the custom bot.
 ```
 
 Do not add multiple overlapping moderation bots at the start. One helper bot is enough.
@@ -144,7 +160,7 @@ Do not add multiple overlapping moderation bots at the start. One helper bot is 
 /watchparty - posts a real watch-party/test-lab prompt
 /questboard - posts five small useful quests
 /serverguide - posts the polished new-member guide
-/roles - posts click-to-pick tester and game role buttons
+/roles - mod-only command that posts click/reaction-to-pick tester and game roles
 /modroles - shows the private staff role map
 /claim - lets testers claim capped points for real participation
 /score - shows a tester's points and tier
@@ -292,7 +308,7 @@ Useful beats perfect. If CueForge makes something worse, say it.
 ```text
 Pick your lane.
 
-React or reply with what fits:
+Click a button or react with what fits:
 
 Panda Pilot - general beta tester
 IEM Listener - IEM testing
@@ -310,6 +326,20 @@ Siege Sound
 COD / Warzone
 Apex Audio
 CS2 / Valorant
+```
+
+Bot permission checklist:
+
+```text
+Manage Roles
+Add Reactions
+Read Message History
+View Channel
+Send Messages
+Use Slash Commands
+SERVER MEMBERS INTENT enabled in the Developer Portal
+Bot role placed above public tester/game roles
+Bot role kept below private owner/mod roles unless explicitly needed
 ```
 
 ## Suggested Channel Topics

@@ -1,0 +1,25 @@
+{
+  "schema": "cueforge.hardware-profile.v1",
+  "profileId": "win-realtek-hyperx-sonar",
+  "label": "Windows Realtek / HyperX / Sonar headset chain",
+  "os": "windows",
+  "input": {
+    "kind": "usb-headset-mic",
+    "matchHints": ["HyperX", "USB Audio", "Headset Microphone"]
+  },
+  "output": {
+    "kind": "usb-headset-output",
+    "matchHints": ["HyperX", "Game", "Headphones"]
+  },
+  "companions": {
+    "equalizerApo": "optional",
+    "peace": "optional",
+    "sonar": "expected",
+    "voicemeeter": "forbidden"
+  },
+  "expectations": {
+    "communicationsEndpointSeparate": true,
+    "loopbackCaptureRequired": true,
+    "maxRoundTripLatencyMs": 80
+  }
+}

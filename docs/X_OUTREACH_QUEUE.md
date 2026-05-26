@@ -5,15 +5,18 @@ Snapshot date: May 22, 2026.
 ## Live Status
 
 ```text
-X profile updated: May 22, 2026.
+X profile target updated: May 25, 2026.
 Account: @CueForge907
-Display name: CueForge
-Bio: Free FPS audio test lab. Mic checks, IEM/headset tuning, Equalizer APO exports, and real match feedback. Proof over hype.
-Location: Panda Lab / FPS Audio
-Website: https://p4nd4907.github.io/cueforge/
+Display name target: CueForge
+Bio target: Windows-first audio chain verifier for gamers. Setup checks, mic/EQ testing, safe exports, and real match proof. Built by P4ND4907.
+Location: Alaska
+Website target: https://p4nd4907.github.io/cueforge/
 Avatar: assets/discord/cueforge-server-pfp.png
 Header: assets/discord/cueforge-profile-header.png
-First post: https://x.com/CueForge907/status/2057751260326174727
+Latest profile check: https://x.com/CueForge907
+Following count after first signal wave: 18
+May 23 rollout result: Update 004 was previously tracked under an alternate X account; current visible CueForge account is `@CueForge907`. Rebuild follows and repost only after the profile is confirmed.
+May 25 queue: Professional profile kit is ready in `docs/social/PROFILE_KIT_2026-05-25.md`. Update display name, bio, website, avatar, and header first. Then post the pinned profile cleanup update. Keep mentions out of the first post.
 ```
 
 ## Posting Guardrails
@@ -61,6 +64,23 @@ Use these sparingly. A cold post should usually use hashtags only.
 | Valorant | `@PlayVALORANT`, `@VALORANT` | HRTF or tactical audio discussion |
 | Counter-Strike | `@CounterStrike` | CS2 HRTF/footstep testing |
 | Headsets | `@HyperX`, `@SteelSeries` | Gear-specific mic/headset thread |
+
+## Latest Ready Post
+
+### Pinned Profile Cleanup Post
+
+```text
+CueForge is a Windows-first audio chain verifier for gamers.
+
+It helps test your setup, mic, EQ, Discord/Sonar/APO routing, safe exports, and real match feedback without leaking private device info.
+
+Looking for honest testers:
+https://p4nd4907.github.io/cueforge/
+
+#CueForge #FPSAudio #PCGaming
+```
+
+Full profile copy lives in `docs/social/PROFILE_KIT_2026-05-25.md`.
 
 ## Post Queue
 

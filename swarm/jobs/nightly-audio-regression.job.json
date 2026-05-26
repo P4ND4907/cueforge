@@ -1,0 +1,32 @@
+{
+  "schema": "cueforge.swarm-job.v1",
+  "jobId": "nightly-audio-regression",
+  "label": "Nightly audio and route proof",
+  "trigger": "nightly",
+  "command": "npm.cmd run qa:audio-fixture-regression && npm.cmd run qa:feedback-contract",
+  "seed": "nightly-audio-seed",
+  "routes": [
+    "auto-detect",
+    "self-test",
+    "report-lab"
+  ],
+  "outputs": [
+    "docs/repair/AUDIO_FIXTURE_REGRESSION.md",
+    "docs/repair/FEEDBACK_CONTRACT.md",
+    "docs/repair/PANDA_NOTES_REPAIR_QUEUE.md"
+  ],
+  "gates": {
+    "canModifySystemState": false,
+    "canPostPublicly": false,
+    "maxNotesBeforeFail": 2,
+    "maxConsoleErrors": 0,
+    "maxRawLeakCount": 0
+  },
+  "privacy": {
+    "allowRawAudioExport": false,
+    "allowCloudUpload": false,
+    "redactDeviceIds": true,
+    "redactUserPaths": true,
+    "summaryOnlyReports": true
+  }
+}

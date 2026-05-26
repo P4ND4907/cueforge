@@ -12,6 +12,9 @@ Feedback: https://github.com/P4ND4907/cueforge/issues/1
 X: https://x.com/CueForge907
 ```
 
+Current rollout pack: `docs/social/2026-05-24-social-command-center.md`
+Current profile kit: `docs/social/PROFILE_KIT_2026-05-25.md`
+
 ## Hashtag Bank
 
 Use 2-4 tags on X/Twitter and 3-6 tags on TikTok/Instagram/Shorts. Do not stuff every tag into every post.
@@ -68,6 +71,19 @@ HyperX mic/headsets: @HyperX
 ```
 
 Do not tag official accounts in generic "try my app" posts. Use them only for no-link discussion posts or specific bug/audio-method questions.
+
+Current pinned X post:
+
+```text
+CueForge is a Windows-first audio chain verifier for gamers.
+
+It helps test your setup, mic, EQ, Discord/Sonar/APO routing, safe exports, and real match feedback without leaking private device info.
+
+Looking for honest testers:
+https://p4nd4907.github.io/cueforge/
+
+#CueForge #FPSAudio #PCGaming
+```
 
 First X post:
 
@@ -129,6 +145,15 @@ Ask for moments where audio helped or failed.
 
 Sunday: roadmap / behind the scenes  
 Share what is coming next and ask what should be prioritized.
+
+## May 24 Rollout Focus
+
+```text
+Theme: CueForge is becoming an audio chain verifier + personal sound engine.
+Proof: 289 tests passed, redaction/preflight/audit checks clean, release gate blocks hype until real Windows loopback proof.
+Main ask: run one setup, play one real match, and report what changed.
+Safe order: Discord #lab-updates, X main post or thread, Reddit profile-safe post only if healthy, then no-link Reddit comments.
+```
 
 ## Update 001 Posting Pack
 
