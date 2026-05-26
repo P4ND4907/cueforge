@@ -7,6 +7,14 @@ describe('desktop bridge fix plan', () => {
 
     expect(plan.status).toBe('browser-needs-desktop');
     expect(plan.warningIsExpected).toBe(true);
+    expect(plan.primaryOption).toMatchObject({
+      label: 'Use desktop app for full scan',
+      mode: 'open-desktop'
+    });
+    expect(plan.fallbackOption).toMatchObject({
+      label: 'Continue browser-only',
+      mode: 'browser-only'
+    });
     expect(plan.developerCommands).toContain('npm run desktop');
     expect(plan.boundary).toContain('never silently bypass');
     expect(buildDesktopBridgeFixText(plan)).toContain('Browser mode can test Web Audio');

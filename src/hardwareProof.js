@@ -6,16 +6,49 @@ function safeList(value) {
   return Array.isArray(value) ? value : [];
 }
 
+const toolLabels = {
+  equalizerApo: 'equalizerApo',
+  peace: 'peace',
+  steelSeriesSonar: 'SteelSeries Sonar',
+  voicemeeter: 'Voicemeeter',
+  vbCable: 'VB-CABLE',
+  fxSound: 'FxSound',
+  razerThx: 'Razer THX / Synapse',
+  dolbyAccess: 'Dolby Access',
+  dtsSoundUnbound: 'DTS Sound Unbound',
+  nahimic: 'Nahimic',
+  realtekAudio: 'Realtek Audio',
+  nvidiaBroadcast: 'NVIDIA Broadcast',
+  discord: 'Discord',
+  elgatoWaveLink: 'Elgato Wave Link',
+  logitechGHub: 'Logitech G HUB',
+  corsairIcue: 'Corsair iCUE',
+  voicemod: 'Voicemod'
+};
+
+const toolGroups = [
+  ['APO/processors', ['equalizerApo', 'peace']],
+  ['mixers/routing', ['steelSeriesSonar', 'voicemeeter', 'vbCable', 'elgatoWaveLink']],
+  ['sound boosters/effects', ['fxSound', 'razerThx', 'dolbyAccess', 'dtsSoundUnbound', 'nahimic', 'realtekAudio']],
+  ['chat/utilities', ['discord', 'nvidiaBroadcast', 'logitechGHub', 'corsairIcue', 'voicemod']]
+];
+
+function toolDisplayName(key, tool = {}) {
+  return tool.displayName || toolLabels[key] || key;
+}
+
 export function summarizeBridgeReport(report = null) {
   const soundDeviceCount = safeList(report?.soundDevices).length;
   const mediaDeviceCount = safeList(report?.mediaDevices).length;
-  const toolState = {
-    equalizerApo: Boolean(report?.tools?.equalizerApo?.installed),
-    peace: Boolean(report?.tools?.peace?.installed),
-    steelSeriesSonar: Boolean(report?.tools?.steelSeriesSonar?.installed),
-    voicemeeter: Boolean(report?.tools?.voicemeeter?.installed),
-    vbCable: Boolean(report?.tools?.vbCable?.installed)
-  };
+  const toolState = Object.fromEntries(
+    Object.keys(toolLabels).map((key) => [key, Boolean(report?.tools?.[key]?.installed)])
+  );
+  const companionGroups = toolGroups.map(([label, keys]) => ({
+    label,
+    tools: keys
+      .filter((key) => toolState[key])
+      .map((key) => toolDisplayName(key, report?.tools?.[key]))
+  }));
   const namedMatches = {
     hyperx: Boolean(report?.matches?.hyperx),
     iemOrDac: Boolean(report?.matches?.iemOrDac),
@@ -28,6 +61,7 @@ export function summarizeBridgeReport(report = null) {
     mediaDeviceCount,
     totalDeviceCount: soundDeviceCount + mediaDeviceCount,
     toolState,
+    companionGroups,
     namedMatches,
     generatedAt: report?.generatedAt || null
   };
@@ -39,10 +73,10 @@ export function formatBridgeReportProof(report = null) {
     return 'No Windows bridge report is loaded yet.';
   }
 
-  const foundTools = Object.entries(summary.toolState)
-    .filter(([, installed]) => installed)
-    .map(([name]) => name)
-    .join(', ') || 'no companion audio tools detected yet';
+  const foundTools = summary.companionGroups
+    .filter((group) => group.tools.length)
+    .map((group) => `${group.label}: ${group.tools.join(', ')}`)
+    .join('; ') || 'no companion audio tools detected yet';
   const matches = [
     summary.namedMatches.hyperx ? 'HyperX-style mic match' : '',
     summary.namedMatches.iemOrDac ? 'IEM/DAC/headset output match' : '',

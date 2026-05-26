@@ -37,6 +37,25 @@ describe('hardware proof helpers', () => {
     expect(proof).toContain('IEM/DAC/headset output match');
   });
 
+  it('names boosters, effects, chat, and gear utilities as companion audio layers', () => {
+    const proof = formatBridgeReportProof({
+      soundDevices: [{ Name: 'Realtek Audio' }],
+      mediaDevices: [{ Name: 'USB DAC' }],
+      tools: {
+        fxSound: { installed: true },
+        razerThx: { installed: true, displayName: 'Razer Synapse' },
+        realtekAudio: { installed: true, displayName: 'Realtek Audio Driver' },
+        discord: { installed: true },
+        logitechGHub: { installed: true, displayName: 'Logitech G HUB' }
+      },
+      matches: { iemOrDac: true }
+    });
+
+    expect(proof).toContain('sound boosters/effects: FxSound, Razer Synapse, Realtek Audio Driver');
+    expect(proof).toContain('chat/utilities: Discord, Logitech G HUB');
+    expect(proof).not.toContain('no companion audio tools detected');
+  });
+
   it('passes mic proof only when a real capture signal is present', () => {
     expect(evaluateMicCaptureProof({ streamStarted: false }).status).toBe('warn');
     expect(evaluateMicCaptureProof({ streamStarted: true, rms: 0, peak: 0, sampleRate: 48000 }).status).toBe('warn');

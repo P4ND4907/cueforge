@@ -1527,6 +1527,11 @@ function SetupJourney({ settings, onComplete, onSkip }) {
     state: micStatus,
     desktopReady: Boolean(window.cueforgeDesktop?.isDesktop)
   }), [micStatus]);
+  const setupDesktopPlan = useMemo(() => buildDesktopBridgeFixPlan({
+    desktopAvailable: Boolean(desktopInfo || window.cueforgeDesktop?.isDesktop),
+    desktopInfo,
+    bridgeReport
+  }), [desktopInfo, bridgeReport]);
   const setupSummary = useMemo(() => [
     `Game focus: ${profile.gameFocus}`,
     `Output: ${profile.outputType}`,
@@ -1608,7 +1613,7 @@ function SetupJourney({ settings, onComplete, onSkip }) {
 
   const runSetupDesktopScan = async () => {
     if (!window.cueforgeDesktop?.scanAudioSetup) {
-      setScanStatus('Desktop access is not active in the browser. Open the CueForge desktop build, then run Windows scan to link local endpoints and audio apps.');
+      setScanStatus(`${setupDesktopPlan.primaryOption.label}: open the CueForge desktop app for endpoint, APO, mixer, booster, Discord, and running-game evidence. ${setupDesktopPlan.fallbackOption.label}: keep going with browser mic/device checks for a lighter starter tune.`);
       return;
     }
 
@@ -1886,25 +1891,23 @@ function SetupJourney({ settings, onComplete, onSkip }) {
                 <small>{formatPermissionRecoverySteps(setupRecovery)}</small>
               </div>
               <div className={`data-card desktop-link-card ${bridgeFound ? 'linked' : desktopInfo ? 'ready' : 'browser-only'}`}>
-                <strong>{bridgeFound ? 'Desktop evidence linked' : desktopInfo ? 'Desktop access ready' : 'Desktop access needed'}</strong>
+                <strong>{bridgeFound ? 'Desktop evidence linked' : setupDesktopPlan.title}</strong>
                 <span>
                   {bridgeFound
                     ? formatBridgeReportProof(bridgeReport)
-                    : desktopInfo
-                      ? 'Run the Windows scan so CueForge can see endpoints, APO, Sonar, Discord, virtual routing, and running games.'
-                      : 'Browser mode cannot read installed Windows audio apps or default endpoints. Open the CueForge desktop app or import a bridge report before trusting a final tune.'}
+                    : setupDesktopPlan.summary}
                 </span>
                 <small>
                   {bridgeFound
                     ? `${bridgeSummary.totalDeviceCount} local device signals / generated ${bridgeSummary.generatedAt || 'now'}`
-                    : desktopInfo?.reportPath || 'No native system changes. This is evidence only.'}
+                    : `${setupDesktopPlan.primaryOption.label}. ${setupDesktopPlan.fallbackOption.label}: ${setupDesktopPlan.fallbackOption.detail}`}
                 </small>
               </div>
               <div className="live-actions">
                 <button className="primary" onClick={requestMic}><Mic size={18} /> Grant mic access</button>
                 <button className="ghost" onClick={scanSetup}><Search size={18} /> Scan devices</button>
                 <button className={desktopInfo ? 'primary' : 'ghost'} onClick={runSetupDesktopScan} disabled={desktopBusy}>
-                  <MonitorCog size={18} /> {desktopBusy ? 'Scanning Windows...' : 'Run Windows scan'}
+                  <MonitorCog size={18} /> {desktopBusy ? 'Scanning Windows...' : setupDesktopPlan.primaryOption.label}
                 </button>
                 {desktopInfo && <button className="ghost" onClick={openSetupBridgeFolder}>Open report folder</button>}
               </div>

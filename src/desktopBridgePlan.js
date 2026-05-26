@@ -17,6 +17,8 @@ export function buildDesktopBridgeFixPlan({
     title: titleForStatus(status),
     summary: summaryForStatus(status, desktopInfo),
     warningIsExpected: !desktopAvailable,
+    primaryOption: primaryOptionForStatus(status),
+    fallbackOption: fallbackOptionForStatus(status),
     developerCommands: [
       'npm run desktop',
       'npm run desktop:dir',
@@ -83,6 +85,50 @@ function summaryForStatus(status, desktopInfo) {
     return 'Use the Windows desktop build for one-click setup scanning and safe APO draft exports.';
   }
   return 'Browser mode can test Web Audio and mic permission, but Windows device/tool scanning needs the CueForge desktop shell.';
+}
+
+function primaryOptionForStatus(status) {
+  if (status === 'desktop-ready') {
+    return {
+      mode: 'refresh-desktop-scan',
+      label: 'Refresh Windows scan',
+      detail: 'Update local endpoint, APO, mixer, booster, Discord, and game-process evidence.'
+    };
+  }
+  if (status === 'desktop-needs-scan') {
+    return {
+      mode: 'run-desktop-scan',
+      label: 'Run Windows scan',
+      detail: 'Read local endpoint and audio app evidence from the desktop shell.'
+    };
+  }
+  return {
+    mode: 'open-desktop',
+    label: 'Use desktop app for full scan',
+    detail: 'Open CueForge desktop when you want endpoint, APO, mixer, booster, Discord, and running-game evidence.'
+  };
+}
+
+function fallbackOptionForStatus(status) {
+  if (status === 'desktop-ready') {
+    return {
+      mode: 'use-loaded-report',
+      label: 'Use loaded report',
+      detail: 'Keep tuning with the Windows evidence already linked.'
+    };
+  }
+  if (status === 'desktop-needs-scan') {
+    return {
+      mode: 'open-report-folder',
+      label: 'Open report folder',
+      detail: 'Check where the desktop app stores the local bridge report.'
+    };
+  }
+  return {
+    mode: 'browser-only',
+    label: 'Continue browser-only',
+    detail: 'Use mic permission, browser device names, and a lighter starter tune until the desktop app is available.'
+  };
 }
 
 function playerStepsForStatus(status) {
