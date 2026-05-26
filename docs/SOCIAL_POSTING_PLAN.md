@@ -12,7 +12,7 @@ Feedback: https://github.com/P4ND4907/cueforge/issues/1
 X: https://x.com/CueForge907
 ```
 
-Current rollout pack: `docs/social/2026-05-24-social-command-center.md`
+Current rollout pack: `docs/social/2026-05-26-desktop-scan-options-update.md`
 Current profile kit: `docs/social/PROFILE_KIT_2026-05-25.md`
 
 ## Hashtag Bank

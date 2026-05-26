@@ -1,6 +1,6 @@
 # CueForge Community Memory
 
-Last updated: 2026-05-25T13:35:00-08:00
+Last updated: 2026-05-26T05:45:00Z
 
 This is the GitHub-side memory for public outreach. It uses public community/thread data only; no account cookies, private messages, or personal data are collected.
 
@@ -23,6 +23,8 @@ May 24 social lane: use `docs/social/2026-05-24-social-command-center.md` as the
 May 25 social lane: use `docs/social/2026-05-25-live-social-sprint.md` for the Auto Detect/device-name/game-profile story. Reddit feed showed one high-fit invited thread, `r/micro_saas - Drop your product, I'll help you find your first 100 users`; prefer that kind of invited product reply over cold launch posts.
 
 May 25 search update: verified Discord targets now include `discord.gg/steelseries`, `discord.gg/logitechg`, `discord.gg/pcmr`, `ilovePCs / PC Build Help`, Indie Hackers Discord, and TurboStarter Discord. Treat official hardware/community servers as learn-and-help spaces first, not places to drop the app link on entry.
+
+May 26 social lane: use `docs/social/2026-05-26-desktop-scan-options-update.md` for the desktop-scan/APO-mixer-booster story. The safest hook is "CueForge now explains browser-only vs desktop scan and groups audio layers in plain words." Discord and X can use the app link. Reddit stays helpful/no-link unless the thread explicitly asks for products or someone asks for the link.
 
 ## High-Engagement Watchlist
 
