@@ -292,13 +292,13 @@ $report = [ordered]@{
     }
     vbCable = [ordered]@{
       installed = [bool]$vbCableDevice
-      device = if ($vbCableDevice) { $vbCableDevice.Name } else { $null }
+      device = $(if ($vbCableDevice) { $vbCableDevice.Name } else { $null })
     }
   }
   soundDevices = $soundDevices
   mediaDevices = $mediaPnP
   defaults = $defaults
-  sessions = @($appSessions + ($runningGames | ForEach-Object {
+  sessions = @(@($appSessions) + @($runningGames | ForEach-Object {
     [ordered]@{
       app = $_.name
       kind = "game-app"
