@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://p4nd4907.github.io/cueforge/sitemap.xml
