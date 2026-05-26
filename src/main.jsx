@@ -1872,6 +1872,11 @@ function SetupJourney({ settings, onComplete, onSkip }) {
             <div><span>Devices</span><strong>{deviceCount}</strong></div>
             <div><span>Native</span><strong>{bridgeFound ? 'bridge' : 'manual'}</strong></div>
           </div>
+          <div className="tester-path-card" aria-label="Tester path">
+            <span>Tester path</span>
+            <strong>{'Open app -> run setup -> send feedback'}</strong>
+            <small>Start with Device Scan, try the starter tune, then tell us where the wording or next step felt off.</small>
+          </div>
           <div className="setup-steps">
             {setupSteps.map(([label, detail], index) => (
               <button className={step === index ? 'selected' : index < step ? 'done' : ''} key={label} onClick={() => goToStep(index)}>

@@ -100,6 +100,11 @@ export function SetupCommandCenter({
         <button className="ghost" onClick={onApplyProfile}><Sparkles size={18} /> Use starter tune</button>
         <button className="ghost" onClick={onExportPack}><Download size={18} /> Export release pack</button>
       </div>
+      <div className="command-tester-path" aria-label="Public tester path">
+        <span>Tester path</span>
+        <strong>{'Open link -> Auto setup -> Starter tune -> Sound Match -> feedback'}</strong>
+        <small>Post the link with the screenshot card, then ask testers for one setup note, one sound note, and their headset or IEM name.</small>
+      </div>
       <GuidedSetupRunPanel guided={guidedSetup} onAction={runGuidedAction} />
       <div className="command-operating-panel">
         <div className="command-operating-head">

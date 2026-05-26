@@ -199,6 +199,43 @@ select {
   line-height: 1.05;
 }
 
+.tester-path-card {
+  display: grid;
+  gap: 6px;
+  max-width: 620px;
+  padding: 14px;
+  border: 1px solid rgba(18,201,154,0.24);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(18,201,154,0.18), rgba(141,122,255,0.08)),
+    rgba(8,15,21,0.66);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.24);
+}
+
+.tester-path-card span,
+.tester-path-card strong,
+.tester-path-card small {
+  overflow-wrap: anywhere;
+}
+
+.tester-path-card span {
+  color: #8ff7de;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.tester-path-card strong {
+  color: #f5fffd;
+  font-size: 18px;
+}
+
+.tester-path-card small {
+  color: #b6c8cb;
+  line-height: 1.45;
+}
+
 .setup-steps {
   display: grid;
   gap: 10px;
@@ -670,6 +707,7 @@ p {
 .command-hero span,
 .command-next span,
 .command-card-head span,
+.command-tester-path span,
 .command-operating-head span,
 .chain-node span,
 .chain-step-copy span,
@@ -727,6 +765,33 @@ p {
 
 .command-main-actions > * {
   flex: 0 1 auto;
+}
+
+.command-tester-path {
+  display: grid;
+  gap: 6px;
+  padding: 13px 14px;
+  border: 1px solid rgba(159,255,227,0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(18,201,154,0.12), rgba(141,122,255,0.08)),
+    rgba(2,13,14,0.46);
+}
+
+.command-tester-path strong,
+.command-tester-path small {
+  overflow-wrap: anywhere;
+}
+
+.command-tester-path strong {
+  color: #f8fffb;
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.command-tester-path small {
+  color: #b5ccce;
+  line-height: 1.4;
 }
 
 .guided-setup-run {
