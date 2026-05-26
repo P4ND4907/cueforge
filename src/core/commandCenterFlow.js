@@ -78,6 +78,8 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
   const hasScanEvidence = hasOutput || hasInput || Boolean(state.autoDetectReport?.source);
   const highConflicts = Number(state.conflicts?.summary?.high || 0);
   const partialEvidence = hasScanEvidence && browserEvidenceIsPartial(state);
+  const desktopCanScan = Boolean(context.desktopScanAvailable || state.desktopReady || state.autoDetectReport?.mode === 'desktop-assisted');
+  const desktopEvidenceLoaded = hasScanEvidence && !partialEvidence;
   const recommendationEq = profileEq(state);
   const hasStarterTune = profileReady(state) && recommendationEq.length > 0;
   const starterTuneApplied = context.starterTuneApplied === true || eqMatches(recommendationEq, context.currentEq);
@@ -93,6 +95,19 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
           ? 'Browser scan is checked. Windows bridge scan gives exact endpoint proof when available.'
           : 'Device and Windows evidence are checked.'
         : 'Scan devices so CueForge can stop guessing.'
+    ),
+    setupCheck(
+      'desktop-link',
+      'Desktop link',
+      desktopEvidenceLoaded ? 'done' : partialEvidence ? (desktopCanScan ? 'next' : 'warn') : 'todo',
+      desktopEvidenceLoaded
+        ? 'Windows bridge evidence is linked for endpoint, companion app, and routing proof.'
+        : partialEvidence
+          ? desktopCanScan
+            ? 'Desktop access is available. Run the Windows scan before trusting a tune.'
+            : 'Browser evidence is partial. Import or run a Windows bridge report when possible.'
+          : 'Desktop link appears after the first scan.',
+      'desktop-scan'
     ),
     setupCheck(
       'output-picked',
@@ -154,6 +169,13 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
       label: 'Pick Headset + Mic',
       route: 'detect',
       detail: 'Confirm which output and input are actually being used.'
+    };
+  } else if (partialEvidence && desktopCanScan) {
+    nextAction = {
+      id: 'desktop-scan',
+      label: 'Run Windows Scan',
+      route: 'desktop-scan',
+      detail: 'Link desktop evidence so CueForge can see endpoints, APO, Sonar, Discord, virtual routing, and running games.'
     };
   } else if (hasScanEvidence && highConflicts > 0) {
     nextAction = {

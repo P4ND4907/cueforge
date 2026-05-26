@@ -13,6 +13,7 @@ import {
   Gauge,
   Headphones,
   Mic,
+  MonitorCog,
   Play,
   Radio,
   RotateCcw,
@@ -88,7 +89,7 @@ import {
   uiFeedbackTags
 } from './uiFeedback.js';
 import { computeUiNoteFocusScrollDelta, computeUiNotePopoverPosition } from './uiNotePosition.js';
-import { evaluateMicCaptureProof, formatBridgeReportProof } from './hardwareProof.js';
+import { evaluateMicCaptureProof, formatBridgeReportProof, summarizeBridgeReport } from './hardwareProof.js';
 import { buildReleaseProofState, buildReleaseUpdateDraft, summarizeReleaseQueue } from './releaseQueue.js';
 import { buildPermissionRecovery, formatPermissionRecoverySteps } from './permissionRecovery.js';
 import { buildPrivacyAuditText, runPrivacyAudit } from './privacyAudit.js';
@@ -1489,6 +1490,9 @@ function SetupJourney({ settings, onComplete, onSkip }) {
   const [scanStatus, setScanStatus] = useState('not scanned');
   const [deviceCount, setDeviceCount] = useState(0);
   const [bridgeFound, setBridgeFound] = useState(false);
+  const [bridgeReport, setBridgeReport] = useState(null);
+  const [desktopInfo, setDesktopInfo] = useState(null);
+  const [desktopBusy, setDesktopBusy] = useState(false);
   const [toneStatus, setToneStatus] = useState('ready');
   const [soundActive, setSoundActive] = useState(false);
   const soundRef = useRef(null);
@@ -1516,6 +1520,7 @@ function SetupJourney({ settings, onComplete, onSkip }) {
   ];
   const setupStage = setupSteps[step];
   const backgroundAudioAllowed = canPlayBackgroundAudio(settings);
+  const bridgeSummary = useMemo(() => summarizeBridgeReport(bridgeReport), [bridgeReport]);
   const profileStrength = Math.round((Number(profile.footstepFocus) + Number(profile.commsFocus) + Number(profile.bassControl) + Number(profile.fatigueControl)) / 4 * 10);
   const setupRecovery = useMemo(() => buildPermissionRecovery({
     feature: 'setup-mic',
@@ -1529,8 +1534,8 @@ function SetupJourney({ settings, onComplete, onSkip }) {
     `Tools: ${Object.values(profile.tools).filter(Boolean).length || 0} selected`,
     `Permission: ${setupRecovery.status}`,
     `Devices: ${deviceCount || 'not scanned yet'}`,
-    bridgeFound ? 'Windows bridge: loaded' : 'Windows bridge: optional'
-  ], [profile.gameFocus, profile.outputType, profile.micType, profile.tools, setupRecovery.status, deviceCount, bridgeFound]);
+    bridgeFound ? 'Desktop link: Windows scan loaded' : desktopInfo ? 'Desktop link: ready' : 'Desktop link: browser-only'
+  ], [profile.gameFocus, profile.outputType, profile.micType, profile.tools, setupRecovery.status, deviceCount, bridgeFound, desktopInfo]);
 
   const updateProfile = (key, value) => setProfile((current) => ({ ...current, [key]: value }));
   const updateTool = (key, value) => setProfile((current) => ({
@@ -1543,6 +1548,33 @@ function SetupJourney({ settings, onComplete, onSkip }) {
   }, [step]);
 
   useEffect(() => () => stopSetupSoundscape({ immediate: true }), []);
+
+  useEffect(() => {
+    let alive = true;
+    const loadDesktopState = async () => {
+      if (window.cueforgeDesktop?.info) {
+        try {
+          const info = await window.cueforgeDesktop.info();
+          if (alive) setDesktopInfo(info);
+        } catch {
+          if (alive) setDesktopInfo(null);
+        }
+      }
+
+      const existingReport = await getGeneratedBridgeReport();
+      if (alive && existingReport) {
+        setBridgeReport(existingReport);
+        setBridgeFound(true);
+        setScanStatus(`Desktop evidence loaded: ${formatBridgeReportProof(existingReport)}`);
+      }
+    };
+
+    loadDesktopState();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!backgroundAudioAllowed && soundRef.current) {
@@ -1567,8 +1599,46 @@ function SetupJourney({ settings, onComplete, onSkip }) {
     const devices = await getBrowserAudioDevices();
     const bridge = await getGeneratedBridgeReport();
     setDeviceCount(devices.length);
+    setBridgeReport(bridge);
     setBridgeFound(Boolean(bridge));
-    setScanStatus(`${devices.length} browser audio devices${bridge ? ' plus Windows bridge' : ''}`);
+    setScanStatus(bridge
+      ? `${devices.length} browser audio devices plus desktop evidence: ${formatBridgeReportProof(bridge)}`
+      : `${devices.length} browser audio devices. Desktop link still needed for Windows endpoints, APO, Sonar, Discord, and running-game proof.`);
+  };
+
+  const runSetupDesktopScan = async () => {
+    if (!window.cueforgeDesktop?.scanAudioSetup) {
+      setScanStatus('Desktop access is not active in the browser. Open the CueForge desktop build, then run Windows scan to link local endpoints and audio apps.');
+      return;
+    }
+
+    setDesktopBusy(true);
+    setScanStatus('Running local Windows audio scan. CueForge reads device/tool names and writes a report in app data.');
+    try {
+      const result = await runDesktopBridgeScanIfAvailable();
+      if (!result?.ok || !result.report) {
+        setScanStatus(result?.error || 'Windows scan did not return a report.');
+        return;
+      }
+
+      const devices = await getBrowserAudioDevices();
+      setDeviceCount(devices.length);
+      setBridgeReport(result.report);
+      setBridgeFound(true);
+      setScanStatus(`Desktop linked: ${formatBridgeReportProof(result.report)}`);
+    } catch {
+      setScanStatus('Windows scan failed before a report could be linked.');
+    } finally {
+      setDesktopBusy(false);
+    }
+  };
+
+  const openSetupBridgeFolder = async () => {
+    if (!window.cueforgeDesktop?.openBridgeFolder) {
+      setScanStatus('Bridge folder is only available in the desktop app.');
+      return;
+    }
+    await window.cueforgeDesktop.openBridgeFolder();
   };
 
   const playSetupPulse = async () => {
@@ -1815,9 +1885,28 @@ function SetupJourney({ settings, onComplete, onSkip }) {
                 <span>{setupRecovery.detail}</span>
                 <small>{formatPermissionRecoverySteps(setupRecovery)}</small>
               </div>
+              <div className={`data-card desktop-link-card ${bridgeFound ? 'linked' : desktopInfo ? 'ready' : 'browser-only'}`}>
+                <strong>{bridgeFound ? 'Desktop evidence linked' : desktopInfo ? 'Desktop access ready' : 'Desktop access needed'}</strong>
+                <span>
+                  {bridgeFound
+                    ? formatBridgeReportProof(bridgeReport)
+                    : desktopInfo
+                      ? 'Run the Windows scan so CueForge can see endpoints, APO, Sonar, Discord, virtual routing, and running games.'
+                      : 'Browser mode cannot read installed Windows audio apps or default endpoints. Open the CueForge desktop app or import a bridge report before trusting a final tune.'}
+                </span>
+                <small>
+                  {bridgeFound
+                    ? `${bridgeSummary.totalDeviceCount} local device signals / generated ${bridgeSummary.generatedAt || 'now'}`
+                    : desktopInfo?.reportPath || 'No native system changes. This is evidence only.'}
+                </small>
+              </div>
               <div className="live-actions">
                 <button className="primary" onClick={requestMic}><Mic size={18} /> Grant mic access</button>
                 <button className="ghost" onClick={scanSetup}><Search size={18} /> Scan devices</button>
+                <button className={desktopInfo ? 'primary' : 'ghost'} onClick={runSetupDesktopScan} disabled={desktopBusy}>
+                  <MonitorCog size={18} /> {desktopBusy ? 'Scanning Windows...' : 'Run Windows scan'}
+                </button>
+                {desktopInfo && <button className="ghost" onClick={openSetupBridgeFolder}>Open report folder</button>}
               </div>
               <p className="callout">{scanStatus}</p>
             </>
@@ -2090,8 +2179,9 @@ function SetupThreeScene({ step }) {
       world.add(signalParticles);
 
       const resize = () => {
-        if (!canvasRef.current) return;
-        const rect = canvasRef.current.getBoundingClientRect();
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
         const width = Math.max(1, Math.floor(rect.width));
         const height = Math.max(1, Math.floor(rect.height));
         renderer.setSize(width, height, false);
@@ -2100,7 +2190,7 @@ function SetupThreeScene({ step }) {
       };
 
       resizeObserver = new ResizeObserver(resize);
-      resizeObserver.observe(canvasRef.current);
+      if (canvasRef.current) resizeObserver.observe(canvasRef.current);
       resize();
       window.addEventListener('pointermove', onPointerMove, { passive: true });
 
@@ -5219,9 +5309,10 @@ function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateCh
         gates: [{ id: 'blind-match', ready: false }]
       }
     }, {
-      currentEq
+      currentEq,
+      desktopScanAvailable: desktopReady
     });
-  }, [autoDetectReport, setupIntelligence, currentEq]);
+  }, [autoDetectReport, setupIntelligence, currentEq, desktopReady]);
   const setupIntelligenceText = useMemo(() => buildSetupIntelligenceText(setupIntelligence), [setupIntelligence]);
   const redditTesterAsk = useMemo(
     () => buildRedditSafeDraft({
@@ -5324,6 +5415,10 @@ function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateCh
   };
 
   const runGuidedAutoSetupAction = (action = guidedAutoSetup.nextAction) => {
+    if (action.route === 'desktop-scan') {
+      runDesktopBridgeScan();
+      return;
+    }
     if (action.route === 'starter-tune') {
       applySuggestedProfile();
       return;

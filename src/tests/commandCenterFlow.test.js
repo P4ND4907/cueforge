@@ -157,6 +157,7 @@ describe('command center flow', () => {
     });
     expect(guided.checks.map((check) => check.label)).toEqual([
       'Device scan',
+      'Desktop link',
       'Output picked',
       'Mic picked',
       'Route conflicts',
@@ -203,11 +204,52 @@ describe('command center flow', () => {
       route: 'starter-tune'
     });
     expect(checks['device-scan'].status).toBe('warn');
+    expect(checks['desktop-link'].status).toBe('warn');
     expect(checks['output-picked'].status).toBe('done');
     expect(checks['mic-picked'].status).toBe('done');
     expect(checks['route-conflicts'].status).toBe('done');
     expect(checks['starter-tune'].status).toBe('next');
     expect(checks['sound-match'].status).toBe('todo');
+  });
+
+  it('uses desktop access as the next move before tuning when browser evidence is partial', () => {
+    const profileEq = [-1, -0.5, 0, 0.5, 1, 1.5, 2, 2, 0.5, -0.5];
+    const guided = buildGuidedSetupRun({
+      chainGraph: {
+        summary: { inputs: 1, outputs: 1, companions: 1 }
+      },
+      autoDetectReport: {
+        source: 'browser',
+        mode: 'desktop-assisted',
+        confidence: { score: 48, tier: 'partial', requiresExplicitScan: true }
+      },
+      conflicts: {
+        summary: { high: 0 },
+        chainHealth: { warnings: [] }
+      },
+      profile: {
+        recommendation: {
+          id: 'competitive-fps-browser',
+          label: 'Competitive FPS',
+          eq: profileEq
+        }
+      },
+      readiness: {
+        gates: [{ id: 'blind-match', ready: false }]
+      }
+    }, {
+      currentEq: Array(10).fill(0),
+      desktopScanAvailable: true
+    });
+
+    const checks = Object.fromEntries(guided.checks.map((check) => [check.id, check]));
+
+    expect(guided.nextAction).toMatchObject({
+      id: 'desktop-scan',
+      label: 'Run Windows Scan',
+      route: 'desktop-scan'
+    });
+    expect(checks['desktop-link'].status).toBe('next');
   });
 
   it('moves from applied starter tune into Sound Match as the next proof step', () => {
@@ -246,6 +288,7 @@ describe('command center flow', () => {
       route: 'blindmatch'
     });
     expect(checks['starter-tune'].status).toBe('done');
+    expect(checks['desktop-link'].status).toBe('done');
     expect(checks['sound-match'].status).toBe('next');
   });
 });
