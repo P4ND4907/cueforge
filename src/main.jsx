@@ -133,6 +133,7 @@ import {
   upsertGameProfile
 } from './deviceProfiles.js';
 import { buildCueForgeState } from './core/cueforgeState.js';
+import { shouldFetchGeneratedBridgeReport } from './core/bridgeReportSource.js';
 import { buildGuidedSetupRun } from './core/commandCenterFlow.js';
 import {
   clampSetupJourneyStep,
@@ -4357,7 +4358,7 @@ async function getGeneratedBridgeReport() {
     }
   }
 
-  if (window.location.protocol === 'file:') return null;
+  if (!shouldFetchGeneratedBridgeReport(window.location)) return null;
 
   try {
     const response = await withTimeout(fetch(publicAssetPath('/tools/cueforge-audio-setup-report.json'), { cache: 'no-store' }), 1800, null);
