@@ -2,7 +2,7 @@
 
 Use these to point testers at the current web app after the launch-preview, clean console, and security-patch update.
 
-Last checked: May 28, 2026 Alaska time.
+Last checked: May 29, 2026 Alaska time.
 
 ## Link Status
 
@@ -22,6 +22,7 @@ Current public proof:
 Live app bundle: index-DysAIbae.js
 Live smoke: Command Center, Auto Setup, Sound Match, mobile load, 0 console errors, 0 bad network responses
 Security: npm audit --audit-level=high reports 0 vulnerabilities
+GitHub security alert: tmp advisory is fixed
 ```
 
 Public link:
