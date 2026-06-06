@@ -652,6 +652,7 @@ function App() {
   const [chainBridgeReport, setChainBridgeReport] = useState(null);
   const [chainAutoDetectReport, setChainAutoDetectReport] = useState(null);
   const [soundPreferenceModel, setSoundPreferenceModel] = useState(() => getSavedJson('cueforge-preference-model'));
+  const [starterTuneApplied, setStarterTuneApplied] = useState(false);
   const [desktopBridgeReady, setDesktopBridgeReady] = useState(false);
   const configRef = useRef(null);
   const apoConfig = useMemo(() => buildApoConfig(eq), [eq]);
@@ -770,7 +771,8 @@ function App() {
       setSelectedSourceProfile(cueforgeState.profile.recommendation.sourceProfile || selectedSourceProfile);
       setSaved(false);
       setActive('eq');
-      setShareStatus('Profile Engine v2 applied a safe starting curve. Review it before exporting.');
+      setStarterTuneApplied(true);
+      setShareStatus('Starter tune applied. Next: run Sound Match, then play one match before changing more.');
     } else {
       setShareStatus('Profile Engine needs setup data before it can apply a curve.');
       setActive('detect');
@@ -847,6 +849,8 @@ function App() {
       bassPreference: 2,
       footstepFocus: 7
     }));
+    setStarterTuneApplied(true);
+    setShareStatus('Starter tune applied. Next: run Sound Match, then play one match before changing more.');
   };
 
   const updateUserSettings = (patch) => {
@@ -1262,6 +1266,7 @@ function App() {
             appInviteText={appInviteText}
             shareProfileText={shareProfileText}
             shareProfilePayload={shareProfilePayload}
+            starterTuneApplied={starterTuneApplied}
             onAutoTune={applySimpleAutoTune}
             onSaveConfig={downloadConfig}
             onOpenExpert={() => updateUserSettings({ interfaceMode: 'expert' })}
@@ -2739,6 +2744,7 @@ function SimpleTunePage({
   appInviteText,
   shareProfileText,
   shareProfilePayload,
+  starterTuneApplied,
   onAutoTune,
   onSaveConfig,
   onOpenExpert,
@@ -2759,8 +2765,8 @@ function SimpleTunePage({
             <p>CueForge keeps the complicated EQ math behind the scenes. Start with an automatic FPS curve, save it, then judge it in one match.</p>
           </div>
           <div className="simple-next">
-            <span>Current target</span>
-            <strong>{sourceName}</strong>
+            <span>{starterTuneApplied ? 'Next step' : 'Current target'}</span>
+            <strong>{starterTuneApplied ? 'Run Sound Match' : sourceName}</strong>
           </div>
         </div>
         <div className="simple-step-grid">
@@ -2785,6 +2791,15 @@ function SimpleTunePage({
             <span>Play hidden sound rounds and let your ears pick the curve.</span>
           </button>
         </div>
+        {starterTuneApplied && (
+          <div className="simple-flow-confirm">
+            <div>
+              <strong>Starter tune applied.</strong>
+              <span>Now compare hidden sound pairs so CueForge can personalize the curve before your play test.</span>
+            </div>
+            <button className="primary" onClick={onOpenSoundMatch}><Radio size={18} /> Run Sound Match</button>
+          </div>
+        )}
       </Panel>
 
       <Panel title="Plain Results" icon={ShieldCheck}>
