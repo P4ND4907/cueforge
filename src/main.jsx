@@ -41,7 +41,7 @@ import {
 import { buildAutoTuneEq } from './autoTune.js';
 import { createAudioDnaFromState } from './audioDna.js';
 import { buildExportPack, downloadTextFile } from './exportPack.js';
-import { SOUND_MATCH_NEUTRAL_CHOICE, blindMatchRounds, createBlindMatchResult } from './blindMatch.js';
+import { SOUND_MATCH_NEUTRAL_CHOICE, blindMatchRounds, buildSoundMatchInsightState, buildSoundMatchUiState, createBlindMatchResult } from './blindMatch.js';
 import { createMaskingTune, maskingScenarios } from './maskingLab.js';
 import { buildIssueReport, redactDeep, validateIssueReport } from './reportPack.js';
 import { computeSetupReadiness } from './setupReadiness.js';
@@ -151,6 +151,7 @@ import {
   safetyRules
 } from './core/safetyRules.js';
 import { buildScopeBoundarySummary } from './core/scopeGuard.js';
+import { buildGameAudioSettingsCheck } from './core/gameAudioSettingsCheck.js';
 import { buildMicPlan } from './engines/micPlan.js';
 import { honestSpatialModes, spatialTruthWarning } from './engines/spatialPlan.js';
 import { GuidedSetupRunPanel, SetupCommandCenter } from './ui/SetupCommandCenter.jsx';
@@ -4015,9 +4016,15 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
 
   const round = blindMatchRounds[roundIndex];
   const result = createBlindMatchResult(choices, baseEq);
+  const uiState = buildSoundMatchUiState(result);
+  const insightState = buildSoundMatchInsightState(result);
   const complete = result.completedRounds >= result.requiredRounds;
   const applyReady = Boolean(result.applyReadiness?.ready);
-  const repeatClean = result.repeatChecks.filter((check) => check.consistent === true).length;
+  const radarPoints = insightState.preferenceSignals.map((signal, index) => {
+    const angle = (-Math.PI / 2) + (index * Math.PI * 2) / insightState.preferenceSignals.length;
+    const radius = 14 + (signal.value / 100) * 34;
+    return `${Number((50 + Math.cos(angle) * radius).toFixed(1))},${Number((50 + Math.sin(angle) * radius).toFixed(1))}`;
+  }).join(' ');
   const sampleLabel = (sampleKey) => {
     if (sampleKey === SOUND_MATCH_NEUTRAL_CHOICE) return round.neutralLabel;
     return sampleKey === 'a' ? `A: ${round.labelA}` : `B: ${round.labelB}`;
@@ -4072,6 +4079,21 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
     setStatus('Reset. Start the this-or-that rounds again.');
   };
 
+  const retakeRepeatChecks = () => {
+    const repeatIds = insightState.repeatRepairRoundIds.length
+      ? insightState.repeatRepairRoundIds
+      : blindMatchRounds.filter((item) => item.repeatOf).map((item) => item.id);
+    const next = { ...choices };
+    repeatIds.forEach((id) => {
+      delete next[id];
+    });
+    const firstRepeatIndex = blindMatchRounds.findIndex((item) => repeatIds.includes(item.id));
+    setChoices(next);
+    setRoundIndex(firstRepeatIndex >= 0 ? firstRepeatIndex : 0);
+    safeSetJson('cueforge-preference-model-draft', createBlindMatchResult(next, baseEq).preferenceModel);
+    setStatus('Repeat check reopened. Pick what still works now; this is what unlocks direct apply.');
+  };
+
   const save = () => {
     const next = createBlindMatchResult(choices, baseEq);
     safeSetJson('cueforge-blind-match', next);
@@ -4094,7 +4116,22 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
         <p>This is the eye test for your ears. Compare hidden sound pairs, pick what actually works, or mark them too close. CueForge learns a personal curve only when your choices repeat cleanly.</p>
         <div className="dna-hero">
           <strong>{round.label}</strong>
-          <span>Round {roundIndex + 1} of {result.requiredRounds}</span>
+          <span>{uiState.progress.label}</span>
+        </div>
+        <div className="sound-match-progress" aria-label={uiState.progress.label}>
+          <div className="sound-match-progress-bar">
+            <span style={{ width: `${uiState.progress.percent}%` }} />
+          </div>
+          <div className="sound-match-round-dots" aria-label={`Sound Match progress ${uiState.progress.completed} of ${uiState.progress.required}`}>
+            {blindMatchRounds.map((item, index) => (
+              <span
+                className={choices[item.id] ? 'done' : index === roundIndex ? 'current' : ''}
+                key={item.id}
+                title={`${index + 1}. ${item.label}`}
+              />
+            ))}
+          </div>
+          <small>{uiState.primaryHint}</small>
         </div>
         <p className="callout">{round.prompt}</p>
         <div className="blind-actions">
@@ -4105,45 +4142,78 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
           <button className="ghost" onClick={() => choose(SOUND_MATCH_NEUTRAL_CHOICE)}>{round.neutralLabel}</button>
         </div>
         <p>{status}</p>
+        {uiState.lockedActions.length > 0 && (
+          <div className="sound-match-lock-note">
+            {uiState.lockedActions.map((item) => <span key={item}>{item}</span>)}
+          </div>
+        )}
         <div className="live-actions">
           <button className="ghost" onClick={reset}>Reset rounds</button>
-          <button className="ghost" onClick={save} disabled={!complete}><Save size={18} /> Save Sound Match</button>
-          <button className="ghost" onClick={exportResult} disabled={!complete}><Download size={18} /> Export Sound Match</button>
+          {complete && !applyReady && (
+            <button className="ghost" onClick={retakeRepeatChecks}><RotateCcw size={18} /> Retake repeat checks</button>
+          )}
+          <button className="ghost locked-action" onClick={save} disabled={!complete} title={complete ? 'Save Sound Match' : `Complete ${uiState.progress.remaining} more rounds first.`}><Save size={18} /> Save Sound Match</button>
+          <button className="ghost locked-action" onClick={exportResult} disabled={!complete} title={complete ? 'Export Sound Match' : `Complete ${uiState.progress.remaining} more rounds first.`}><Download size={18} /> Export Sound Match</button>
           <button
-            className="primary"
+            className={`primary ${applyReady ? '' : 'locked-action'}`}
             onClick={() => {
               safeSetJson('cueforge-preference-model', result.preferenceModel);
               onSavePreferenceModel?.(result.preferenceModel);
               onApply(result.eq);
             }}
             disabled={!applyReady}
+            title={applyReady ? 'Apply learned EQ' : insightState.statusBody}
           >
-            <CheckCircle2 size={18} /> Apply learned EQ
+            <CheckCircle2 size={18} /> {applyReady ? 'Apply learned EQ' : 'Direct apply locked'}
           </button>
         </div>
       </Panel>
       <Panel title="Learned Curve" icon={SlidersHorizontal}>
-        <Metric label="Confidence" value={`${result.confidence}%`} tone={applyReady ? 'teal' : 'amber'} />
-        <Metric label="Consistency" value={`${repeatClean}/${result.repeatChecks.length || 2}`} tone={applyReady ? 'teal' : 'amber'} />
-        <Metric label="Preference" value={`${Math.round((result.preferenceModel?.confidence || 0) * 100)}%`} tone={complete ? 'teal' : 'amber'} />
-        <p>{result.summary}</p>
-        <div className="data-card">
-          <strong>{result.preferenceSummary}</strong>
-          <span>The simple choices are saved as hidden weights so the profile engine can tune EQ, dynamics, and spatial behavior together.</span>
-          <small>Footsteps {result.preferenceModel.footstepPriority || 0} / Comms {result.preferenceModel.voiceClarity || 0} / Bass {result.preferenceModel.bassImpact || 0} / Masking {result.preferenceModel.maskingControl || 0} / Comfort {result.preferenceModel.comfortPriority || 0}</small>
+        <div className="learned-status-card">
+          <div>
+            <span>{applyReady ? 'Controlled apply ready' : complete ? 'Saved as preview' : 'Still learning'}</span>
+            <strong>{insightState.statusTitle}</strong>
+            <p>{insightState.statusBody}</p>
+          </div>
+          <Metric label="Confidence" value={`${result.confidence}%`} tone={applyReady ? 'teal' : 'amber'} />
         </div>
-        <div className="data-card">
-          <strong>{result.applyReadiness.status === 'ready' ? 'Ready for controlled apply' : 'Preview evidence only'}</strong>
-          <span>{result.applyReadiness.reason}</span>
-          <small>{result.whyChips.join(' / ')}</small>
+        <div className="metric-row selftest-summary">
+          <Metric label="Progress" value={`${result.completedRounds}/${result.requiredRounds}`} tone={complete ? 'teal' : 'amber'} />
+          <Metric label="Repeats" value={uiState.repeatSummary} tone={applyReady ? 'teal' : 'amber'} />
+          <Metric label="Preference" value={`${Math.round((result.preferenceModel?.confidence || 0) * 100)}%`} tone={complete ? 'teal' : 'amber'} />
+        </div>
+        <div className="sound-insight-grid">
+          <div className="preference-radar" aria-label="Sound Match preference map">
+            <svg viewBox="0 0 100 100" role="img">
+              <polygon className="radar-grid" points="50,12 82.9,31 82.9,69 50,88 17.1,69 17.1,31" />
+              <polygon className="radar-grid inner" points="50,28 69.1,39 69.1,61 50,72 30.9,61 30.9,39" />
+              <polygon className="radar-shape" points={radarPoints} />
+              {insightState.preferenceSignals.map((signal, index) => {
+                const angle = (-Math.PI / 2) + (index * Math.PI * 2) / insightState.preferenceSignals.length;
+                const x = Number((50 + Math.cos(angle) * 44).toFixed(1));
+                const y = Number((50 + Math.sin(angle) * 44).toFixed(1));
+                return <circle key={signal.id} cx={x} cy={y} r="2.5" />;
+              })}
+            </svg>
+            <strong>{insightState.plainMeaning}</strong>
+            <span>{insightState.nextStep}</span>
+          </div>
+          <div className="preference-signal-list">
+            {insightState.preferenceSignals.map((signal) => (
+              <div className="preference-signal" key={signal.id}>
+                <div>
+                  <strong>{signal.label}</strong>
+                  <span>{signal.meaning}</span>
+                </div>
+                <em>{signal.value}</em>
+              </div>
+            ))}
+          </div>
         </div>
         <div className="data-card replay-export-status">
-          <strong>Replay-safe export status</strong>
-          <span>{complete ? 'Ready to export choices, repeat checks, preference weights, confidence, and learned EQ.' : 'Complete the standard 9-round flow before the replay-safe export unlocks.'}</span>
-          <small>No raw audio is stored. The export is enough to replay the decision path.</small>
-        </div>
-        <div className="eq-preview">
-          {result.eq.map((gain, index) => <span key={bands[index]} style={{ height: `${45 + gain * 8}%` }} title={`${bands[index]} ${gain}dB`} />)}
+          <strong>{complete ? 'Replay export ready' : 'Replay export locked'}</strong>
+          <span>{insightState.exportStatus}</span>
+          <small>No raw audio is stored. Direct apply is separate from export so shaky evidence cannot silently become a live tune.</small>
         </div>
         <ul className="clean-list">
           {result.picked.length === 0 && <li>No choices yet.</li>}
@@ -5199,6 +5269,7 @@ function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateCh
   const [permissionState, setPermissionState] = useState('prompt');
   const [setupGame, setSetupGame] = useState('Tarkov / Siege / COD');
   const [budgetTier, setBudgetTier] = useState('no-spend');
+  const [gameAudioSettings, setGameAudioSettings] = useState(() => getSavedJson('cueforge-game-audio-settings') || {});
   const [deviceAliases, setDeviceAliases] = useState(() => getSavedJson(DEVICE_ALIAS_KEY) || {});
   const [savedGameProfiles, setSavedGameProfiles] = useState(() => getSavedJson(GAME_PROFILE_KEY) || []);
   const [autoSwitchEnabled, setAutoSwitchEnabled] = useState(() => localStorage.getItem('cueforge-auto-switch-game-profile') !== 'off');
@@ -5222,6 +5293,13 @@ function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateCh
   }), [devices, bridgeReport, permissionState, desktopReady]);
   const autoDetectSummary = useMemo(() => summarizeAutoDetectReport(autoDetectReport), [autoDetectReport]);
   const desktopEvidenceSummary = useMemo(() => buildDesktopEvidenceSummary(autoDetectReport), [autoDetectReport]);
+  const latestSoundMatch = useMemo(() => getSavedJson('cueforge-blind-match'), [status]);
+  const gameAudioCheck = useMemo(() => buildGameAudioSettingsCheck({
+    game: setupGame,
+    settings: gameAudioSettings[setupGame],
+    autoDetectReport,
+    soundMatchResult: latestSoundMatch
+  }), [setupGame, gameAudioSettings, autoDetectReport, latestSoundMatch]);
   const namedDevices = useMemo(() => applyDeviceAliases(devices, deviceAliases), [devices, deviceAliases]);
   const gameProfileOptions = useMemo(() => mergeGameProfiles(savedGameProfiles), [savedGameProfiles]);
   const activeGameMatch = useMemo(() => detectActiveGameProfile({
@@ -5269,6 +5347,20 @@ function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateCh
       game: nextGame,
       sourceProfile: saved?.sourceProfile || 'competitiveFps',
       matchHints: (saved?.matchHints || [nextGame]).join(', ')
+    });
+  };
+
+  const updateGameAudioSetting = (settingId, value) => {
+    setGameAudioSettings((current) => {
+      const next = {
+        ...current,
+        [setupGame]: {
+          ...(current[setupGame] || {}),
+          [settingId]: value
+        }
+      };
+      safeSetJson('cueforge-game-audio-settings', next);
+      return next;
     });
   };
 
@@ -5647,6 +5739,51 @@ function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateCh
         <div className="live-actions">
           <button className="primary" onClick={() => copyText(JSON.stringify(autoDetectReport, null, 2), 'Normalized Auto Detect report')}><Copy size={18} /> Copy v2 report</button>
           <button className="ghost" onClick={() => downloadTextFile('cueforge-auto-detect-report.json', JSON.stringify(autoDetectReport, null, 2))}><Download size={18} /> Export JSON</button>
+        </div>
+      </Panel>
+      <Panel className="wide" title="Game Audio Settings Check" icon={Gamepad2}>
+        <p>Manual, safe game settings proof. CueForge asks the questions that matter and combines your answers with desktop scan and Sound Match. It does not inspect protected game files, memory, or anti-cheat surfaces.</p>
+        <div className="metric-row selftest-summary">
+          <Metric label="Game" value={setupGame} tone="teal" />
+          <Metric label="Checked" value={gameAudioCheck.progress.label} tone={gameAudioCheck.progress.completed >= 5 ? 'teal' : 'amber'} />
+          <Metric label="Confidence" value={`${gameAudioCheck.confidence}%`} tone={gameAudioCheck.status === 'ready' ? 'teal' : gameAudioCheck.status === 'needs-fix' ? 'red' : 'amber'} />
+          <Metric label="Status" value={gameAudioCheck.status.replace('-', ' ')} tone={gameAudioCheck.status === 'ready' ? 'teal' : gameAudioCheck.status === 'needs-fix' ? 'red' : 'amber'} />
+        </div>
+        <div className="game-settings-grid">
+          {gameAudioCheck.questions.map((question) => (
+            <label className="field game-setting-field" key={question.id}>
+              <span>{question.label}</span>
+              {question.id === 'gameOutput' ? (
+                <input
+                  value={gameAudioCheck.settings.gameOutput}
+                  onChange={(event) => updateGameAudioSetting(question.id, event.target.value)}
+                  placeholder="Example: SteelSeries Sonar - Gaming or USB DAC Headphones"
+                />
+              ) : (
+                <select
+                  value={gameAudioCheck.settings[question.id]}
+                  onChange={(event) => updateGameAudioSetting(question.id, event.target.value)}
+                >
+                  {question.options.map((option) => <option key={option} value={option}>{option.replaceAll('-', ' ')}</option>)}
+                </select>
+              )}
+              <small>{question.helper}</small>
+            </label>
+          ))}
+        </div>
+        <div className="copy-grid">
+          <div className="data-card">
+            <strong>What this changes</strong>
+            <span>{gameAudioCheck.summary}</span>
+            <small>Use this before applying a learned EQ, especially if HRTF, Sonar, Discord, OBS, or a virtual mixer is involved.</small>
+          </div>
+          <div className="data-card">
+            <strong>Warnings</strong>
+            <ul className="clean-list">
+              {gameAudioCheck.warnings.length === 0 && <li>No game setting warning from current answers.</li>}
+              {gameAudioCheck.warnings.map((warning) => <li key={warning.id}>{warning.title}: {warning.fix}</li>)}
+            </ul>
+          </div>
         </div>
       </Panel>
       <Panel className="wide" title="Setup Intelligence" icon={BrainCircuit}>

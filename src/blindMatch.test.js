@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   SOUND_MATCH_STANDARD_ROUNDS,
+  buildSoundMatchInsightState,
+  buildSoundMatchUiState,
   blindMatchRounds,
   createBlindMatchResult
 } from './blindMatch.js';
@@ -50,6 +52,21 @@ describe('blind match tuner', () => {
     expect(result.confidence).toBeLessThan(80);
     expect(result.applyReadiness.ready).toBe(false);
     expect(result.applyReadiness.status).toBe('preview');
+
+    const ui = buildSoundMatchUiState(result);
+    expect(ui.progress).toMatchObject({
+      completed: 5,
+      required: SOUND_MATCH_STANDARD_ROUNDS,
+      remaining: 4,
+      percent: 56,
+      label: '5 of 9 rounds complete'
+    });
+    expect(ui.lockedActions).toEqual([
+      'Save unlocks after 4 more rounds.',
+      'Export unlocks after 4 more rounds.',
+      'Apply stays locked until 9 rounds are complete and repeat checks are clean.'
+    ]);
+    expect(ui.primaryHint).toBe('Keep choosing. 4 rounds left before save/export unlock.');
   });
 
   it('treats too-close choices as neutral evidence instead of forced preference', () => {
@@ -84,5 +101,38 @@ describe('blind match tuner', () => {
     expect(contradictory.repeatChecks.every((check) => check.consistent === false)).toBe(true);
     expect(contradictory.confidence).toBeLessThan(consistent.confidence);
     expect(contradictory.applyReadiness.ready).toBe(false);
+
+    const insight = buildSoundMatchInsightState(contradictory);
+    expect(insight.statusTitle).toBe('Direct apply locked');
+    expect(insight.statusBody).toContain('hidden repeat');
+    expect(insight.nextStep).toContain('Retake');
+    expect(insight.repeatRepairRoundIds).toEqual([
+      'repeat_footstep_vs_comfort',
+      'repeat_bass_vs_comms'
+    ]);
+    expect(insight.preferenceSignals.map((signal) => signal.label)).toEqual([
+      'Cue clarity',
+      'Comms cut',
+      'Game body',
+      'Center lock',
+      'Masking guard',
+      'Comfort'
+    ]);
+  });
+
+  it('marks Sound Match ready only when progress and repeat checks are clean', () => {
+    const result = createBlindMatchResult(consistentStandardChoices(), Array(10).fill(0));
+    const ui = buildSoundMatchUiState(result);
+
+    expect(ui.progress).toMatchObject({
+      completed: 9,
+      required: SOUND_MATCH_STANDARD_ROUNDS,
+      remaining: 0,
+      percent: 100,
+      label: '9 of 9 rounds complete'
+    });
+    expect(ui.repeatSummary).toBe('2 repeat checks clean');
+    expect(ui.primaryHint).toBe('Ready: save, export, or apply the learned EQ after review.');
+    expect(ui.lockedActions).toEqual([]);
   });
 });
