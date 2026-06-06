@@ -46,11 +46,25 @@ const stepIcons = {
 
 const guidedCheckIcons = {
   'device-scan': Search,
+  'desktop-link': Download,
+  'game-settings': Gamepad2,
   'output-picked': Headphones,
   'mic-picked': Mic,
   'route-conflicts': ShieldCheck,
   'starter-tune': Sparkles,
-  'sound-match': Radio
+  'sound-match': Radio,
+  'safe-recommendation': BrainCircuit,
+  'backup-undo': Download,
+  'play-test-report': CheckCircle2
+};
+
+const proofAnswerIcons = {
+  found: Search,
+  wrong: Bug,
+  changed: Sparkles,
+  why: BrainCircuit,
+  confidence: Gauge,
+  undo: Download
 };
 
 export function SetupCommandCenter({
@@ -187,8 +201,9 @@ export function SetupCommandCenter({
   );
 }
 
-export function GuidedSetupRunPanel({ guided, onAction, compact = false }) {
+export function GuidedSetupRunPanel({ guided, onAction, onUndo, compact = false }) {
   if (!guided) return null;
+  const DecisionIcon = guided.decision?.status === 'ready' ? CheckCircle2 : guided.decision?.status === 'do-not-apply' ? ShieldCheck : Gauge;
 
   return (
     <div className={`guided-setup-run ${compact ? 'compact' : ''}`} aria-label="Auto Setup guided result">
@@ -202,6 +217,31 @@ export function GuidedSetupRunPanel({ guided, onAction, compact = false }) {
           <Sparkles size={18} /> {guided.nextAction.label}
         </button>
       </div>
+      {guided.decision && (
+        <div className={`guided-decision decision-${guided.decision.status}`}>
+          <DecisionIcon size={20} />
+          <div>
+            <span>Final setup answer</span>
+            <strong>{guided.decision.title}</strong>
+            <small>{guided.decision.detail}</small>
+          </div>
+          <em>{guided.decision.confidence || 0}%</em>
+        </div>
+      )}
+      {guided.proofAnswers?.length > 0 && (
+        <div className="guided-proof-grid" aria-label="Auto Setup proof answers">
+          {guided.proofAnswers.map((answer) => {
+            const Icon = proofAnswerIcons[answer.id] || CheckCircle2;
+            return (
+              <button className={`guided-proof proof-${answer.status}`} key={answer.id} onClick={() => onAction?.({ route: answer.route })}>
+                <span><Icon size={15} /> {answer.label}</span>
+                <strong>{answer.value}</strong>
+                <small>{answer.detail}</small>
+              </button>
+            );
+          })}
+        </div>
+      )}
       <div className="guided-check-grid">
         {guided.checks.map((check) => {
           const Icon = guidedCheckIcons[check.id] || CheckCircle2;
@@ -214,6 +254,11 @@ export function GuidedSetupRunPanel({ guided, onAction, compact = false }) {
           );
         })}
       </div>
+      {onUndo && guided.proofAnswers?.find((answer) => answer.id === 'undo')?.status === 'done' && (
+        <button className="ghost guided-undo-action" onClick={onUndo}>
+          <Download size={18} /> Restore Auto Setup backup
+        </button>
+      )}
     </div>
   );
 }

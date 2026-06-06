@@ -1302,6 +1302,7 @@ function App() {
         {active === 'detect' && <AutoDetect
           currentEq={eq}
           onApplyProfile={applySetupIntelligenceProfile}
+          onRestoreEq={applyAutoTune}
           onAutoSwitchProfile={autoSwitchDetectedGameProfile}
           onOpen={setActive}
           onUpdateChain={({ devices, bridgeReport, autoDetectReport, desktopReady }) => {
@@ -5260,7 +5261,7 @@ function avg(values, start, end) {
   return count ? total / count : 0;
 }
 
-function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateChain, onOpen }) {
+function AutoDetect({ currentEq, onApplyProfile, onRestoreEq, onAutoSwitchProfile, onUpdateChain, onOpen }) {
   const [devices, setDevices] = useState([]);
   const [status, setStatus] = useState('Auto scan starts when this page opens.');
   const [bridgeReport, setBridgeReport] = useState(null);
@@ -5270,6 +5271,7 @@ function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateCh
   const [setupGame, setSetupGame] = useState('Tarkov / Siege / COD');
   const [budgetTier, setBudgetTier] = useState('no-spend');
   const [gameAudioSettings, setGameAudioSettings] = useState(() => getSavedJson('cueforge-game-audio-settings') || {});
+  const [setupUndoBackup, setSetupUndoBackup] = useState(() => getSavedJson('cueforge-setup-undo-backup'));
   const [deviceAliases, setDeviceAliases] = useState(() => getSavedJson(DEVICE_ALIAS_KEY) || {});
   const [savedGameProfiles, setSavedGameProfiles] = useState(() => getSavedJson(GAME_PROFILE_KEY) || []);
   const [autoSwitchEnabled, setAutoSwitchEnabled] = useState(() => localStorage.getItem('cueforge-auto-switch-game-profile') !== 'off');
@@ -5472,13 +5474,17 @@ function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateCh
         }
       },
       readiness: {
-        gates: [{ id: 'blind-match', ready: false }]
+        gates: [{ id: 'blind-match', ready: Boolean(latestSoundMatch?.applyReadiness?.ready) }]
       }
     }, {
       currentEq,
-      desktopScanAvailable: desktopReady
+      desktopScanAvailable: desktopReady,
+      gameAudioCheck,
+      soundMatchResult: latestSoundMatch,
+      setupUndoBackup,
+      backupReady: Boolean(setupUndoBackup?.eq?.length)
     });
-  }, [autoDetectReport, setupIntelligence, currentEq, desktopReady]);
+  }, [autoDetectReport, setupIntelligence, currentEq, desktopReady, gameAudioCheck, latestSoundMatch, setupUndoBackup]);
   const setupIntelligenceText = useMemo(() => buildSetupIntelligenceText(setupIntelligence), [setupIntelligence]);
   const redditTesterAsk = useMemo(
     () => buildRedditSafeDraft({
@@ -5573,11 +5579,30 @@ function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateCh
   };
 
   const applySuggestedProfile = () => {
+    const backup = {
+      schema: 'cueforge.setup-undo-backup.v1',
+      createdAt: new Date().toISOString(),
+      game: setupGame,
+      sourceProfile: setupIntelligence.gamePlan.sourceProfile,
+      eq: currentEq,
+      reason: 'Saved before Auto Setup starter profile apply.'
+    };
+    safeSetJson('cueforge-setup-undo-backup', backup);
+    setSetupUndoBackup(backup);
     onApplyProfile?.({
       game: setupGame,
       sourceProfile: setupIntelligence.gamePlan.sourceProfile
     });
-    setStatus(`${setupIntelligence.gamePlan.profile} applied inside CueForge. Review EQ Studio before exporting APO.`);
+    setStatus(`${setupIntelligence.gamePlan.profile} applied inside CueForge. Backup saved so Undo can restore the previous EQ.`);
+  };
+
+  const restoreSetupBackup = () => {
+    if (!setupUndoBackup?.eq?.length) {
+      setStatus('No Auto Setup backup is saved yet. Apply a starter tune first, then Undo becomes available.');
+      return;
+    }
+    onRestoreEq?.(setupUndoBackup.eq);
+    setStatus(`Restored Auto Setup backup from ${setupUndoBackup.createdAt || 'the last starter tune apply'}.`);
   };
 
   const runGuidedAutoSetupAction = (action = guidedAutoSetup.nextAction) => {
@@ -5598,7 +5623,7 @@ function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateCh
 
   return (
     <section className="grid two">
-      <GuidedSetupRunPanel guided={guidedAutoSetup} onAction={runGuidedAutoSetupAction} />
+      <GuidedSetupRunPanel guided={guidedAutoSetup} onAction={runGuidedAutoSetupAction} onUndo={restoreSetupBackup} />
       <Panel title="Connected Device Scanner" icon={Search}>
         <p>{status}</p>
         <button className="primary" onClick={() => scanDevices()}><Search size={18} /> Scan audio devices</button>

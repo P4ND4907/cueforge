@@ -158,11 +158,15 @@ describe('command center flow', () => {
     expect(guided.checks.map((check) => check.label)).toEqual([
       'Device scan',
       'Desktop link',
+      'Game settings',
       'Output picked',
       'Mic picked',
       'Route conflicts',
       'Starter tune',
-      'Sound Match'
+      'Sound Match',
+      'Safe recommendation',
+      'Backup + undo',
+      'Play test report'
     ]);
     expect(guided.checks.every((check) => check.status === 'todo')).toBe(true);
   });
@@ -290,5 +294,94 @@ describe('command center flow', () => {
     expect(checks['starter-tune'].status).toBe('done');
     expect(checks['desktop-link'].status).toBe('done');
     expect(checks['sound-match'].status).toBe('next');
+  });
+
+  it('turns Auto Setup into a proof loop that blocks unsafe apply with a plain final decision', () => {
+    const profileEq = [-1, -0.5, 0, 0.5, 1, 1.5, 2, 2, 0.5, -0.5];
+    const guided = buildGuidedSetupRun({
+      chainGraph: {
+        summary: { inputs: 1, outputs: 1, companions: 3, applyTargets: 1 }
+      },
+      autoDetectReport: {
+        source: 'browser+desktop_bridge',
+        confidence: { score: 86, tier: 'strong', requiresExplicitScan: false },
+        risks: [{ title: 'Double spatial risk', severity: 'high' }]
+      },
+      conflicts: {
+        summary: { high: 1 },
+        chainHealth: {
+          warnings: ['Double spatial risk detected. Pick game HRTF or Sonar, not both.'],
+          blockers: ['High-risk spatial stack needs review.']
+        }
+      },
+      profile: {
+        recommendation: {
+          id: 'competitive-fps-desktop',
+          label: 'Competitive FPS',
+          eq: profileEq,
+          explanation: 'Recommended from scan evidence and game focus.'
+        }
+      },
+      readiness: {
+        score: 72,
+        gates: [{ id: 'blind-match', ready: false }]
+      },
+      applyPath: {
+        mode: 'review-and-apply',
+        reason: 'Apply target detected; user still reviews before native/apply steps.'
+      }
+    }, {
+      currentEq: profileEq,
+      desktopScanAvailable: true,
+      gameAudioCheck: {
+        status: 'needs-fix',
+        confidence: 52,
+        summary: 'Pick one spatial layer before applying.',
+        warnings: [{ title: 'Game HRTF may be stacked with another spatial layer' }]
+      },
+      soundMatchResult: {
+        completedRounds: 9,
+        requiredRounds: 9,
+        contradictions: 2,
+        applyReadiness: { ready: false }
+      },
+      backupReady: false
+    });
+
+    expect(guided.decision).toMatchObject({
+      status: 'do-not-apply',
+      title: 'Do not apply yet'
+    });
+    expect(guided.nextAction).toMatchObject({
+      id: 'fix-route',
+      label: 'Fix Route Conflict'
+    });
+    expect(guided.checks.map((check) => check.label)).toEqual([
+      'Device scan',
+      'Desktop link',
+      'Game settings',
+      'Output picked',
+      'Mic picked',
+      'Route conflicts',
+      'Starter tune',
+      'Sound Match',
+      'Safe recommendation',
+      'Backup + undo',
+      'Play test report'
+    ]);
+    expect(guided.proofAnswers.map((answer) => answer.id)).toEqual([
+      'found',
+      'wrong',
+      'changed',
+      'why',
+      'confidence',
+      'undo'
+    ]);
+    expect(guided.proofAnswers.find((answer) => answer.id === 'found').value).toBe('1 output / 1 input / 3 layers');
+    expect(guided.proofAnswers.find((answer) => answer.id === 'wrong').detail).toContain('Double spatial risk');
+    expect(guided.proofAnswers.find((answer) => answer.id === 'changed').value).toBe('Competitive FPS');
+    expect(guided.proofAnswers.find((answer) => answer.id === 'why').detail).toMatch(/desktop scan.*game settings.*Sound Match/i);
+    expect(guided.proofAnswers.find((answer) => answer.id === 'confidence').value).toBe('72/100');
+    expect(guided.proofAnswers.find((answer) => answer.id === 'undo').detail).toMatch(/backup.*undo/i);
   });
 });

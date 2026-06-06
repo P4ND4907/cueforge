@@ -71,6 +71,248 @@ function setupCheck(id, label, status, detail, route = 'detect') {
   return { id, label, status, detail, route };
 }
 
+function gameSettingsStatus(context = {}) {
+  const check = context.gameAudioCheck;
+  if (!check) {
+    return {
+      status: 'todo',
+      detail: 'Answer HRTF, spatial, output device, dynamic range, and voice/chat split before applying.',
+      route: 'detect'
+    };
+  }
+  if (check.status === 'ready') {
+    return {
+      status: 'done',
+      detail: check.summary || 'Game audio settings are checked against the scan and Sound Match.',
+      route: 'detect'
+    };
+  }
+  if (check.status === 'needs-fix') {
+    return {
+      status: 'blocked',
+      detail: check.summary || check.warnings?.[0]?.title || 'Game settings need a safe fix before apply.',
+      route: 'detect'
+    };
+  }
+  return {
+    status: 'next',
+    detail: check.summary || 'Finish the game settings check before applying a learned EQ.',
+    route: 'detect'
+  };
+}
+
+function soundMatchStatus(state = {}, context = {}, starterTuneApplied = false) {
+  const result = context.soundMatchResult || state.stateV2?.calibration?.blindMatch || null;
+  const doneByGate = gateReady(state.readiness, 'blind-match') || result?.complete === true;
+  const completed = Number(result?.completedRounds || 0);
+  const required = Number(result?.requiredRounds || 9);
+  const contradictions = Number(result?.contradictions || 0);
+  const ready = Boolean(result?.applyReadiness?.ready || doneByGate);
+
+  if (ready && contradictions === 0) {
+    return {
+      ready: true,
+      status: 'done',
+      detail: 'Sound Match is complete and repeat checks are clean.'
+    };
+  }
+  if (completed >= required && contradictions > 0) {
+    return {
+      ready: false,
+      status: 'blocked',
+      detail: `${contradictions} hidden repeat contradiction${contradictions === 1 ? '' : 's'} blocked direct apply.`
+    };
+  }
+  if (starterTuneApplied) {
+    return {
+      ready: false,
+      status: 'next',
+      detail: 'Run hidden A/B rounds so the curve follows what the player actually hears.'
+    };
+  }
+  return {
+    ready: false,
+    status: 'todo',
+    detail: 'Do this after the starter tune is active.'
+  };
+}
+
+function applyBackupStatus(state = {}, context = {}) {
+  const applyMode = state.applyPath?.mode || 'export-only';
+  const explicitApply = state.applyPath?.explicit === true || Boolean(state.applyPath);
+  const backupReady = Boolean(context.backupReady || context.setupUndoBackup?.eq?.length || context.setupUndoBackup?.profileId);
+  if (backupReady) {
+    return {
+      ready: true,
+      status: 'done',
+      detail: 'Backup is saved. Undo can restore the previous CueForge EQ/profile.',
+      value: 'Backup ready'
+    };
+  }
+  if (explicitApply || applyMode === 'review-and-apply') {
+    return {
+      ready: false,
+      status: 'next',
+      detail: 'Create a backup before apply so undo is visible and reviewable.',
+      value: 'Backup needed'
+    };
+  }
+  if (!state.applyPath && !state.stateV2?.exports?.apoConfig && !state.stateV2?.exports?.engineManifest) {
+    return {
+      ready: false,
+      status: 'todo',
+      detail: 'Backup and undo appear before direct apply.',
+      value: 'Not started'
+    };
+  }
+  return {
+    ready: false,
+    status: 'warn',
+    detail: 'Export-only mode is safe, but direct apply needs a backup and undo path first.',
+    value: 'Export only'
+  };
+}
+
+function playTestStatus(context = {}) {
+  if (context.lastTrial?.feedback?.score || context.lastReport) {
+    return {
+      status: 'done',
+      detail: 'A match report or player trial is saved.'
+    };
+  }
+  return {
+    status: 'todo',
+    detail: 'Play one real match and report footsteps, comms, bass masking, and clipping.'
+  };
+}
+
+function buildAutoSetupDecision({
+  state,
+  context,
+  hasScanEvidence,
+  hasStarterTune,
+  starterTuneApplied,
+  highConflicts,
+  gameStatus,
+  soundStatus,
+  backupStatus
+}) {
+  const score = Number(state.readiness?.score || state.autoDetectReport?.confidence?.score || 0);
+  const gameNeedsFix = context.gameAudioCheck?.status === 'needs-fix';
+  const soundBlocked = soundStatus.status === 'blocked';
+
+  if (!hasScanEvidence) {
+    return {
+      status: 'needs-scan',
+      title: 'Scan first',
+      detail: 'CueForge needs device and route evidence before it can recommend a safe setup.',
+      confidence: score,
+      tone: 'amber'
+    };
+  }
+  if (highConflicts > 0 || gameNeedsFix || soundBlocked) {
+    return {
+      status: 'do-not-apply',
+      title: 'Do not apply yet',
+      detail: highConflicts > 0
+        ? 'A route or enhancer conflict is still high risk. Fix it before applying any learned EQ.'
+        : gameNeedsFix
+          ? 'Game audio settings conflict with the scan. Fix the setting warning before applying.'
+          : soundStatus.detail,
+      confidence: score,
+      tone: 'red'
+    };
+  }
+  if (!hasStarterTune || !starterTuneApplied || gameStatus.status !== 'done' || !soundStatus.ready || !backupStatus.ready) {
+    return {
+      status: 'needs-fix',
+      title: 'Needs one more proof step',
+      detail: 'The setup is close, but CueForge still needs the next guided proof step before direct apply.',
+      confidence: score,
+      tone: 'amber'
+    };
+  }
+  return {
+    status: 'ready',
+    title: 'Your setup is ready',
+    detail: 'Scan, game settings, Sound Match, recommendation, backup, and undo proof are aligned.',
+    confidence: score,
+    tone: 'teal'
+  };
+}
+
+function buildProofAnswers(state = {}, context = {}, {
+  gameStatus,
+  soundStatus,
+  backupStatus,
+  starterTuneApplied
+} = {}) {
+  const conflict = conflictSummary(state);
+  const companions = companionLabels(state);
+  const score = Number(state.readiness?.score || state.autoDetectReport?.confidence?.score || 0);
+  const source = state.autoDetectReport?.source || '';
+  const scanLabel = source.includes('desktop') || source.includes('bridge') ? 'desktop scan' : source ? 'browser scan' : 'no scan';
+  const gameLabel = context.gameAudioCheck ? `game settings ${context.gameAudioCheck.status}` : 'game settings unanswered';
+  const soundLabel = soundStatus.ready ? 'Sound Match clean' : soundStatus.status === 'blocked' ? 'Sound Match blocked' : 'Sound Match pending';
+  const changedDetail = starterTuneApplied
+    ? `${profileLabel(state)} is staged in CueForge from the current recommendation.`
+    : `${profileLabel(state)} is recommended but not applied yet.`;
+
+  return [
+    {
+      id: 'found',
+      label: 'What it found',
+      value: chainLabel(state),
+      detail: `${evidenceMode(state)}. Layers: ${compactList(companions)}.`,
+      route: 'detect',
+      status: state.autoDetectReport?.source ? 'done' : 'todo'
+    },
+    {
+      id: 'wrong',
+      label: 'What looks wrong',
+      value: conflict.value,
+      detail: [
+        conflict.detail,
+        context.gameAudioCheck?.warnings?.[0]?.title
+      ].filter(Boolean).join(' '),
+      route: 'detect',
+      status: conflict.blockers ? 'blocked' : conflict.warnings || gameStatus.status === 'blocked' ? 'warn' : 'done'
+    },
+    {
+      id: 'changed',
+      label: 'What changed',
+      value: profileLabel(state),
+      detail: changedDetail,
+      route: 'dashboard',
+      status: starterTuneApplied ? 'done' : 'next'
+    },
+    {
+      id: 'why',
+      label: 'Why',
+      value: `${scanLabel} + game settings + Sound Match`,
+      detail: `${scanLabel} evidence, ${gameLabel}, and ${soundLabel} decide whether the recommendation can be applied.`,
+      route: 'detect',
+      status: soundStatus.ready && gameStatus.status === 'done' ? 'done' : 'next'
+    },
+    {
+      id: 'confidence',
+      label: 'How sure it is',
+      value: `${score}/100`,
+      detail: `Auto Detect ${state.autoDetectReport?.confidence?.score ?? 0}%, game check ${context.gameAudioCheck?.confidence ?? 0}%, Sound Match ${soundStatus.ready ? 'clean' : soundStatus.status}.`,
+      route: 'selftest',
+      status: score >= 80 ? 'done' : score >= 55 ? 'warn' : 'todo'
+    },
+    {
+      id: 'undo',
+      label: 'How to undo',
+      value: backupStatus.value,
+      detail: `${backupStatus.detail} Keep backup and undo visible before direct apply.`,
+      route: 'export',
+      status: backupStatus.status
+    }
+  ];
+}
+
 export function buildGuidedSetupRun(state = {}, context = {}) {
   const counts = deviceCounts(state);
   const hasOutput = counts.outputs > 0;
@@ -83,7 +325,11 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
   const recommendationEq = profileEq(state);
   const hasStarterTune = profileReady(state) && recommendationEq.length > 0;
   const starterTuneApplied = context.starterTuneApplied === true || eqMatches(recommendationEq, context.currentEq);
-  const soundMatchDone = gateReady(state.readiness, 'blind-match') || state.stateV2?.calibration?.blindMatch?.complete === true;
+  const gameStatus = gameSettingsStatus(context);
+  const soundStatus = soundMatchStatus(state, context, starterTuneApplied);
+  const backupStatus = applyBackupStatus(state, context);
+  const matchStatus = playTestStatus(context);
+  const safeRecommendationStatus = hasStarterTune && highConflicts === 0 && gameStatus.status !== 'blocked' ? 'done' : hasStarterTune ? 'warn' : 'todo';
 
   const checks = [
     setupCheck(
@@ -108,6 +354,13 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
             : 'Browser evidence is partial. Import or run a Windows bridge report when possible.'
           : 'Desktop link appears after the first scan.',
       'desktop-scan'
+    ),
+    setupCheck(
+      'game-settings',
+      'Game settings',
+      gameStatus.status,
+      gameStatus.detail,
+      gameStatus.route
     ),
     setupCheck(
       'output-picked',
@@ -146,13 +399,32 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
     setupCheck(
       'sound-match',
       'Sound Match',
-      soundMatchDone ? 'done' : starterTuneApplied ? 'next' : 'todo',
-      soundMatchDone
-        ? 'Personal sound preference proof is saved.'
-        : starterTuneApplied
-          ? 'Run hidden A/B rounds so the curve follows what you actually hear.'
-          : 'Do this after the starter tune is active.',
+      soundStatus.status,
+      soundStatus.detail,
       'blindmatch'
+    ),
+    setupCheck(
+      'safe-recommendation',
+      'Safe recommendation',
+      safeRecommendationStatus,
+      hasStarterTune
+        ? `${profileLabel(state)} is the current recommendation.`
+        : 'One safe recommendation appears after scan, game settings, and profile selection.',
+      'dashboard'
+    ),
+    setupCheck(
+      'backup-undo',
+      'Backup + undo',
+      backupStatus.status,
+      backupStatus.detail,
+      'export'
+    ),
+    setupCheck(
+      'play-test-report',
+      'Play test report',
+      matchStatus.status,
+      matchStatus.detail,
+      'trial'
     )
   ];
 
@@ -184,6 +456,13 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
       route: 'detect',
       detail: 'Clear high-risk routing conflicts before applying a tune.'
     };
+  } else if (gameStatus.status === 'blocked' || gameStatus.status === 'next') {
+    nextAction = {
+      id: 'game-settings',
+      label: gameStatus.status === 'blocked' ? 'Fix Game Settings' : 'Check Game Settings',
+      route: 'detect',
+      detail: gameStatus.detail
+    };
   } else if (hasScanEvidence && hasStarterTune && !starterTuneApplied) {
     nextAction = {
       id: 'starter-tune',
@@ -191,14 +470,21 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
       route: 'starter-tune',
       detail: 'Apply the safe profile to EQ Studio, then prove it with Sound Match or a play test.'
     };
-  } else if (starterTuneApplied && !soundMatchDone) {
+  } else if (starterTuneApplied && !soundStatus.ready) {
     nextAction = {
       id: 'sound-match',
-      label: 'Run Sound Match',
+      label: soundStatus.status === 'blocked' ? 'Retake Sound Match' : 'Run Sound Match',
       route: 'blindmatch',
-      detail: 'Use the hidden sound pairs to personalize the starter curve.'
+      detail: soundStatus.detail
     };
-  } else if (soundMatchDone) {
+  } else if (!backupStatus.ready && soundStatus.ready) {
+    nextAction = {
+      id: 'backup-undo',
+      label: 'Save Backup + Undo',
+      route: 'export',
+      detail: backupStatus.detail
+    };
+  } else if (soundStatus.ready) {
     nextAction = {
       id: 'play-test',
       label: 'Play Test',
@@ -207,11 +493,31 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
     };
   }
 
+  const decision = buildAutoSetupDecision({
+    state,
+    context,
+    hasScanEvidence,
+    hasStarterTune,
+    starterTuneApplied,
+    highConflicts,
+    gameStatus,
+    soundStatus,
+    backupStatus
+  });
+  const proofAnswers = buildProofAnswers(state, context, {
+    gameStatus,
+    soundStatus,
+    backupStatus,
+    starterTuneApplied
+  });
+
   return {
     title: hasScanEvidence ? 'Setup scanned' : 'Start Auto Setup',
     summary: hasScanEvidence
-      ? 'CueForge checked the audio chain and picked the next safe step.'
+      ? `${decision.title}: ${decision.detail}`
       : 'Run one scan first. Then CueForge turns the result into a setup checklist and one next button.',
+    decision,
+    proofAnswers,
     nextAction,
     checks
   };
