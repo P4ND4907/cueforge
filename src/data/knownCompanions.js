@@ -10,6 +10,7 @@ export const knownCompanions = [
   { key: 'realtekAudio', name: 'Realtek Audio Console', type: 'driver-console', group: 'driver-console', risk: 'low' },
   { key: 'nvidiaBroadcast', name: 'NVIDIA Broadcast', type: 'mic-processing', group: 'mic-processing', risk: 'medium' },
   { key: 'discord', name: 'Discord', type: 'communication-app', group: 'communication-app', risk: 'low' },
+  { key: 'obs', name: 'OBS Studio', type: 'communication-app', group: 'stream-app', risk: 'low' },
   { key: 'elgatoWaveLink', name: 'Elgato Wave Link', type: 'mixer', group: 'virtual-mixer', risk: 'medium' },
   { key: 'logitechGHub', name: 'Logitech G HUB', type: 'device-suite', group: 'device-suite', risk: 'medium' },
   { key: 'corsairIcue', name: 'Corsair iCUE', type: 'device-suite', group: 'device-suite', risk: 'medium' },

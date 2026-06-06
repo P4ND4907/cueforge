@@ -8,6 +8,11 @@ const companionMap = {
   voicemeeter: ['voicemeeter'],
   vbCable: ['vbCable'],
   discord: ['discord'],
+  obs: ['obs'],
+  fxSound: ['fxSound'],
+  nvidiaBroadcast: ['nvidiaBroadcast'],
+  voicemod: ['voicemod'],
+  elgatoWaveLink: ['elgatoWaveLink'],
   dolby: ['dolbyAccess', 'dtsSoundUnbound'],
   windowsSonic: ['windowsSonic'],
   nahimic: ['nahimic'],
@@ -21,6 +26,11 @@ const companionLabels = {
   voicemeeter: 'Voicemeeter',
   vbCable: 'VB-CABLE',
   discord: 'Discord',
+  obs: 'OBS Studio',
+  fxSound: 'FxSound',
+  nvidiaBroadcast: 'NVIDIA Broadcast',
+  voicemod: 'Voicemod',
+  elgatoWaveLink: 'Elgato Wave Link',
   dolby: 'Dolby / DTS',
   windowsSonic: 'Windows Sonic',
   nahimic: 'Nahimic',
@@ -413,6 +423,107 @@ function buildRecommendations({ companions, risks, hasBridge, outputs, inputs })
   }
 
   return [...new Set(recommendations)].slice(0, 6);
+}
+
+function companionDetected(report, keys) {
+  return keys
+    .map((key) => report?.companions?.[key])
+    .filter((item) => item?.detected === true)
+    .map((item) => {
+      if (item.label === 'Sonar' && /steelseries/i.test(item.evidence || '')) return 'SteelSeries Sonar';
+      return item.label;
+    });
+}
+
+function card(id, label, items, foundDetail, missingDetail) {
+  const cleanItems = [...new Set(items.filter(Boolean))];
+  return {
+    id,
+    label,
+    status: cleanItems.length ? 'found' : 'not-found',
+    detail: cleanItems.length ? foundDetail : missingDetail,
+    items: cleanItems
+  };
+}
+
+export function buildDesktopEvidenceSummary(report = {}) {
+  const hasDesktop = report.source?.includes('desktop') || report.mode === 'desktop-assisted';
+  const deviceCount = (
+    (report.devices?.windowsRenderDevices?.length || 0) +
+    (report.devices?.windowsCaptureDevices?.length || 0)
+  );
+  const virtualMixerItems = companionDetected(report, ['sonar', 'voicemeeter', 'vbCable']);
+  const voiceStreamItems = companionDetected(report, ['discord', 'obs']);
+  const boosterItems = companionDetected(report, ['dolby', 'windowsSonic', 'nahimic', 'razer']);
+  const micProcessingItems = companionDetected(report, ['nvidiaBroadcast'])
+    .concat(report.companions?.voicemod?.detected === true ? ['Voicemod'] : [])
+    .concat(report.companions?.elgatoWaveLink?.detected === true ? ['Elgato Wave Link'] : []);
+
+  const cards = [
+    card(
+      'device-names',
+      'Device names',
+      deviceCount ? [`${deviceCount} Windows device names`] : [],
+      'Windows device names loaded from the desktop scan.',
+      hasDesktop ? 'Desktop scan loaded, but no Windows endpoint names were found.' : 'Run the Windows scan to reveal real endpoint names.'
+    ),
+    card(
+      'apo-eq',
+      'APO / EQ',
+      companionDetected(report, ['equalizerApo', 'peace']),
+      'System EQ tools are detected. Review target endpoint before applying config text.',
+      'No Equalizer APO or Peace install detected yet.'
+    ),
+    card(
+      'virtual-mixers',
+      'Virtual mixers',
+      virtualMixerItems,
+      'Virtual mixer or cable routing is present. Map game, chat, stream, and mic paths before tuning.',
+      'No Sonar, Voicemeeter, or VB-CABLE layer detected.'
+    ),
+    card(
+      'voice-stream',
+      'Voice / stream apps',
+      voiceStreamItems,
+      'Communication or stream apps are visible. Confirm their selected input/output devices.',
+      'No Discord or OBS evidence detected in the current scan.'
+    ),
+    card(
+      'boosters',
+      'Boosters / spatial',
+      [...companionDetected(report, ['fxSound']), ...boosterItems],
+      'Output boosters or spatial tools may change the sound before CueForge tuning.',
+      'No output booster or spatial layer detected.'
+    ),
+    card(
+      'mic-processing',
+      'Mic processing',
+      micProcessingItems,
+      'Mic processors may gate, suppress, or delay Discord/game chat voice.',
+      'No mic processing layer detected.'
+    )
+  ];
+
+  const nextBestQuestions = [];
+  if (virtualMixerItems.length || report.companions?.equalizerApo?.detected) {
+    nextBestQuestions.push('Which endpoint does the game actually use?');
+  }
+  if (voiceStreamItems.includes('OBS Studio')) {
+    nextBestQuestions.push('Is OBS listening to the same Stream Mix that CueForge is limiting?');
+  }
+  if (voiceStreamItems.includes('Discord')) {
+    nextBestQuestions.push('Does Discord use the intended mic and chat output?');
+  }
+  if (!nextBestQuestions.length) {
+    nextBestQuestions.push('Which headset, IEM, DAC, and mic should this profile be saved for?');
+  }
+
+  return {
+    schema: 'cueforge.desktop-evidence-summary.v1',
+    status: hasDesktop ? 'desktop-linked' : 'browser-only',
+    cards,
+    nextBestQuestions: nextBestQuestions.slice(0, 4)
+  };
 }
 
 export function buildAutoDetectReport({

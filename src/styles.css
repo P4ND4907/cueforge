@@ -2055,6 +2055,30 @@ p {
   color: #b7c9cc;
 }
 
+.desktop-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+
+.desktop-evidence-card {
+  min-height: 126px;
+  border-color: rgba(246,177,61,0.2);
+}
+
+.desktop-evidence-card.found {
+  border-color: rgba(18,201,154,0.28);
+  background: rgba(18,201,154,0.08);
+}
+
+.desktop-evidence-card.not-found {
+  background: rgba(255,255,255,0.035);
+}
+
+.desktop-evidence-card small {
+  overflow-wrap: anywhere;
+}
+
 .simple-step svg,
 .mode-choice svg {
   color: #12c99a;

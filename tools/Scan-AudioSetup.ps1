@@ -251,6 +251,11 @@ $discord = Test-AudioTool -Name "Discord" `
   -RegistryPatterns @("Discord") `
   -ProcessPatterns @("Discord", "DiscordCanary", "DiscordPTB")
 
+$obs = Test-AudioTool -Name "OBS Studio" `
+  -Paths @("$env:ProgramFiles\obs-studio\bin\64bit\obs64.exe", "${env:ProgramFiles(x86)}\obs-studio\bin\64bit\obs64.exe") `
+  -RegistryPatterns @("OBS Studio", "obs-studio") `
+  -ProcessPatterns @("obs64", "obs32", "obs")
+
 $runningGames = Get-RunningGameMatches
 $defaults = Get-SoundMapperDefaults
 $appSessions = Get-AppSessionHints
@@ -282,6 +287,7 @@ $report = [ordered]@{
     realtekAudio = $realtekAudio
     nvidiaBroadcast = $nvidiaBroadcast
     discord = $discord
+    obs = $obs
     elgatoWaveLink = $elgatoWaveLink
     logitechGHub = $logitechGHub
     corsairIcue = $corsairIcue

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildAutoDetectReport, summarizeAutoDetectReport } from '../core/autoDetectReport.js';
+import { buildAutoDetectReport, buildDesktopEvidenceSummary, summarizeAutoDetectReport } from '../core/autoDetectReport.js';
 import { browserDeviceFixture, desktopBridgeFixture } from '../data/testFixtures.js';
 
 describe('auto detect report v2', () => {
@@ -97,5 +97,59 @@ describe('auto detect report v2', () => {
     ]));
     expect(summary.risks).toContain('Sonar may be routing game audio through a virtual output');
     expect(summary.recommendations).toContain('Confirm which endpoint game audio uses before applying APO.');
+  });
+
+  it('explains desktop scan evidence across APO, mixers, chat apps, boosters, and device names', () => {
+    const report = buildAutoDetectReport({
+      bridgeReport: {
+        ...desktopBridgeFixture,
+        tools: {
+          ...desktopBridgeFixture.tools,
+          obs: { installed: true, displayName: 'OBS Studio', source: 'process' },
+          fxSound: { installed: true, displayName: 'FxSound' },
+          nvidiaBroadcast: { installed: true, displayName: 'NVIDIA Broadcast' },
+          voicemeeter: { installed: true, displayName: 'Voicemeeter' },
+          vbCable: { installed: true, displayName: 'VB-CABLE' }
+        },
+        mediaDevices: [
+          { Name: 'SteelSeries Sonar - Gaming' },
+          { Name: 'CABLE Output (VB-Audio Virtual Cable)' }
+        ],
+        sessions: [
+          { app: 'Discord', processName: 'Discord', active: true },
+          { app: 'OBS Studio', processName: 'obs64', active: true }
+        ],
+        matches: {
+          ...desktopBridgeFixture.matches,
+          virtualRouting: true
+        }
+      },
+      desktopReady: true,
+      detectedAt: '2026-05-23T00:00:00.000Z'
+    });
+    const desktop = buildDesktopEvidenceSummary(report);
+
+    expect(report.companions.obs).toMatchObject({ detected: true, label: 'OBS Studio' });
+    expect(desktop.cards.map((card) => card.id)).toEqual([
+      'device-names',
+      'apo-eq',
+      'virtual-mixers',
+      'voice-stream',
+      'boosters',
+      'mic-processing'
+    ]);
+    expect(desktop.cards.find((card) => card.id === 'device-names')).toMatchObject({
+      status: 'found',
+      detail: expect.stringContaining('Windows device names')
+    });
+    expect(desktop.cards.find((card) => card.id === 'apo-eq')?.items).toEqual(expect.arrayContaining(['Equalizer APO', 'Peace']));
+    expect(desktop.cards.find((card) => card.id === 'virtual-mixers')?.items).toEqual(expect.arrayContaining(['SteelSeries Sonar', 'Voicemeeter', 'VB-CABLE']));
+    expect(desktop.cards.find((card) => card.id === 'voice-stream')?.items).toEqual(expect.arrayContaining(['Discord', 'OBS Studio']));
+    expect(desktop.cards.find((card) => card.id === 'boosters')?.items).toEqual(expect.arrayContaining(['FxSound']));
+    expect(desktop.cards.find((card) => card.id === 'mic-processing')?.items).toEqual(expect.arrayContaining(['NVIDIA Broadcast']));
+    expect(desktop.nextBestQuestions).toEqual(expect.arrayContaining([
+      'Which endpoint does the game actually use?',
+      'Is OBS listening to the same Stream Mix that CueForge is limiting?'
+    ]));
   });
 });

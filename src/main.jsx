@@ -141,7 +141,7 @@ import {
   setupJourneyActionLabel
 } from './core/setupJourneyFlow.js';
 import { publishSetupAssessmentSnapshot } from './core/setupAssessmentSnapshot.js';
-import { buildAutoDetectReport, summarizeAutoDetectReport } from './core/autoDetectReport.js';
+import { buildAutoDetectReport, buildDesktopEvidenceSummary, summarizeAutoDetectReport } from './core/autoDetectReport.js';
 import { summarizeReleasePack } from './core/exportSchema.js';
 import { summarizeNativeEngineRoadmap } from './data/nativeEngineRoadmap.js';
 import {
@@ -5221,6 +5221,7 @@ function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateCh
     desktopReady
   }), [devices, bridgeReport, permissionState, desktopReady]);
   const autoDetectSummary = useMemo(() => summarizeAutoDetectReport(autoDetectReport), [autoDetectReport]);
+  const desktopEvidenceSummary = useMemo(() => buildDesktopEvidenceSummary(autoDetectReport), [autoDetectReport]);
   const namedDevices = useMemo(() => applyDeviceAliases(devices, deviceAliases), [devices, deviceAliases]);
   const gameProfileOptions = useMemo(() => mergeGameProfiles(savedGameProfiles), [savedGameProfiles]);
   const activeGameMatch = useMemo(() => detectActiveGameProfile({
@@ -5597,6 +5598,21 @@ function AutoDetect({ currentEq, onApplyProfile, onAutoSwitchProfile, onUpdateCh
           <strong>{autoDetectReport.confidence.requiresExplicitScan ? 'Browser-only partial evidence' : 'Native high-confidence evidence'}</strong>
           <span>{autoDetectReport.confidence.reasons.join(', ') || 'CueForge is waiting on device evidence.'}</span>
           <small>{autoDetectReport.confidence.requiresExplicitScan ? 'Run the desktop bridge scan or import the Windows report before calling the chain fully detected.' : 'Windows bridge data is loaded, so endpoint, companion, and route warnings are stronger.'}</small>
+        </div>
+        <div className="desktop-evidence-grid">
+          {desktopEvidenceSummary.cards.map((card) => (
+            <div className={`data-card desktop-evidence-card ${card.status}`} key={card.id}>
+              <strong>{card.label}</strong>
+              <span>{card.detail}</span>
+              <small>{card.items.length ? card.items.join(' / ') : 'Waiting on Windows scan evidence.'}</small>
+            </div>
+          ))}
+        </div>
+        <div className="data-card">
+          <strong>Next questions CueForge needs answered</strong>
+          <ul className="clean-list">
+            {desktopEvidenceSummary.nextBestQuestions.map((question) => <li key={question}>{question}</li>)}
+          </ul>
         </div>
         <div className="copy-grid">
           <div className="data-card">
