@@ -31,19 +31,35 @@ function completeHearingModel({ repeatedAnswers = [] } = {}) {
   return buildHearingModelV2({ results, repeatedAnswers });
 }
 
+function soundMatchPreviewChoices() {
+  return {
+    footstep_vs_comfort: 'a',
+    bass_vs_comms: 'b',
+    wide_vs_center: 'b',
+    detail_vs_fatigue: 'b',
+    direction_vs_body: 'a',
+    masking_cut_vs_cue_boost: 'a',
+    voice_separation_vs_game_body: 'a',
+    repeat_footstep_vs_comfort: 'b',
+    repeat_bass_vs_comms: 'a'
+  };
+}
+
+function soundMatchStandardChoices() {
+  return {
+    ...soundMatchPreviewChoices(),
+    distant_cues_vs_comfort: 'a',
+    comms_under_chaos_vs_bass: 'b',
+    space_scan_vs_center_lock: 'b',
+    air_detail_vs_long_session: 'b',
+    repeat_space_vs_center: 'a',
+    repeat_detail_vs_fatigue: 'a'
+  };
+}
+
 describe('personalization lab inputs', () => {
   it('turns hearing, blind match, masking, and player trial into one conservative lab contract', () => {
-    const blindMatch = createBlindMatchResult({
-      footstep_vs_comfort: 'a',
-      bass_vs_comms: 'b',
-      wide_vs_center: 'b',
-      detail_vs_fatigue: 'b',
-      direction_vs_body: 'a',
-      masking_cut_vs_cue_boost: 'a',
-      voice_separation_vs_game_body: 'a',
-      repeat_footstep_vs_comfort: 'b',
-      repeat_bass_vs_comms: 'a'
-    }, Array(10).fill(0));
+    const blindMatch = createBlindMatchResult(soundMatchStandardChoices(), Array(10).fill(0));
     const maskingLab = createMaskingTune(Array(10).fill(0), 'footsteps-under-explosion');
     const playerTrial = buildTesterPacket({
       feedback: {
@@ -124,7 +140,20 @@ describe('personalization lab inputs', () => {
     expect(lab.inputs.preference.present).toBe(true);
     expect(lab.inputs.preference.ready).toBe(false);
     expect(lab.inputs.preference.influenceWeight).toBeLessThan(0.18);
-    expect(lab.readiness.blockers).toContain('Sound Match needs the standard 9-round consistency check before strong personalization.');
+    expect(lab.readiness.blockers).toContain('Sound Match needs the 15-round adjustment check before strong personalization.');
+  });
+
+  it('treats nine-round Sound Match as exportable preview evidence, not strong personalization', () => {
+    const blindMatch = createBlindMatchResult(soundMatchPreviewChoices(), Array(10).fill(0));
+    const lab = buildPersonalizationLabInputs({ blindMatch });
+
+    expect(blindMatch.completedRounds).toBe(9);
+    expect(blindMatch.previewReady).toBe(true);
+    expect(blindMatch.applyReadiness.ready).toBe(false);
+    expect(lab.inputs.preference.present).toBe(true);
+    expect(lab.inputs.preference.ready).toBe(false);
+    expect(lab.inputs.preference.influenceWeight).toBeLessThan(0.2);
+    expect(lab.inputs.preference.recommendations).toContain('Finish the 15-round Sound Match adjustment check before strong personalization.');
   });
 
   it('refuses medical and audiometry style claims', () => {

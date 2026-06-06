@@ -11,12 +11,14 @@ describe('profile sharing', () => {
     const invite = buildAppInviteText({
       appUrl: 'https://example.test/app',
       releaseUrl: 'https://example.test/download',
+      desktopUrl: 'https://example.test/CueForge.exe',
       discordUrl: 'https://discord.test'
     });
 
     expect(invite).toContain('Try CueForge with me.');
     expect(invite).toContain('Open app: https://example.test/app');
     expect(invite).toContain('Release notes: https://example.test/download');
+    expect(invite).toContain('Desktop alpha: https://example.test/CueForge.exe');
     expect(invite).not.toContain('Download:');
     expect(invite).not.toMatch(/password|token|phone|DOB/i);
   });

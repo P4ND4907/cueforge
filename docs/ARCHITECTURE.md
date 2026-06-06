@@ -16,7 +16,7 @@ The web build should not write Windows audio settings, install drivers, or chang
 
 ## State Contract
 
-CueForge v0.2.0-alpha.3 uses `cueforgeStateV2` as the shared app brain. Native engine manifests, APO exports, profile recommendations, Discord/community feedback packs, Report Lab exports, Audio DNA, and release/setup packs should all reference this same state through `src/core/cueforgeState.js` and `src/core/stateAdapters.js`.
+CueForge v0.2.0-alpha.4 uses `cueforgeStateV2` as the shared app brain. Native engine manifests, APO exports, profile recommendations, Discord/community feedback packs, Report Lab exports, Audio DNA, and release/setup packs should all reference this same state through `src/core/cueforgeState.js` and `src/core/stateAdapters.js`.
 
 See `docs/STATE_V2_CONTRACT.md` before adding any feature that reads setup, device, profile, readiness, or export data.
 
@@ -257,7 +257,7 @@ Sound Match is now the player-facing layer for preference learning. The standard
 
 Those answers produce a hidden model in `src/core/preferenceModel.js` with bounded weights for footstep priority, voice clarity, bass impact, masking control, cue boost, voice separation, spatial width, center focus, detail, comfort, treble, bass, and fatigue risk. The saved model lives in `cueforgeStateV2.calibration.preferenceModel` and can also be attached to the Sound Match result.
 
-`src/blindMatch.js` keeps the legacy module name for compatibility, but the exported result schema is `cueforge.sound-match-result.v2`. Result confidence now depends on completed rounds, neutral choices, hidden repeat consistency, and contradiction count. Five-round runs stay preview-only; the standard 9-round pass is required before direct apply readiness.
+`src/blindMatch.js` keeps the legacy module name for compatibility, but the exported result schema is `cueforge.sound-match-result.v2`. Result confidence now depends on completed rounds, neutral choices, hidden repeat consistency, and contradiction count. Five-round runs stay draft-only; the 9-round checkpoint is enough for save/export preview evidence; the 15-round adjustment pass with 4 clean repeat checks is required before direct apply readiness.
 
 The profile engine consumes that model before export/apply recommendations. It adjusts EQ, dynamics, and spatial planning together instead of treating Sound Match as a separate lab. Any future tuning feature that learns user preference should update this same model or translate into this shape before reaching `src/core/profileEngine.js`.
 

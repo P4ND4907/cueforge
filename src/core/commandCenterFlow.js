@@ -105,7 +105,7 @@ function soundMatchStatus(state = {}, context = {}, starterTuneApplied = false) 
   const result = context.soundMatchResult || state.stateV2?.calibration?.blindMatch || null;
   const doneByGate = gateReady(state.readiness, 'blind-match') || result?.complete === true;
   const completed = Number(result?.completedRounds || 0);
-  const required = Number(result?.requiredRounds || 9);
+  const required = Number(result?.requiredRounds || 15);
   const contradictions = Number(result?.contradictions || 0);
   const ready = Boolean(result?.applyReadiness?.ready || doneByGate);
 

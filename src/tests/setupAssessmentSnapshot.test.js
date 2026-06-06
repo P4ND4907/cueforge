@@ -54,7 +54,7 @@ describe('setup assessment snapshot', () => {
 
     expect(snapshot).toMatchObject({
       schema: 'cueforge.setup-assessment-snapshot.v1',
-      version: '0.2.0-alpha.3',
+      version: '0.2.0-alpha.4',
       source: 'unit-test',
       privacy: {
         rawAudioIncluded: false,
@@ -94,7 +94,7 @@ describe('setup assessment snapshot', () => {
   it('rejects snapshots that leak raw evidence or lose the state anchor', () => {
     const bad = {
       schema: 'cueforge.setup-assessment-snapshot.v1',
-      version: '0.2.0-alpha.3',
+      version: '0.2.0-alpha.4',
       stateAnchor: { statePresent: false },
       privacy: {
         rawAudioIncluded: true,

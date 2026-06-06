@@ -9,6 +9,13 @@ Use this with the Chrome tab group: Discord, Reddit Inbox, and X / Follow.
 3. Confirm the account is the correct one before changing anything.
 4. Do not paste passwords, recovery codes, private screenshots, or raw account details into any public box.
 5. Do not mass-post the same link into communities.
+6. Use the web app as the main link and the desktop alpha only when the post asks for Windows scan/local setup testers.
+
+Current links:
+
+- Web app: `https://p4nd4907.github.io/cueforge/`
+- Release notes: `https://github.com/P4ND4907/cueforge/releases/tag/v0.2.0-alpha.4`
+- Windows desktop alpha: `https://github.com/P4ND4907/cueforge/releases/download/v0.2.0-alpha.4/CueForge-0.2.0-alpha.4-x64.exe`
 
 ## X / Follow Tab
 
@@ -86,7 +93,8 @@ Next GitHub polish:
 
 1. Merge the current CueForge PR after review.
 2. Make sure the README first screen uses the same positioning.
-3. Keep the GitHub Pages web app as the public CTA. Do not use releases/latest as a public download CTA until desktop proof gates pass.
+3. Keep the GitHub Pages web app as the public CTA.
+4. Use the tagged `v0.2.0-alpha.4` desktop asset only for Windows testers who need local scan proof. Call it unsigned alpha, not a finished installer.
 
 ## Professional Pass
 

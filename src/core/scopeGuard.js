@@ -111,7 +111,7 @@ export function evaluateScopeBoundary({ feature = '', description = '', claims =
 export function buildScopeBoundarySummary() {
   return {
     schema: 'cueforge.scope-boundary.v1',
-    version: '0.2.0-alpha.3',
+    version: '0.2.0-alpha.4',
     status: 'trusted-alpha-boundary',
     allowedNow: [
       'browser/device detection',

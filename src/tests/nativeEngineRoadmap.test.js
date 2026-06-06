@@ -28,7 +28,7 @@ describe('native engine roadmap', () => {
   });
 
   it('makes v0.3 the next move after v0.2 and keeps it sandbox-only', () => {
-    const next = nextNativeEngineMilestone('0.2.0-alpha.3');
+    const next = nextNativeEngineMilestone('0.2.0-alpha.4');
 
     expect(next.version).toBe('v0.3.0');
     expect(next.deliverables).toContain('miniaudio prototype');

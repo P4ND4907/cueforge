@@ -1,6 +1,6 @@
 # CueForge Implementation Backlog
 
-Status: v0.2.0-alpha.3 planning contract.
+Status: v0.2.0-alpha.4 planning contract.
 
 This file mirrors `src/data/implementationBacklog.js`. The code version is the source of truth because tests can validate it.
 

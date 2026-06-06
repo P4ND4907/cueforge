@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  SOUND_MATCH_PREVIEW_ROUNDS,
   SOUND_MATCH_STANDARD_ROUNDS,
   buildSoundMatchInsightState,
   buildSoundMatchUiState,
@@ -7,7 +8,7 @@ import {
   createBlindMatchResult
 } from './blindMatch.js';
 
-function consistentStandardChoices() {
+function previewCheckpointChoices() {
   return {
     footstep_vs_comfort: 'a',
     bass_vs_comms: 'b',
@@ -21,6 +22,18 @@ function consistentStandardChoices() {
   };
 }
 
+function consistentStandardChoices() {
+  return {
+    ...previewCheckpointChoices(),
+    distant_cues_vs_comfort: 'a',
+    comms_under_chaos_vs_bass: 'b',
+    space_scan_vs_center_lock: 'b',
+    air_detail_vs_long_session: 'b',
+    repeat_space_vs_center: 'a',
+    repeat_detail_vs_fatigue: 'a'
+  };
+}
+
 describe('blind match tuner', () => {
   it('learns a personal eq curve from blind choices', () => {
     const choices = consistentStandardChoices();
@@ -31,7 +44,7 @@ describe('blind match tuner', () => {
     expect(result.eq).toHaveLength(10);
     expect(result.confidence).toBeGreaterThan(80);
     expect(result.applyReadiness.ready).toBe(true);
-    expect(result.repeatChecks).toHaveLength(2);
+    expect(result.repeatChecks).toHaveLength(4);
     expect(result.contradictions).toBe(0);
     expect(result.summary).toContain('Learned from');
     expect(result.preferenceModel.roundsCompleted).toBe(SOUND_MATCH_STANDARD_ROUNDS);
@@ -57,16 +70,46 @@ describe('blind match tuner', () => {
     expect(ui.progress).toMatchObject({
       completed: 5,
       required: SOUND_MATCH_STANDARD_ROUNDS,
-      remaining: 4,
-      percent: 56,
-      label: '5 of 9 rounds complete'
+      remaining: 10,
+      percent: 33,
+      label: '5 of 15 rounds complete'
     });
     expect(ui.lockedActions).toEqual([
       'Save unlocks after 4 more rounds.',
       'Export unlocks after 4 more rounds.',
-      'Apply stays locked until 9 rounds are complete and repeat checks are clean.'
+      'Apply stays locked until 15 rounds are complete and 4 repeat checks are clean.'
     ]);
-    expect(ui.primaryHint).toBe('Keep choosing. 4 rounds left before save/export unlock.');
+    expect(ui.primaryHint).toBe('Keep choosing. 4 rounds left before the quick preview unlocks.');
+  });
+
+  it('treats the nine-round checkpoint as preview evidence, not adjustment-grade apply', () => {
+    const result = createBlindMatchResult(previewCheckpointChoices(), Array(10).fill(0));
+    const ui = buildSoundMatchUiState(result);
+    const insight = buildSoundMatchInsightState(result);
+
+    expect(result.completedRounds).toBe(SOUND_MATCH_PREVIEW_ROUNDS);
+    expect(result.requiredRounds).toBe(SOUND_MATCH_STANDARD_ROUNDS);
+    expect(result.previewReady).toBe(true);
+    expect(result.applyReadiness.ready).toBe(false);
+    expect(result.applyReadiness.reason).toContain('15-round');
+    expect(ui.progress).toMatchObject({
+      completed: 9,
+      required: SOUND_MATCH_STANDARD_ROUNDS,
+      remaining: 6,
+      percent: 60,
+      label: '9 of 15 rounds complete'
+    });
+    expect(ui.preview).toMatchObject({
+      ready: true,
+      required: SOUND_MATCH_PREVIEW_ROUNDS,
+      remaining: 0
+    });
+    expect(ui.primaryHint).toBe('Quick preview built. Continue 6 rounds for adjustment-grade confidence.');
+    expect(ui.lockedActions).toEqual([
+      'Apply stays locked until 15 rounds are complete and 4 repeat checks are clean.'
+    ]);
+    expect(insight.statusTitle).toBe('Preview curve ready');
+    expect(insight.exportStatus).toContain('9-round preview');
   });
 
   it('treats too-close choices as neutral evidence instead of forced preference', () => {
@@ -79,7 +122,13 @@ describe('blind match tuner', () => {
       masking_cut_vs_cue_boost: 'a',
       voice_separation_vs_game_body: 'neutral',
       repeat_footstep_vs_comfort: 'b',
-      repeat_bass_vs_comms: 'neutral'
+      repeat_bass_vs_comms: 'neutral',
+      distant_cues_vs_comfort: 'a',
+      comms_under_chaos_vs_bass: 'b',
+      space_scan_vs_center_lock: 'b',
+      air_detail_vs_long_session: 'b',
+      repeat_space_vs_center: 'a',
+      repeat_detail_vs_fatigue: 'a'
     }, Array(10).fill(0));
 
     expect(result.completedRounds).toBe(SOUND_MATCH_STANDARD_ROUNDS);
@@ -98,7 +147,7 @@ describe('blind match tuner', () => {
     }, Array(10).fill(0));
 
     expect(contradictory.contradictions).toBe(2);
-    expect(contradictory.repeatChecks.every((check) => check.consistent === false)).toBe(true);
+    expect(contradictory.repeatChecks.filter((check) => check.consistent === false)).toHaveLength(2);
     expect(contradictory.confidence).toBeLessThan(consistent.confidence);
     expect(contradictory.applyReadiness.ready).toBe(false);
 
@@ -125,13 +174,13 @@ describe('blind match tuner', () => {
     const ui = buildSoundMatchUiState(result);
 
     expect(ui.progress).toMatchObject({
-      completed: 9,
+      completed: 15,
       required: SOUND_MATCH_STANDARD_ROUNDS,
       remaining: 0,
       percent: 100,
-      label: '9 of 9 rounds complete'
+      label: '15 of 15 rounds complete'
     });
-    expect(ui.repeatSummary).toBe('2 repeat checks clean');
+    expect(ui.repeatSummary).toBe('4 repeat checks clean');
     expect(ui.primaryHint).toBe('Ready: save, export, or apply the learned EQ after review.');
     expect(ui.lockedActions).toEqual([]);
   });

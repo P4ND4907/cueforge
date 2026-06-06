@@ -166,7 +166,7 @@ export function getNativeEngineMilestone(version) {
   return nativeEngineRoadmap.find((milestone) => milestone.version === version) || null;
 }
 
-export function nextNativeEngineMilestone(currentVersion = '0.2.0-alpha.3') {
+export function nextNativeEngineMilestone(currentVersion = '0.2.0-alpha.4') {
   if (/^v?0\.2\./.test(currentVersion) || currentVersion.includes('0.2.0')) {
     return nativeEngineRoadmap[0];
   }
@@ -177,7 +177,7 @@ export function nextNativeEngineMilestone(currentVersion = '0.2.0-alpha.3') {
   return nativeEngineRoadmap[currentIndex + 1] || nativeEngineRoadmap[nativeEngineRoadmap.length - 1];
 }
 
-export function summarizeNativeEngineRoadmap({ currentVersion = '0.2.0-alpha.3', proof = {} } = {}) {
+export function summarizeNativeEngineRoadmap({ currentVersion = '0.2.0-alpha.4', proof = {} } = {}) {
   const next = nextNativeEngineMilestone(currentVersion);
   const totalGates = nativeEngineRoadmap.reduce((total, milestone) => total + milestone.proofGates.length, 0);
   const completedGates = Object.values(proof).filter(Boolean).length;

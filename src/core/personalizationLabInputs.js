@@ -1,7 +1,7 @@
 import { safetyRules } from './safetyRules.js';
 
 const MEDICAL_LANGUAGE = /\b(audiogram|audiologist|audiology|audiometry|diagnos(?:e|is|tic)|hearing loss|medical|clinical|tinnitus treatment|cure)\b/i;
-const SOUND_MATCH_STANDARD_ROUNDS = 9;
+const SOUND_MATCH_STANDARD_ROUNDS = 15;
 
 function clamp(value, min = 0, max = 1) {
   return Math.max(min, Math.min(max, Number(value) || 0));
@@ -109,7 +109,7 @@ function buildPreferenceInput({ blindMatch = null, preferenceModel = null } = {}
   const previewMultiplier = evidenceReady ? 1 : 0.55;
   const contradictionMultiplier = contradictions ? 0.4 : 1;
   const neutralMultiplier = noDifferenceCount >= 3 ? 0.75 : 1;
-  const influenceWeight = clamp(rounds / 12, 0, 1)
+  const influenceWeight = clamp(rounds / SOUND_MATCH_STANDARD_ROUNDS, 0, 1)
     * Math.max(0.28, modelConfidence)
     * 0.34
     * previewMultiplier
@@ -134,7 +134,7 @@ function buildPreferenceInput({ blindMatch = null, preferenceModel = null } = {}
     recommendations: evidenceReady
       ? ['Blend preference choices conservatively into EQ, dynamics, and spatial planning.']
       : rounds
-        ? ['Finish the standard Sound Match repeat check before strong personalization.']
+        ? [`Finish the ${SOUND_MATCH_STANDARD_ROUNDS}-round Sound Match adjustment check before strong personalization.`]
       : ['Run Sound Match before treating preferences as learned.']
   };
 }
@@ -223,7 +223,7 @@ export function buildPersonalizationLabInputs({
     playbackSafety.safe ? null : 'Playback safety is not proven for hearing-style tests.',
     hearing.responseConsistency?.retestRecommended ? 'Hearing answers need a repeat check before strong personalization.' : null,
     preference.present && !preference.ready && preference.roundsCompleted > 0
-      ? 'Sound Match needs the standard 9-round consistency check before strong personalization.'
+      ? `Sound Match needs the ${SOUND_MATCH_STANDARD_ROUNDS}-round adjustment check before strong personalization.`
       : null
   ]);
   const nextActions = dedupe([

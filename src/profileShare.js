@@ -31,13 +31,14 @@ export function createAudioProfileShare({
   }, cueforgeState, STATE_CONSUMERS.profileRecommendation);
 }
 
-export function buildAppInviteText({ appUrl = '', releaseUrl = '', discordUrl = '' } = {}) {
+export function buildAppInviteText({ appUrl = '', releaseUrl = '', desktopUrl = '', discordUrl = '' } = {}) {
   return [
     'Try CueForge with me.',
     '',
     'It is a local-first FPS audio tool for setup checks, mic testing, EQ profiles, and real match feedback.',
     appUrl ? `Open app: ${appUrl}` : '',
     releaseUrl ? `Release notes: ${releaseUrl}` : '',
+    desktopUrl ? `Desktop alpha: ${desktopUrl}` : '',
     discordUrl ? `Discord: ${discordUrl}` : '',
     '',
     'Run Auto Setup, Auto Tune, then one real match. If it gets worse, send that too.'

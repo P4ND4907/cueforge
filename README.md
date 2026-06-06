@@ -43,9 +43,10 @@ Use GitHub issues for feedback:
 
 - Web app: https://p4nd4907.github.io/cueforge/
 - Feedback thread: https://github.com/P4ND4907/cueforge/issues/1
-- Release notes: https://github.com/P4ND4907/cueforge/releases/latest
+- Release notes: https://github.com/P4ND4907/cueforge/releases/tag/v0.2.0-alpha.4
+- Windows desktop alpha: https://github.com/P4ND4907/cueforge/releases/download/v0.2.0-alpha.4/CueForge-0.2.0-alpha.4-x64.exe
 
-Desktop downloads are paused as the public call-to-action while CueForge finishes the next proof gates. Send testers to the web app first, then collect feedback through GitHub or Discord. Desktop package notes stay in the release history for maintainers, but public posts should not ask players to download an alpha build.
+Send most testers to the web app first. Use the Windows desktop alpha when a tester needs local Windows scan proof, desktop Auto Setup, or the native bridge path. The desktop build is unsigned and should be described as a tester build, not a finished installer.
 
 ## Public Roadmap
 
@@ -69,7 +70,7 @@ The roadmap breaks CueForge into five workstreams: player testing, audio engine,
 
 ## Developer Architecture
 
-CueForge v0.2.0-alpha.3 now has a formal foundation layer for the next desktop/native work:
+CueForge v0.2.0-alpha.4 now has a formal foundation layer for the next desktop/native work:
 
 - `src/app/routes` holds route-level app surfaces such as Command Center, Auto Detect, Self Test, Hearing, Blind Match, Masking Lab, Report Lab, and Player Trial.
 - `src/core/chain`, `src/core/scoring`, `src/core/manifests`, and `src/core/exports` expose stable adapters around the current chain graph, readiness, native manifest, and report/export policy.
@@ -136,7 +137,7 @@ The product should stay honest: no hidden driver changes, no sketchy anti-cheat 
 - Sound-scene intelligence guardrails that separate post-mix inference from true game-world metadata.
 - IEM/headphone checks for left, right, center, and sweep testing.
 - Auto Calibration wizard for output target, game focus, treble sensitivity, bass preference, footstep focus, and mic boom/noise.
-- Sound Match, the nine-round this-or-that ear test with too-close choices, hidden repeat checks, and a personal preference model for EQ, dynamics, and spatial recommendations.
+- Sound Match, the this-or-that ear test with a 9-round preview checkpoint, a 15-round adjustment path, too-close choices, hidden repeat checks, and a personal preference model for EQ, dynamics, and spatial recommendations.
 - Tactical Masking Lab that stress-tests footsteps, comms, and IEM sharpness against masking scenarios.
 - Report Lab for real player testing: create redacted issue reports, import them later, and replay the exact EQ/game/source/mic state that caused a problem.
 - EQ Studio with 10-band editing, local source profiles, and Equalizer APO export.
@@ -228,7 +229,7 @@ The generated bridge report is local machine data. It is ignored by Git and excl
 5. Use `Left`, `Right`, `Center`, and `Sweep` to check channel balance and harsh peaks.
 6. Open `Hearing Model`, keep volume low, test left/right ears, and export the hearing profile.
 7. Open `Calibration`, generate autotune, and apply it to EQ Studio.
-8. Open `Sound Match`, run the standard 9-round check, and apply the learned curve only when repeat consistency is clean.
+8. Open `Sound Match`, run the 9-round preview, then continue to the 15-round adjustment check before applying the learned curve.
 9. Open `Masking Lab`, pick a scenario, and apply the anti-masking curve.
 10. Open `Player Trial`, run the guided match script, fill the ratings, and export the tester packet.
 11. Open `Beta Check-in`, record a short opt-in evidence clip if the tester agrees, and export the local evidence JSON.

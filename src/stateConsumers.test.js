@@ -63,7 +63,7 @@ describe('state-backed feature consumers', () => {
     expect(setupPack.files['cueforge-state-v2.json']).toContain('recommendedProfile');
     expect(community.stateAnchor.consumer).toBe('discord-feedback-pack');
     expect(report.stateAnchor.consumer).toBe('report-lab');
-    expect(report.reproducibleState.cueforgeStateV2.version).toBe('0.2.0-alpha.3');
+    expect(report.reproducibleState.cueforgeStateV2.version).toBe('0.2.0-alpha.4');
     expect(report.reproducibleState.cueforgeStateV2.devices.outputType).toBe('dac');
   });
 });

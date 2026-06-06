@@ -98,7 +98,7 @@ export function SetupCommandCenter({
     <section className={`setup-command-center ${compact ? 'compact' : ''}`}>
       <div className="command-hero">
         <div>
-          <span>CueForge v0.2.0-alpha.3</span>
+          <span>CueForge v0.2.0-alpha.4</span>
           <h2>Setup Command Center</h2>
           <p>Audio chain verifier + personal sound engine. Prove the setup, learn the player, warn on conflicts, map the game intent, and export safely.</p>
         </div>

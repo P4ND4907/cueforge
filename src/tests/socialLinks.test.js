@@ -23,12 +23,15 @@ describe('owned social links', () => {
     expect(`${appSource}\n${audit}`).not.toMatch(/@?PAND4907|x\.com\/PAND4907/i);
   });
 
-  it('keeps public release notes current without exposing alpha download CTAs', () => {
+  it('keeps public release links current with a tag-specific desktop alpha', () => {
     const source = readFileSync(join(root, 'src/main.jsx'), 'utf8');
 
-    expect(source).toContain("const latestReleaseUrl = 'https://github.com/P4ND4907/cueforge/releases/latest'");
+    expect(source).toContain("const releaseTag = 'v0.2.0-alpha.4'");
+    expect(source).toContain('https://github.com/P4ND4907/cueforge/releases/tag/');
+    expect(source).toContain('https://github.com/P4ND4907/cueforge/releases/download/');
+    expect(source).toContain('CueForge-0.2.0-alpha.4-x64.exe');
     expect(source).toContain('notes: latestReleaseUrl');
-    expect(source).not.toMatch(/publicRelease\.download|Download Alpha|Download alpha/);
+    expect(source).toContain('desktop: desktopAlphaUrl');
     expect(source).not.toMatch(/releases\/(?:download|tag)\/v0\.1\.0-alpha\.2/);
   });
 
@@ -42,8 +45,9 @@ describe('owned social links', () => {
       .join('\n');
 
     expect(bundle).toContain('https://x.com/CueForge907');
-    expect(bundle).toContain('https://github.com/P4ND4907/cueforge/releases/latest');
-    expect(bundle).not.toMatch(/Download Alpha|Download alpha|Download CueForge alpha|Download:/);
+    expect(bundle).toContain('https://github.com/P4ND4907/cueforge/releases/tag/v0.2.0-alpha.4');
+    expect(bundle).toContain('CueForge-0.2.0-alpha.4-x64.exe');
+    expect(bundle).not.toMatch(/Download:/);
     expect(bundle).not.toMatch(/@?PAND4907|x\.com\/PAND4907/i);
     expect(bundle).not.toMatch(/releases\/(?:download|tag)\/v0\.1\.0-alpha\.2/);
   });

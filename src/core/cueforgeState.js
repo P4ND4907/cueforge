@@ -11,7 +11,7 @@ import { buildPersonalizationLabInputs } from './personalizationLabInputs.js';
 import { buildSetupAssessmentSnapshot } from './setupAssessmentSnapshot.js';
 
 export const cueforgeStateV2 = {
-  version: '0.2.0-alpha.3',
+  version: '0.2.0-alpha.4',
   player: {
     testerId: null,
     experienceLevel: 'unknown',
@@ -311,7 +311,7 @@ export function buildCueForgeState({
     calibration: {
       hearingModel: hearing,
       repeatedHearingAnswers,
-      blindMatch: blindMatch || (preferenceModel?.roundsCompleted ? { complete: preferenceModel.roundsCompleted >= 9, preferenceModel } : null),
+      blindMatch: blindMatch || (preferenceModel?.roundsCompleted ? { complete: preferenceModel.roundsCompleted >= 15, preferenceModel } : null),
       preferenceModel: preferenceModel || blindMatch?.preferenceModel || null,
       maskingLab,
       playerTrial
@@ -346,7 +346,7 @@ export function buildCueForgeState({
 
   return {
     schema: 'cueforge.state.v2',
-    version: '0.2.0-alpha.3',
+    version: '0.2.0-alpha.4',
     codename: 'Seamless Engine Foundation',
     autoDetectReport: detectionReport,
     stateV2,

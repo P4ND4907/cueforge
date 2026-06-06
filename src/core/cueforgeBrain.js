@@ -243,7 +243,7 @@ function localEvidencePillar(source, state) {
 }
 
 function nativeReadyPillar(source, state) {
-  const next = nextNativeEngineMilestone(state.version || '0.2.0-alpha.3');
+  const next = nextNativeEngineMilestone(state.version || '0.2.0-alpha.4');
   const hasManifest = Boolean(source.engine?.schema || state.exports?.engineManifest);
   const hasAnchor = Boolean(source.engine?.stateAnchor);
   let score = 15;

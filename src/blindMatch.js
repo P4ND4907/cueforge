@@ -6,8 +6,10 @@ import {
 } from './core/preferenceModel.js';
 
 export const SOUND_MATCH_FAST_ROUNDS = 5;
-export const SOUND_MATCH_STANDARD_ROUNDS = 9;
-export const SOUND_MATCH_MAX_ROUNDS = 12;
+export const SOUND_MATCH_PREVIEW_ROUNDS = 9;
+export const SOUND_MATCH_STANDARD_ROUNDS = 15;
+export const SOUND_MATCH_REQUIRED_REPEATS = 4;
+export const SOUND_MATCH_MAX_ROUNDS = 18;
 export const SOUND_MATCH_NEUTRAL_CHOICE = 'neutral';
 
 const baseRoundById = Object.fromEntries(preferenceRounds.map((round) => [round.id, round]));
@@ -102,6 +104,58 @@ const voiceRound = roundSpec(
   { eqDelta: [0.8, 0.7, 0.5, 0.1, 0, 0.1, 0.1, -0.1, -0.3, -0.3], frequencies: [80, 180, 760] }
 );
 
+const distantCueRound = roundSpec(
+  'footstep_vs_comfort',
+  'Distant cues vs comfort',
+  { eqDelta: [-0.2, -0.2, -0.3, -0.3, 0, 0.3, 1.2, 1.5, -0.5, -0.7], frequencies: [1100, 2600, 4700], loudnessGain: 0.84 },
+  { eqDelta: [0.2, 0.1, 0, 0, 0, 0.1, 0.4, 0.1, -1, -0.9], frequencies: [760, 1800, 3600], loudnessGain: 0.86 },
+  {
+    id: 'distant_cues_vs_comfort',
+    prompt: 'Do distant cue edges help, or does the calmer version stay easier to trust?',
+    labelA: 'More distant cue edge',
+    labelB: 'Smoother long-session cues'
+  }
+);
+
+const commsUnderChaosRound = roundSpec(
+  'bass_vs_comms',
+  'Comms under action vs bass',
+  { eqDelta: [1, 0.9, 0.6, 0.1, -0.2, -0.1, 0.1, 0.1, 0, 0], frequencies: [50, 95, 180], loudnessGain: 0.82 },
+  { eqDelta: [-0.6, -0.6, -0.4, -0.1, 0.7, 1, 0.8, 0.3, -0.2, -0.4], frequencies: [650, 1200, 2600], loudnessGain: 0.86 },
+  {
+    id: 'comms_under_chaos_vs_bass',
+    prompt: 'When action gets busy, should bass stay big or should teammate voice cut through?',
+    labelA: 'Keep action impact',
+    labelB: 'Clearer comms in chaos'
+  }
+);
+
+const spaceScanRound = roundSpec(
+  'wide_vs_center',
+  'Wide scan vs center lock',
+  { eqDelta: [0.1, 0.2, 0.1, -0.2, -0.1, 0, 0.4, 0.6, 0.5, 0.3], frequencies: [300, 1200, 5200], loudnessGain: 0.85 },
+  { eqDelta: [-0.2, -0.2, 0, 0.2, 0.5, 0.5, 0.2, 0, -0.1, -0.2], frequencies: [480, 960, 1900], loudnessGain: 0.86 },
+  {
+    id: 'space_scan_vs_center_lock',
+    prompt: 'Does the wider scan help, or is the tighter center image easier to aim with?',
+    labelA: 'Wider scan',
+    labelB: 'Tighter center lock'
+  }
+);
+
+const airDetailRound = roundSpec(
+  'detail_vs_fatigue',
+  'Air detail vs long session',
+  { eqDelta: [0, 0, 0, -0.1, 0.1, 0.2, 0.9, 1.2, 0.8, 0.5], frequencies: [3000, 5600, 9600], loudnessGain: 0.84 },
+  { eqDelta: [0, 0, 0, 0, 0.2, 0.4, 0.5, 0.2, -1.2, -1], frequencies: [1600, 3600, 7200], loudnessGain: 0.86 },
+  {
+    id: 'air_detail_vs_long_session',
+    prompt: 'Do you want more air/detail, or the version that feels safer for longer sessions?',
+    labelA: 'More air detail',
+    labelB: 'Less long-session fatigue'
+  }
+);
+
 export const blindMatchRounds = [
   footstepRound,
   bassRound,
@@ -111,7 +165,13 @@ export const blindMatchRounds = [
   maskingRound,
   voiceRound,
   reversedRepeat(footstepRound, 'repeat_footstep_vs_comfort', 'Reliability: footsteps repeat'),
-  reversedRepeat(bassRound, 'repeat_bass_vs_comms', 'Reliability: bass/comms repeat')
+  reversedRepeat(bassRound, 'repeat_bass_vs_comms', 'Reliability: bass/comms repeat'),
+  distantCueRound,
+  commsUnderChaosRound,
+  spaceScanRound,
+  airDetailRound,
+  reversedRepeat(spaceRound, 'repeat_space_vs_center', 'Reliability: space/center repeat'),
+  reversedRepeat(detailRound, 'repeat_detail_vs_fatigue', 'Reliability: detail/fatigue repeat')
 ];
 
 export function createBlindMatchResult(choices = {}, baseEq = Array(10).fill(0)) {
@@ -156,14 +216,18 @@ export function createBlindMatchResult(choices = {}, baseEq = Array(10).fill(0))
   const preferenceSummary = describePreferenceModel(preferenceModel);
   const applyReadiness = buildApplyReadiness({ completedRounds, contradictions, confidence, noDifferenceCount, repeatChecks });
   const whyChips = buildWhyChips({ applyReadiness, contradictions, noDifferenceCount, repeatChecks });
+  const previewReady = completedRounds >= SOUND_MATCH_PREVIEW_ROUNDS;
 
   return {
     schema: 'cueforge.sound-match-result.v2',
     mode: 'standard',
+    previewRounds: SOUND_MATCH_PREVIEW_ROUNDS,
     requiredRounds: SOUND_MATCH_STANDARD_ROUNDS,
+    requiredRepeatChecks: SOUND_MATCH_REQUIRED_REPEATS,
     maxAdaptiveRounds: SOUND_MATCH_MAX_ROUNDS,
     confidence,
     completedRounds,
+    previewReady,
     noDifferenceCount,
     repeatChecks,
     contradictions,
@@ -182,21 +246,26 @@ export function createBlindMatchResult(choices = {}, baseEq = Array(10).fill(0))
 
 export function buildSoundMatchUiState(result = {}) {
   const required = Number(result.requiredRounds || SOUND_MATCH_STANDARD_ROUNDS);
-  const completed = Math.max(0, Math.min(required, Number(result.completedRounds || 0)));
+  const previewRequired = Number(result.previewRounds || SOUND_MATCH_PREVIEW_ROUNDS);
+  const completedRaw = Math.max(0, Number(result.completedRounds || 0));
+  const completed = Math.max(0, Math.min(required, completedRaw));
   const remaining = Math.max(0, required - completed);
+  const previewRemaining = Math.max(0, previewRequired - completedRaw);
+  const previewReady = Boolean(result.previewReady ?? completedRaw >= previewRequired);
   const percent = Math.round((completed / Math.max(1, required)) * 100);
   const repeatClean = (result.repeatChecks || []).filter((check) => check.consistent === true).length;
-  const repeatTotal = Math.max(2, (result.repeatChecks || []).length);
+  const repeatTotal = Math.max(SOUND_MATCH_REQUIRED_REPEATS, (result.repeatChecks || []).length);
   const ready = Boolean(result.applyReadiness?.ready);
-  const plural = remaining === 1 ? 'round' : 'rounds';
+  const previewPlural = previewRemaining === 1 ? 'round' : 'rounds';
+  const remainingPlural = remaining === 1 ? 'round' : 'rounds';
   const lockedActions = [];
 
-  if (remaining > 0) {
-    lockedActions.push(`Save unlocks after ${remaining} more ${plural}.`);
-    lockedActions.push(`Export unlocks after ${remaining} more ${plural}.`);
+  if (!previewReady) {
+    lockedActions.push(`Save unlocks after ${previewRemaining} more ${previewPlural}.`);
+    lockedActions.push(`Export unlocks after ${previewRemaining} more ${previewPlural}.`);
   }
   if (!ready) {
-    lockedActions.push('Apply stays locked until 9 rounds are complete and repeat checks are clean.');
+    lockedActions.push('Apply stays locked until 15 rounds are complete and 4 repeat checks are clean.');
   }
 
   return {
@@ -207,13 +276,20 @@ export function buildSoundMatchUiState(result = {}) {
       percent,
       label: `${completed} of ${required} rounds complete`
     },
-    repeatSummary: repeatClean >= 2 && (result.contradictions || 0) === 0
+    preview: {
+      ready: previewReady,
+      required: previewRequired,
+      remaining: previewRemaining
+    },
+    repeatSummary: repeatClean >= SOUND_MATCH_REQUIRED_REPEATS && (result.contradictions || 0) === 0
       ? `${repeatClean} repeat checks clean`
       : `${repeatClean}/${repeatTotal} repeat checks clean`,
     primaryHint: ready
       ? 'Ready: save, export, or apply the learned EQ after review.'
-      : remaining > 0
-        ? `Keep choosing. ${remaining} ${plural} left before save/export unlock.`
+      : !previewReady
+        ? `Keep choosing. ${previewRemaining} ${previewPlural} left before the quick preview unlocks.`
+        : remaining > 0
+          ? `Quick preview built. Continue ${remaining} ${remainingPlural} for adjustment-grade confidence.`
         : result.contradictions
           ? 'Repeat choices contradicted. Review before applying the learned EQ.'
           : 'Complete repeat checks cleanly before direct apply unlocks.',
@@ -224,6 +300,7 @@ export function buildSoundMatchUiState(result = {}) {
 export function buildSoundMatchInsightState(result = {}) {
   const model = result.preferenceModel || {};
   const complete = Number(result.completedRounds || 0) >= Number(result.requiredRounds || SOUND_MATCH_STANDARD_ROUNDS);
+  const previewComplete = Boolean(result.previewReady ?? Number(result.completedRounds || 0) >= Number(result.previewRounds || SOUND_MATCH_PREVIEW_ROUNDS));
   const contradictions = Number(result.contradictions || 0);
   const ready = Boolean(result.applyReadiness?.ready);
   const repeatChecks = result.repeatChecks || [];
@@ -285,24 +362,30 @@ export function buildSoundMatchInsightState(result = {}) {
       ? 'Direct apply locked'
       : complete
         ? 'Needs one clean review'
-        : 'Learning in progress';
+        : previewComplete
+          ? 'Preview curve ready'
+          : 'Learning in progress';
   const statusBody = ready
-    ? 'Your choices finished the standard check and the hidden repeats agreed, so CueForge can apply this curve.'
+    ? 'Your choices finished the 15-round adjustment check and all hidden repeats agreed, so CueForge can apply this curve after review.'
     : complete && contradictions > 0
-      ? `You finished 9 rounds, but ${contradictions} hidden repeat check${contradictions === 1 ? '' : 's'} disagreed. Save/export is fine; direct apply stays locked until those repeats are clean.`
+      ? `You finished 15 rounds, but ${contradictions} hidden repeat check${contradictions === 1 ? '' : 's'} disagreed. Save/export is fine; direct apply stays locked until those repeats are clean.`
       : complete
         ? 'The full round set is complete, but CueForge still needs clean repeat evidence before direct apply.'
-        : 'Keep picking between A and B. The curve is only a preview until all 9 rounds are done.';
+        : previewComplete
+          ? 'The 9-round preview is useful evidence for save/export, but it is not enough for live adjustment. Keep going to 15 rounds and 4 clean repeat checks before applying.'
+          : 'Keep picking between A and B. The quick preview unlocks at 9 rounds; direct apply waits for 15 rounds and 4 clean repeat checks.';
   const nextStep = ready
     ? 'Apply it, then play one real match before changing anything else.'
     : complete && contradictions > 0
       ? 'Retake the highlighted repeat rounds. Do not change your whole setup yet.'
       : complete
         ? 'Review the result and rerun any uncertain choices before applying.'
-        : 'Finish the remaining rounds so CueForge has enough evidence.';
-  const exportStatus = complete
-    ? 'Export is ready for replay and QA. It stores choices, confidence, repeat checks, weights, and EQ only.'
-    : 'Export unlocks after the standard 9-round flow is complete.';
+        : previewComplete
+          ? 'Save or export the preview if needed, then continue the deeper adjustment check.'
+          : 'Reach the 9-round preview first, then continue if you want CueForge to apply the learned EQ.';
+  const exportStatus = previewComplete
+    ? 'The 9-round preview can be exported for replay and QA. Direct apply still waits for the full 15-round adjustment check.'
+    : 'Export unlocks after the 9-round preview checkpoint is complete.';
 
   return {
     statusTitle,
@@ -352,7 +435,7 @@ function expectedRepeatChoice(sourceChoice, round) {
 function calculateSoundMatchConfidence({ completedRounds, contradictions, noDifferenceCount, preferenceModel, repeatChecks }) {
   const progress = Math.min(completedRounds, SOUND_MATCH_STANDARD_ROUNDS) / SOUND_MATCH_STANDARD_ROUNDS;
   const consistentRepeats = repeatChecks.filter((check) => check.consistent === true).length;
-  const allRepeatsClean = repeatChecks.length >= 2 && contradictions === 0;
+  const allRepeatsClean = repeatChecks.length >= SOUND_MATCH_REQUIRED_REPEATS && contradictions === 0;
   let score = 36
     + progress * 34
     + consistentRepeats * 6
@@ -361,34 +444,35 @@ function calculateSoundMatchConfidence({ completedRounds, contradictions, noDiff
     - noDifferenceCount * 5
     - contradictions * 18;
 
-  if (completedRounds < SOUND_MATCH_STANDARD_ROUNDS) score = Math.min(score, 76);
-  if (repeatChecks.length < 2) score = Math.min(score, 82);
+  if (completedRounds < SOUND_MATCH_PREVIEW_ROUNDS) score = Math.min(score, 68);
+  if (completedRounds < SOUND_MATCH_STANDARD_ROUNDS) score = Math.min(score, 78);
+  if (repeatChecks.length < SOUND_MATCH_REQUIRED_REPEATS) score = Math.min(score, 80);
   if (contradictions > 0) score = Math.min(score, 74 - contradictions * 6);
-  if (noDifferenceCount >= 3) score = Math.min(score, 78);
+  if (noDifferenceCount >= 5) score = Math.min(score, 78);
 
   return Math.round(clamp(score, 0, 96));
 }
 
 function buildApplyReadiness({ completedRounds, contradictions, confidence, noDifferenceCount, repeatChecks }) {
   const ready = completedRounds >= SOUND_MATCH_STANDARD_ROUNDS
-    && repeatChecks.length >= 2
+    && repeatChecks.length >= SOUND_MATCH_REQUIRED_REPEATS
     && contradictions === 0
-    && noDifferenceCount <= 2
-    && confidence >= 82;
+    && noDifferenceCount <= 4
+    && confidence >= 84;
 
   return {
     ready,
     status: ready ? 'ready' : 'preview',
     reason: ready
-      ? 'Standard Sound Match is complete and repeat choices stayed consistent.'
-      : 'Preview only until the standard 9-round consistency check is complete.'
+      ? 'Adjustment-grade Sound Match is complete and all repeat choices stayed consistent.'
+      : 'Preview only until the 15-round adjustment check and 4 repeat checks are complete.'
   };
 }
 
 function buildWhyChips({ applyReadiness, contradictions, noDifferenceCount, repeatChecks }) {
-  const chips = ['standard 9-round check'];
+  const chips = ['9-round preview', '15-round adjustment check'];
   if (repeatChecks.length) chips.push(`${repeatChecks.length} repeat checks`);
-  if (repeatChecks.length >= 2 && contradictions === 0) chips.push('repeat choices clean');
+  if (repeatChecks.length >= SOUND_MATCH_REQUIRED_REPEATS && contradictions === 0) chips.push('repeat choices clean');
   if (noDifferenceCount) chips.push(`${noDifferenceCount} too-close picks`);
   if (contradictions) chips.push(`${contradictions} contradiction${contradictions === 1 ? '' : 's'}`);
   if (!applyReadiness.ready) chips.push('preview only');

@@ -144,7 +144,7 @@ export function getCompanionIntegration(id) {
 
 export function buildCompanionIntegrationPlan({
   include = Object.values(companionIntegrationIds),
-  stage = 'v0.2.0-alpha.3'
+  stage = 'v0.2.0-alpha.4'
 } = {}) {
   const selected = companionIntegrations.filter((integration) => include.includes(integration.id));
   const commands = [...new Set(selected.flatMap((integration) => integration.commands))];

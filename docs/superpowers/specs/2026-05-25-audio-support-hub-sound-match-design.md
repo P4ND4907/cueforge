@@ -116,7 +116,7 @@ Apply readiness values:
 
 ### Adaptive Rounds
 
-The first implemented pass uses a standard 9-round flow. The old five-round path is still a useful preview shape, but it is no longer enough for strong apply readiness:
+The implemented flow now separates preview from adjustment. The old five-round path is still useful draft evidence, the 9-round checkpoint is enough for save/export preview evidence, and the 15-round path is the first adjustment-grade gate:
 
 - footsteps vs comfort
 - bass impact vs comms clarity

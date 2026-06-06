@@ -340,8 +340,8 @@ describe('command center flow', () => {
         warnings: [{ title: 'Game HRTF may be stacked with another spatial layer' }]
       },
       soundMatchResult: {
-        completedRounds: 9,
-        requiredRounds: 9,
+        completedRounds: 15,
+        requiredRounds: 15,
         contradictions: 2,
         applyReadiness: { ready: false }
       },

@@ -188,13 +188,16 @@ const socialBrand = {
 };
 
 const socialLinks = Object.fromEntries(socialBrand.links);
-const latestReleaseUrl = 'https://github.com/P4ND4907/cueforge/releases/latest';
+const releaseTag = 'v0.2.0-alpha.4';
+const latestReleaseUrl = 'https://github.com/P4ND4907/cueforge/releases/tag/v0.2.0-alpha.4';
+const desktopAlphaUrl = 'https://github.com/P4ND4907/cueforge/releases/download/v0.2.0-alpha.4/CueForge-0.2.0-alpha.4-x64.exe';
 
 const publicRelease = {
   app: 'https://p4nd4907.github.io/cueforge/',
   notes: latestReleaseUrl,
+  desktop: desktopAlphaUrl,
   feedback: 'https://github.com/P4ND4907/cueforge/issues/1',
-  desktopStatus: 'Desktop downloads are paused for public testers while the next proof gates finish. Use the web app and feedback loop for now.'
+  desktopStatus: 'Desktop alpha is available for Windows testers who need local scan proof. It is unsigned, local-first, and should be treated as a tester build.'
 };
 
 function publicAssetPath(path) {
@@ -677,6 +680,8 @@ function App() {
     : 'Start with auto setup, run one check, tune safely, then play. Expert tools stay out of the way until you need them.';
   const appInviteText = useMemo(() => buildAppInviteText({
     appUrl: publicRelease.app,
+    releaseUrl: publicRelease.notes,
+    desktopUrl: publicRelease.desktop,
     discordUrl: socialLinks.Discord
   }), []);
 
@@ -782,9 +787,9 @@ function App() {
 
   const exportSeamlessReleasePack = () => {
     const pack = cueforgeState.releasePack;
-    downloadTextFile('cueforge-v0.2.0-alpha.3-release-pack.json', JSON.stringify(pack, null, 2));
-    downloadTextFile('cueforge-v0.2.0-alpha.3-summary.txt', summarizeReleasePack(pack));
-    setShareStatus('v0.2.0-alpha.3 release pack exported locally.');
+    downloadTextFile('cueforge-v0.2.0-alpha.4-release-pack.json', JSON.stringify(pack, null, 2));
+    downloadTextFile('cueforge-v0.2.0-alpha.4-summary.txt', summarizeReleasePack(pack));
+    setShareStatus('v0.2.0-alpha.4 release pack exported locally.');
   };
 
   const setBand = (index, value) => {
@@ -1097,6 +1102,7 @@ function App() {
               </ul>
               <div className="live-actions">
                 <a className="primary button-link" href={publicRelease.app} target="_blank" rel="noreferrer"><Play size={18} /> Open web app</a>
+                <a className="ghost button-link" href={publicRelease.desktop} target="_blank" rel="noreferrer"><Download size={18} /> Desktop alpha</a>
                 <a className="ghost button-link" href={publicRelease.feedback} target="_blank" rel="noreferrer"><Bug size={18} /> Send feedback</a>
               </div>
               <p className="callout">{publicRelease.desktopStatus}</p>
@@ -4020,6 +4026,7 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
   const uiState = buildSoundMatchUiState(result);
   const insightState = buildSoundMatchInsightState(result);
   const complete = result.completedRounds >= result.requiredRounds;
+  const previewComplete = Boolean(result.previewReady);
   const applyReady = Boolean(result.applyReadiness?.ready);
   const radarPoints = insightState.preferenceSignals.map((signal, index) => {
     const angle = (-Math.PI / 2) + (index * Math.PI * 2) / insightState.preferenceSignals.length;
@@ -4153,8 +4160,8 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
           {complete && !applyReady && (
             <button className="ghost" onClick={retakeRepeatChecks}><RotateCcw size={18} /> Retake repeat checks</button>
           )}
-          <button className="ghost locked-action" onClick={save} disabled={!complete} title={complete ? 'Save Sound Match' : `Complete ${uiState.progress.remaining} more rounds first.`}><Save size={18} /> Save Sound Match</button>
-          <button className="ghost locked-action" onClick={exportResult} disabled={!complete} title={complete ? 'Export Sound Match' : `Complete ${uiState.progress.remaining} more rounds first.`}><Download size={18} /> Export Sound Match</button>
+          <button className="ghost locked-action" onClick={save} disabled={!previewComplete} title={previewComplete ? 'Save Sound Match preview' : `Complete ${uiState.preview.remaining} more rounds first.`}><Save size={18} /> Save Sound Match</button>
+          <button className="ghost locked-action" onClick={exportResult} disabled={!previewComplete} title={previewComplete ? 'Export Sound Match preview' : `Complete ${uiState.preview.remaining} more rounds first.`}><Download size={18} /> Export Sound Match</button>
           <button
             className={`primary ${applyReady ? '' : 'locked-action'}`}
             onClick={() => {
@@ -4172,7 +4179,7 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
       <Panel title="Learned Curve" icon={SlidersHorizontal}>
         <div className="learned-status-card">
           <div>
-            <span>{applyReady ? 'Controlled apply ready' : complete ? 'Saved as preview' : 'Still learning'}</span>
+            <span>{applyReady ? 'Controlled apply ready' : previewComplete ? 'Preview ready' : 'Still learning'}</span>
             <strong>{insightState.statusTitle}</strong>
             <p>{insightState.statusBody}</p>
           </div>
@@ -4181,7 +4188,7 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
         <div className="metric-row selftest-summary">
           <Metric label="Progress" value={`${result.completedRounds}/${result.requiredRounds}`} tone={complete ? 'teal' : 'amber'} />
           <Metric label="Repeats" value={uiState.repeatSummary} tone={applyReady ? 'teal' : 'amber'} />
-          <Metric label="Preference" value={`${Math.round((result.preferenceModel?.confidence || 0) * 100)}%`} tone={complete ? 'teal' : 'amber'} />
+          <Metric label="Preference" value={`${Math.round((result.preferenceModel?.confidence || 0) * 100)}%`} tone={previewComplete ? 'teal' : 'amber'} />
         </div>
         <div className="sound-insight-grid">
           <div className="preference-radar" aria-label="Sound Match preference map">
@@ -4212,7 +4219,7 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
           </div>
         </div>
         <div className="data-card replay-export-status">
-          <strong>{complete ? 'Replay export ready' : 'Replay export locked'}</strong>
+          <strong>{previewComplete ? 'Replay export ready' : 'Replay export locked'}</strong>
           <span>{insightState.exportStatus}</span>
           <small>No raw audio is stored. Direct apply is separate from export so shaky evidence cannot silently become a live tune.</small>
         </div>
@@ -4222,7 +4229,7 @@ function BlindMatchPage({ baseEq, onApply, onSavePreferenceModel }) {
         </ul>
       </Panel>
       <Panel className="wide" title="Saved Sound Match" icon={Save}>
-        {!savedResult && <div className="data-card"><strong>No saved Sound Match yet</strong><span>Complete all rounds and save the result.</span></div>}
+        {!savedResult && <div className="data-card"><strong>No saved Sound Match yet</strong><span>Reach the 9-round preview checkpoint, then save the result.</span></div>}
         {savedResult && (
           <div className="data-card">
             <strong>{savedResult.signature}</strong>

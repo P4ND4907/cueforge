@@ -1,17 +1,17 @@
 # CueForge v0.2.0 Acceptance Checklist
 
-Status: passing locally for `0.2.0-alpha.3`.
+Status: passing locally for `0.2.0-alpha.4`.
 
 This checklist is the release gate for the Seamless Engine Foundation. A build is not considered done unless these items stay checked and the command gates pass.
 
-Release-candidate note: `0.2.0-alpha.3` can pass the local alpha scaffold gates while a public release candidate is still blocked. The stricter RC contract lives in `src/data/releaseAcceptanceChecklist.js` and keeps real Windows loopback regression proof as a hard blocker until an actual endpoint loopback run is attached.
+Release-candidate note: `0.2.0-alpha.4` can pass the local alpha scaffold gates while a public release candidate is still blocked. The stricter RC contract lives in `src/data/releaseAcceptanceChecklist.js` and keeps real Windows loopback regression proof as a hard blocker until an actual endpoint loopback run is attached.
 
 ## Product Gates
 
 - [x] Setup Command Center exists.
   - Evidence: `src/core/commandCenterFlow.js`, app command-center cards, `src/tests/v020Acceptance.test.js`.
 - [x] CueForge state object exists.
-  - Evidence: `src/core/cueforgeState.js`, `cueforgeStateV2.version = 0.2.0-alpha.3`.
+  - Evidence: `src/core/cueforgeState.js`, `cueforgeStateV2.version = 0.2.0-alpha.4`.
 - [x] CueForge Brain differentiator exists and is connected.
   - Evidence: `src/core/cueforgeBrain.js`, `cueforge-brain.json` in the release pack, Setup Command Center proof strip, and acceptance coverage for the audio chain verifier + personal sound engine promise.
 - [x] Chain Graph builds from browser + bridge data.
