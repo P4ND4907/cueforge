@@ -270,6 +270,54 @@ describe('command center flow', () => {
     expect(checks['desktop-link'].status).toBe('next');
   });
 
+  it('makes Windows scan the next action when game settings are blocked by missing desktop proof', () => {
+    const guided = buildGuidedSetupRun({
+      chainGraph: {
+        summary: { inputs: 1, outputs: 1, companions: 0 }
+      },
+      autoDetectReport: {
+        source: 'browser',
+        confidence: { score: 44, tier: 'partial', requiresExplicitScan: true },
+        devices: {
+          browserInputs: [{ label: 'Microphone input 1' }],
+          browserOutputs: [{ label: 'Headphone/output 2' }]
+        }
+      },
+      conflicts: {
+        summary: { high: 0 },
+        chainHealth: { warnings: [] }
+      },
+      profile: {
+        recommendation: {
+          id: 'competitive-fps-browser',
+          label: 'Competitive FPS',
+          eq: [-1, -0.5, 0, 0.5, 1, 1.5, 2, 2, 0.5, -0.5]
+        }
+      },
+      readiness: {
+        score: 44,
+        gates: [{ id: 'blind-match', ready: false }]
+      }
+    }, {
+      currentEq: Array(10).fill(0),
+      desktopScanAvailable: true,
+      gameAudioCheck: {
+        status: 'needs-review',
+        confidence: 44,
+        summary: 'Run the Windows scan before calling native spatial compatibility proven.'
+      }
+    });
+
+    expect(guided.nextAction).toMatchObject({
+      id: 'desktop-scan',
+      label: 'Run Windows Scan',
+      route: 'desktop-scan'
+    });
+    expect(guided.decision).toMatchObject({
+      title: 'Run Windows scan for proof'
+    });
+  });
+
   it('moves from applied starter tune into Sound Match as the next proof step', () => {
     const profileEq = [-1, -0.5, 0, 0.5, 1, 1.5, 2, 2, 0.5, -0.5];
     const guided = buildGuidedSetupRun({

@@ -292,17 +292,19 @@ export function buildAutoSetupVerdict({
   }
 
   if (gameAudioCheck && !gameReady(gameAudioCheck)) {
+    const summary = gameAudioCheck.summary || 'Game HRTF, output, dynamic range, spatial, or voice/chat split is not confirmed.';
+    const needsDesktopProof = /windows scan|desktop scan|native spatial.*proven|desktop proof/i.test(summary);
     return verdictPayload({
       status: 'needs-fixes',
-      headline: 'Check game audio settings',
+      headline: needsDesktopProof ? 'Run Windows scan for proof' : 'Check game audio settings',
       confidence,
       found: evidenceFound,
-      problems: [gameAudioCheck.summary || 'Game HRTF, output, dynamic range, spatial, or voice/chat split is not confirmed.'],
+      problems: [summary],
       nextAction: {
-        id: 'game-settings',
-        label: 'Check Game Settings',
-        route: 'detect',
-        detail: gameAudioCheck.summary || 'Answer the game audio settings before applying.'
+        id: needsDesktopProof ? 'desktop-scan' : 'game-settings',
+        label: needsDesktopProof ? 'Run Windows Scan' : 'Check Game Settings',
+        route: needsDesktopProof ? 'desktop-scan' : 'detect',
+        detail: needsDesktopProof ? 'Use desktop proof before calling native spatial compatibility proven.' : 'Answer the game audio settings before applying.'
       },
       why,
       undo,

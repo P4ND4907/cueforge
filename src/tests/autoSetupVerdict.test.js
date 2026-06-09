@@ -146,6 +146,29 @@ describe('auto setup verdict', () => {
     expect(JSON.stringify(verdict)).not.toContain('secret-endpoint-id');
   });
 
+  it('routes desktop-proof game setting blockers to the Windows scan instead of vague settings copy', () => {
+    const verdict = buildAutoSetupVerdict(readyInput({
+      gameAudioCheck: {
+        status: 'needs-review',
+        confidence: 44,
+        summary: 'Run the Windows scan before calling native spatial compatibility proven.'
+      },
+      loopbackProof: buildWasapiLoopbackProof(),
+      desktopReady: false
+    }));
+
+    expect(verdict).toMatchObject({
+      status: 'needs-fixes',
+      headline: 'Run Windows scan for proof',
+      nextAction: {
+        id: 'desktop-scan',
+        label: 'Run Windows Scan',
+        route: 'desktop-scan'
+      }
+    });
+    expect(verdict.problems.join(' ')).toMatch(/Windows scan/i);
+  });
+
   it('prioritizes clipping, missing limiter, and stacked-processing conflicts as do-not-apply', () => {
     const verdict = buildAutoSetupVerdict(readyInput({
       conflicts: {

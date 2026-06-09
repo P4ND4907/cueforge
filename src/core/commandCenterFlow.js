@@ -75,6 +75,8 @@ function setupCheck(id, label, status, detail, route = 'detect') {
 
 function gameSettingsStatus(context = {}) {
   const check = context.gameAudioCheck;
+  const summary = check?.summary || check?.warnings?.[0]?.title || '';
+  const needsDesktopProof = /windows scan|desktop scan|native spatial.*proven|desktop proof/i.test(summary);
   if (!check) {
     return {
       status: 'todo',
@@ -98,8 +100,8 @@ function gameSettingsStatus(context = {}) {
   }
   return {
     status: 'next',
-    detail: check.summary || 'Finish the game settings check before applying a learned EQ.',
-    route: 'detect'
+    detail: summary || 'Finish the game settings check before applying a learned EQ.',
+    route: needsDesktopProof ? 'desktop-scan' : 'detect'
   };
 }
 
@@ -650,9 +652,11 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
     };
   } else if (hasScanEvidence && gameStatus.status !== 'done') {
     nextAction = {
-      id: 'game-settings',
-      label: gameStatus.status === 'blocked' ? 'Fix Game Settings' : 'Check Game Settings',
-      route: 'detect',
+      id: gameStatus.route === 'desktop-scan' ? 'desktop-scan' : 'game-settings',
+      label: gameStatus.route === 'desktop-scan'
+        ? 'Run Windows Scan'
+        : gameStatus.status === 'blocked' ? 'Fix Game Settings' : 'Check Game Settings',
+      route: gameStatus.route,
       detail: gameStatus.detail
     };
   } else if (hasScanEvidence && spatialStatus.status !== 'done') {
