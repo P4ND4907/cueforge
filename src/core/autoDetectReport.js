@@ -15,6 +15,7 @@ const companionMap = {
   elgatoWaveLink: ['elgatoWaveLink'],
   dolby: ['dolbyAccess', 'dtsSoundUnbound'],
   windowsSonic: ['windowsSonic'],
+  audioscenic: ['audioscenic'],
   nahimic: ['nahimic'],
   razer: ['razerThx']
 };
@@ -33,6 +34,7 @@ const companionLabels = {
   elgatoWaveLink: 'Elgato Wave Link',
   dolby: 'Dolby / DTS',
   windowsSonic: 'Windows Sonic',
+  audioscenic: 'Audioscenic / OEM spatial APO',
   nahimic: 'Nahimic',
   razer: 'Razer THX'
 };
@@ -134,7 +136,9 @@ function companionState(report, key, hasBridge) {
   const evidence = toolEvidence(report, keys);
   const labelDetected = key === 'windowsSonic'
     ? labelsInclude(report, /windows sonic/i)
-    : false;
+    : key === 'audioscenic'
+      ? labelsInclude(report, /audioscenic|listener[- ]tracked|adaptive audio|spatial speakers|oem spatial/i)
+      : false;
 
   if (installed || labelDetected) {
     return {
@@ -145,7 +149,7 @@ function companionState(report, key, hasBridge) {
     };
   }
 
-  if (key === 'windowsSonic' && !report?.tools?.windowsSonic) {
+  if ((key === 'windowsSonic' && !report?.tools?.windowsSonic) || (key === 'audioscenic' && !report?.tools?.audioscenic)) {
     return {
       detected: null,
       confidence: 0,
@@ -280,7 +284,7 @@ function buildConfidence({ permissionState, hasBridge, outputs, inputs, companio
 function buildRisks({ report, companions, outputs, inputs, hasBridge }) {
   const risks = [];
   const defaultPlayback = defaultPlaybackLabel(report);
-  const spatialCount = ['dolby', 'windowsSonic', 'nahimic', 'razer']
+  const spatialCount = ['dolby', 'windowsSonic', 'audioscenic', 'nahimic', 'razer']
     .filter((key) => companions[key]?.detected === true).length;
 
   if (!hasBridge) {
@@ -384,7 +388,7 @@ function buildRisks({ report, companions, outputs, inputs, hasBridge }) {
       'high',
       'Multiple spatial/enhancer layers detected',
       'Stacked spatial processing can smear direction cues and make footsteps worse.',
-      'Use one spatial layer during testing.'
+      'Use one spatial renderer during testing.'
     ));
   }
 
@@ -417,6 +421,9 @@ function buildRecommendations({ companions, risks, hasBridge, outputs, inputs })
   }
   if (risks.some((item) => item.id === 'chat_game_split_detected')) {
     recommendations.push('Confirm the game endpoint and chat endpoint are intentionally split before judging audio changes.');
+  }
+  if (risks.some((item) => item.id === 'multiple_spatial_layers')) {
+    recommendations.push('Choose one spatial renderer before Sound Match: game HRTF, Windows/OEM spatial, or headset spatial.');
   }
   if (!recommendations.length) {
     recommendations.push('Run output check, Mic Lab, then one real match A/B before calling the setup proven.');
@@ -454,7 +461,7 @@ export function buildDesktopEvidenceSummary(report = {}) {
   );
   const virtualMixerItems = companionDetected(report, ['sonar', 'voicemeeter', 'vbCable']);
   const voiceStreamItems = companionDetected(report, ['discord', 'obs']);
-  const boosterItems = companionDetected(report, ['dolby', 'windowsSonic', 'nahimic', 'razer']);
+  const boosterItems = companionDetected(report, ['dolby', 'windowsSonic', 'audioscenic', 'nahimic', 'razer']);
   const micProcessingItems = companionDetected(report, ['nvidiaBroadcast'])
     .concat(report.companions?.voicemod?.detected === true ? ['Voicemod'] : [])
     .concat(report.companions?.elgatoWaveLink?.detected === true ? ['Elgato Wave Link'] : []);

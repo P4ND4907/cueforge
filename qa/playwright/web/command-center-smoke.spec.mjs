@@ -14,8 +14,9 @@ test('first-run onboarding can hand off into the app without surprise audio', as
   await page.goto('/?qa=playwright-onboarding-smoke', { waitUntil: 'networkidle' });
 
   await expect(page.locator('.setup-journey-shell')).toBeVisible();
-  await expect(page.getByText(/Bamboo soundwalk|first run is a guided soundwalk/i).first()).toBeVisible();
-  await expect(page.getByRole('button', { name: /Background audio off|Start soundwalk/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Set up your FPS audio without guessing/i })).toBeVisible();
+  await expect(page.getByText(/Audio Support Hub/i).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Test bed off|Start test bed|Stop test bed/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /Skip for now/i })).toBeVisible();
   await expectNoHorizontalOverflow(page, 'setup journey');
 
@@ -40,10 +41,11 @@ test('guided web flow renders, navigates, and avoids runtime/layout failures', a
   await expect(page.locator('.app-shell')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Setup Command Center' }).first()).toBeVisible();
   await expect(page.getByText('Audio chain verifier + personal sound engine').first()).toBeVisible();
-  await expect(page.getByRole('button', { name: /Run setup scan/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Auto setup|Start Auto Setup|Check Game Settings|Check Spatial Stack|Fix Route Conflict/i }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Native spatial (todo|next|done|blocked)/i })).toBeVisible();
   await expectNoHorizontalOverflow(page, 'command center');
 
-  await openSimpleRoute(page, 'detect', 'Auto Detect');
+  await openSimpleRoute(page, 'detect', 'Auto Setup');
   await expect(page.getByText(/Browser-only partial evidence|Auto Detect v2 Report/i).first()).toBeVisible();
   await expect(page.getByRole('button', { name: /Scan audio devices|Copy v2 report|Export JSON/i }).first()).toBeVisible();
   await expect(page.getByText(/USB Test Mic|USB Test DAC|audio input|audio output/i).first()).toBeVisible();
@@ -62,13 +64,13 @@ test('guided web flow renders, navigates, and avoids runtime/layout failures', a
   await expectNoHorizontalOverflow(page, 'player trial');
 
   await openSimpleRoute(page, 'blindmatch', 'Sound Match');
-  await expect(page.getByText(/Round 1 of 9/i).first()).toBeVisible();
+  await expect(page.getByText(/0 of 15 rounds complete/i).first()).toBeVisible();
   await expect(page.getByRole('button', { name: /Too close \/ no clear difference/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Apply learned EQ/i })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /Direct apply locked|Apply learned EQ/i })).toBeDisabled();
   await page.getByRole('button', { name: /A: More footstep bite/i }).click();
-  await expect(page.getByText(/Round 2 of 9/i).first()).toBeVisible();
+  await expect(page.getByText(/1 of 15 rounds complete/i).first()).toBeVisible();
   await page.getByRole('button', { name: /Too close \/ no clear difference/i }).click();
-  await expect(page.getByText(/Round 3 of 9/i).first()).toBeVisible();
+  await expect(page.getByText(/2 of 15 rounds complete/i).first()).toBeVisible();
   await expectNoHorizontalOverflow(page, 'sound match');
 
   await openSimpleRoute(page, 'reports', 'Report Lab');
@@ -79,7 +81,7 @@ test('guided web flow renders, navigates, and avoids runtime/layout failures', a
 
   await openSimpleRoute(page, 'settings', 'Settings');
   await expect(page.getByText('Quiet mode').first()).toBeVisible();
-  await expect(page.getByText('Allow background soundwalk').first()).toBeVisible();
+  await expect(page.getByText('Allow background test bed').first()).toBeVisible();
   await expect(page.getByText('Allow cinematic video audio').first()).toBeVisible();
   await expectNoHorizontalOverflow(page, 'settings');
 
@@ -94,7 +96,9 @@ test('guided web flow renders, navigates, and avoids runtime/layout failures', a
 
 async function seedApp(page, { setupComplete = 'yes', settings = quietSettings } = {}) {
   await page.addInitScript(({ nextSettings, nextSetupComplete }) => {
-    localStorage.setItem('cueforge-setup-complete', 'yes');
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('cueforge-')) localStorage.removeItem(key);
+    }
     localStorage.setItem('cueforge-setup-complete', nextSetupComplete);
     localStorage.setItem('cueforge-user-settings', JSON.stringify(nextSettings));
   }, { nextSettings: settings, nextSetupComplete: setupComplete });

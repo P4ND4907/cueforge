@@ -152,4 +152,38 @@ describe('auto detect report v2', () => {
       'Is OBS listening to the same Stream Mix that CueForge is limiting?'
     ]));
   });
+
+  it('detects OEM native spatial APO evidence and warns when it stacks with Windows spatial', () => {
+    const report = buildAutoDetectReport({
+      bridgeReport: {
+        ...desktopBridgeFixture,
+        tools: {
+          ...desktopBridgeFixture.tools,
+          audioscenic: { installed: true, displayName: 'Audioscenic Adaptive Audio APO' },
+          windowsSonic: { installed: true, displayName: 'Windows Sonic for Headphones' }
+        },
+        soundDevices: [
+          ...desktopBridgeFixture.soundDevices,
+          { Name: 'Audioscenic listener-tracked laptop speakers' }
+        ]
+      },
+      desktopReady: true,
+      detectedAt: '2026-05-23T00:00:00.000Z'
+    });
+    const desktop = buildDesktopEvidenceSummary(report);
+
+    expect(report.companions.audioscenic).toMatchObject({
+      detected: true,
+      label: 'Audioscenic / OEM spatial APO'
+    });
+    expect(report.risks.find((item) => item.id === 'multiple_spatial_layers')).toMatchObject({
+      severity: 'high',
+      fix: expect.stringMatching(/one spatial renderer/i)
+    });
+    expect(report.recommendations).toContain('Choose one spatial renderer before Sound Match: game HRTF, Windows/OEM spatial, or headset spatial.');
+    expect(desktop.cards.find((card) => card.id === 'boosters')?.items).toEqual(expect.arrayContaining([
+      'Audioscenic / OEM spatial APO',
+      'Windows Sonic'
+    ]));
+  });
 });

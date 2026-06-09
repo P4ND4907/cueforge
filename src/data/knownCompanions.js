@@ -4,6 +4,8 @@ export const knownCompanions = [
   { key: 'steelSeriesSonar', name: 'SteelSeries Sonar', type: 'mixer', group: 'virtual-mixer', risk: 'medium' },
   { key: 'fxSound', name: 'FxSound', type: 'enhancer', group: 'enhancer', risk: 'medium' },
   { key: 'razerThx', name: 'Razer THX / Synapse', type: 'spatial', group: 'spatial', risk: 'medium' },
+  { key: 'windowsSonic', name: 'Windows Sonic', type: 'spatial', group: 'spatial', risk: 'medium' },
+  { key: 'audioscenic', name: 'Audioscenic / OEM spatial APO', type: 'spatial', group: 'spatial', risk: 'medium' },
   { key: 'dolbyAccess', name: 'Dolby Access / Atmos', type: 'spatial', group: 'spatial', risk: 'medium' },
   { key: 'dtsSoundUnbound', name: 'DTS Sound Unbound', type: 'spatial', group: 'spatial', risk: 'medium' },
   { key: 'nahimic', name: 'Nahimic', type: 'enhancer', group: 'enhancer', risk: 'medium' },

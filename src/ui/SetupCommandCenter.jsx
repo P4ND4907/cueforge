@@ -48,6 +48,7 @@ const guidedCheckIcons = {
   'device-scan': Search,
   'desktop-link': Download,
   'game-settings': Gamepad2,
+  'native-spatial': Radio,
   'output-picked': Headphones,
   'mic-picked': Mic,
   'route-conflicts': ShieldCheck,

@@ -159,6 +159,7 @@ describe('command center flow', () => {
       'Device scan',
       'Desktop link',
       'Game settings',
+      'Native spatial',
       'Output picked',
       'Mic picked',
       'Route conflicts',
@@ -196,7 +197,17 @@ describe('command center flow', () => {
         gates: [{ id: 'blind-match', ready: false }]
       }
     }, {
-      currentEq: Array(10).fill(0)
+      currentEq: Array(10).fill(0),
+      gameAudioCheck: {
+        status: 'ready',
+        summary: 'Game settings are aligned.',
+        confidence: 92
+      },
+      nativeSpatialCompatibility: {
+        status: 'ready',
+        summary: 'One spatial renderer selected: Safe stereo.',
+        confidence: 88
+      }
     });
 
     const checks = Object.fromEntries(guided.checks.map((check) => [check.id, check]));
@@ -209,6 +220,8 @@ describe('command center flow', () => {
     });
     expect(checks['device-scan'].status).toBe('warn');
     expect(checks['desktop-link'].status).toBe('warn');
+    expect(checks['game-settings'].status).toBe('done');
+    expect(checks['native-spatial'].status).toBe('done');
     expect(checks['output-picked'].status).toBe('done');
     expect(checks['mic-picked'].status).toBe('done');
     expect(checks['route-conflicts'].status).toBe('done');
@@ -281,7 +294,17 @@ describe('command center flow', () => {
         gates: [{ id: 'blind-match', ready: false }]
       }
     }, {
-      currentEq: profileEq
+      currentEq: profileEq,
+      gameAudioCheck: {
+        status: 'ready',
+        summary: 'Game settings are aligned.',
+        confidence: 93
+      },
+      nativeSpatialCompatibility: {
+        status: 'ready',
+        summary: 'One spatial renderer selected: Safe stereo.',
+        confidence: 89
+      }
     });
 
     const checks = Object.fromEntries(guided.checks.map((check) => [check.id, check]));
@@ -293,6 +316,8 @@ describe('command center flow', () => {
     });
     expect(checks['starter-tune'].status).toBe('done');
     expect(checks['desktop-link'].status).toBe('done');
+    expect(checks['game-settings'].status).toBe('done');
+    expect(checks['native-spatial'].status).toBe('done');
     expect(checks['sound-match'].status).toBe('next');
   });
 
@@ -339,6 +364,12 @@ describe('command center flow', () => {
         summary: 'Pick one spatial layer before applying.',
         warnings: [{ title: 'Game HRTF may be stacked with another spatial layer' }]
       },
+      nativeSpatialCompatibility: {
+        status: 'needs-fix',
+        confidence: 45,
+        summary: 'Pick exactly one spatial renderer before tuning.',
+        warnings: [{ title: 'Game HRTF, Windows spatial, and Sonar are stacked.' }]
+      },
       soundMatchResult: {
         completedRounds: 15,
         requiredRounds: 15,
@@ -360,6 +391,7 @@ describe('command center flow', () => {
       'Device scan',
       'Desktop link',
       'Game settings',
+      'Native spatial',
       'Output picked',
       'Mic picked',
       'Route conflicts',
@@ -380,8 +412,76 @@ describe('command center flow', () => {
     expect(guided.proofAnswers.find((answer) => answer.id === 'found').value).toBe('1 output / 1 input / 3 layers');
     expect(guided.proofAnswers.find((answer) => answer.id === 'wrong').detail).toContain('Double spatial risk');
     expect(guided.proofAnswers.find((answer) => answer.id === 'changed').value).toBe('Competitive FPS');
-    expect(guided.proofAnswers.find((answer) => answer.id === 'why').detail).toMatch(/desktop scan.*game settings.*Sound Match/i);
+    expect(guided.proofAnswers.find((answer) => answer.id === 'why').detail).toMatch(/desktop scan.*game settings.*native spatial.*Sound Match/i);
     expect(guided.proofAnswers.find((answer) => answer.id === 'confidence').value).toBe('72/100');
     expect(guided.proofAnswers.find((answer) => answer.id === 'undo').detail).toMatch(/backup.*undo/i);
+  });
+
+  it('blocks Auto Setup on native spatial stacks even when route conflicts are otherwise clear', () => {
+    const profileEq = [-1, -0.5, 0, 0.5, 1, 1.5, 2, 2, 0.5, -0.5];
+    const guided = buildGuidedSetupRun({
+      chainGraph: {
+        summary: { inputs: 1, outputs: 1, companions: 2, applyTargets: 1 }
+      },
+      autoDetectReport: {
+        source: 'browser+desktop_bridge',
+        confidence: { score: 84, tier: 'strong', requiresExplicitScan: false }
+      },
+      conflicts: {
+        summary: { high: 0 },
+        chainHealth: { warnings: [] }
+      },
+      profile: {
+        recommendation: {
+          id: 'competitive-fps-desktop',
+          label: 'Competitive FPS',
+          eq: profileEq
+        }
+      },
+      readiness: {
+        score: 79,
+        gates: [{ id: 'blind-match', ready: true }]
+      },
+      applyPath: {
+        mode: 'review-and-apply'
+      }
+    }, {
+      currentEq: profileEq,
+      gameAudioCheck: {
+        status: 'ready',
+        confidence: 91,
+        summary: 'Game settings are aligned.'
+      },
+      nativeSpatialCompatibility: {
+        status: 'needs-fix',
+        confidence: 47,
+        summary: 'Pick exactly one spatial renderer before tuning.',
+        warnings: [{ title: 'Windows/OEM spatial and headset spatial are both present.' }]
+      },
+      soundMatchResult: {
+        completedRounds: 15,
+        requiredRounds: 15,
+        contradictions: 0,
+        applyReadiness: { ready: true }
+      },
+      backupReady: true
+    });
+
+    const checks = Object.fromEntries(guided.checks.map((check) => [check.id, check]));
+
+    expect(guided.decision).toMatchObject({
+      status: 'do-not-apply',
+      title: 'Do not apply yet',
+      detail: expect.stringMatching(/spatial renderer/i)
+    });
+    expect(guided.nextAction).toMatchObject({
+      id: 'spatial-compatibility',
+      label: 'Fix Spatial Stack',
+      route: 'detect'
+    });
+    expect(checks['native-spatial']).toMatchObject({
+      status: 'blocked',
+      detail: expect.stringMatching(/exactly one spatial renderer/i)
+    });
   });
 });

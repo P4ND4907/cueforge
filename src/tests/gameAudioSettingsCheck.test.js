@@ -11,6 +11,7 @@ describe('game audio settings check', () => {
     expect(check.questions.map((question) => question.id)).toEqual([
       'hrtf',
       'windowsSpatial',
+      'nativePlatformSpatial',
       'sonarSpatial',
       'gameOutput',
       'dynamicRange',
@@ -27,6 +28,7 @@ describe('game audio settings check', () => {
       settings: {
         hrtf: 'on',
         windowsSpatial: 'on',
+        nativePlatformSpatial: 'on',
         sonarSpatial: 'on',
         gameOutput: 'USB DAC Headphones',
         dynamicRange: 'night',
@@ -38,24 +40,38 @@ describe('game audio settings check', () => {
         companions: {
           sonar: { detected: true },
           dolby: { detected: true },
+          audioscenic: { detected: true },
           voicemeeter: { detected: true }
         }
       }
     });
 
     expect(check.progress).toMatchObject({
-      completed: 6,
-      total: 6,
-      label: '6/6 settings checked'
+      completed: 7,
+      total: 7,
+      label: '7/7 settings checked'
     });
     expect(check.status).toBe('needs-fix');
     expect(check.warnings.map((warning) => warning.id)).toEqual(expect.arrayContaining([
       'double-spatial-risk',
+      'native-spatial-stack-blocked',
       'sonar-output-mismatch',
       'night-mode-before-tuning',
       'chat-game-route-needs-proof'
     ]));
-    expect(check.summary).toMatch(/Pick one spatial layer/i);
+    expect(check.nativeSpatial).toMatchObject({
+      schema: 'cueforge.native-spatial-compatibility.v1',
+      status: 'needs-fix',
+      rendererMode: 'stacked-renderers'
+    });
+    expect(check.nativeSpatial.activeRenderers.map((renderer) => renderer.category)).toEqual(expect.arrayContaining([
+      'game-native',
+      'windows-spatial',
+      'oem-apo',
+      'headset-suite'
+    ]));
+    expect(check.nativeSpatial.warnings.map((warning) => warning.id)).toContain('stacked-spatial-renderers');
+    expect(check.summary).toMatch(/Pick exactly one spatial renderer/i);
   });
 
   it('marks the settings ready when answers, desktop evidence, and Sound Match align', () => {
@@ -64,6 +80,7 @@ describe('game audio settings check', () => {
       settings: {
         hrtf: 'off',
         windowsSpatial: 'off',
+        nativePlatformSpatial: 'off',
         sonarSpatial: 'off',
         gameOutput: 'USB DAC Headphones',
         dynamicRange: 'headphones',
@@ -82,6 +99,10 @@ describe('game audio settings check', () => {
     expect(check.status).toBe('ready');
     expect(check.confidence).toBeGreaterThanOrEqual(90);
     expect(check.warnings).toEqual([]);
+    expect(check.nativeSpatial).toMatchObject({
+      status: 'ready',
+      rendererMode: 'safe-stereo'
+    });
     expect(check.summary).toMatch(/one real match test/i);
   });
 });

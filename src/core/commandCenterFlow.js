@@ -101,6 +101,40 @@ function gameSettingsStatus(context = {}) {
   };
 }
 
+function spatialCompatibilityFromContext(context = {}) {
+  return context.nativeSpatialCompatibility || context.gameAudioCheck?.nativeSpatial || null;
+}
+
+function spatialCompatibilityStatus(context = {}) {
+  const check = spatialCompatibilityFromContext(context);
+  if (!check) {
+    return {
+      status: 'todo',
+      detail: 'Classify game HRTF, Windows spatial, native/OEM APO, headset spatial, and virtual mixer path.',
+      route: 'detect'
+    };
+  }
+  if (check.status === 'ready') {
+    return {
+      status: 'done',
+      detail: check.summary || 'One spatial renderer path is selected for tuning.',
+      route: 'detect'
+    };
+  }
+  if (check.status === 'needs-fix') {
+    return {
+      status: 'blocked',
+      detail: check.summary || check.warnings?.[0]?.title || 'Spatial stack needs a safe fix before apply.',
+      route: 'detect'
+    };
+  }
+  return {
+    status: 'next',
+    detail: check.summary || 'Confirm the active spatial renderer before applying a tune.',
+    route: 'detect'
+  };
+}
+
 function soundMatchStatus(state = {}, context = {}, starterTuneApplied = false) {
   const result = context.soundMatchResult || state.stateV2?.calibration?.blindMatch || null;
   const doneByGate = gateReady(state.readiness, 'blind-match') || result?.complete === true;
@@ -194,11 +228,13 @@ function buildAutoSetupDecision({
   starterTuneApplied,
   highConflicts,
   gameStatus,
+  spatialStatus,
   soundStatus,
   backupStatus
 }) {
   const score = Number(state.readiness?.score || state.autoDetectReport?.confidence?.score || 0);
   const gameNeedsFix = context.gameAudioCheck?.status === 'needs-fix';
+  const spatialNeedsFix = spatialStatus.status === 'blocked';
   const soundBlocked = soundStatus.status === 'blocked';
 
   if (!hasScanEvidence) {
@@ -210,7 +246,7 @@ function buildAutoSetupDecision({
       tone: 'amber'
     };
   }
-  if (highConflicts > 0 || gameNeedsFix || soundBlocked) {
+  if (highConflicts > 0 || gameNeedsFix || spatialNeedsFix || soundBlocked) {
     return {
       status: 'do-not-apply',
       title: 'Do not apply yet',
@@ -218,12 +254,14 @@ function buildAutoSetupDecision({
         ? 'A route or enhancer conflict is still high risk. Fix it before applying any learned EQ.'
         : gameNeedsFix
           ? 'Game audio settings conflict with the scan. Fix the setting warning before applying.'
-          : soundStatus.detail,
+          : spatialNeedsFix
+            ? spatialStatus.detail
+            : soundStatus.detail,
       confidence: score,
       tone: 'red'
     };
   }
-  if (!hasStarterTune || !starterTuneApplied || gameStatus.status !== 'done' || !soundStatus.ready || !backupStatus.ready) {
+  if (!hasStarterTune || !starterTuneApplied || gameStatus.status !== 'done' || spatialStatus.status !== 'done' || !soundStatus.ready || !backupStatus.ready) {
     return {
       status: 'needs-fix',
       title: 'Needs one more proof step',
@@ -243,6 +281,7 @@ function buildAutoSetupDecision({
 
 function buildProofAnswers(state = {}, context = {}, {
   gameStatus,
+  spatialStatus,
   soundStatus,
   backupStatus,
   starterTuneApplied
@@ -253,6 +292,8 @@ function buildProofAnswers(state = {}, context = {}, {
   const source = state.autoDetectReport?.source || '';
   const scanLabel = source.includes('desktop') || source.includes('bridge') ? 'desktop scan' : source ? 'browser scan' : 'no scan';
   const gameLabel = context.gameAudioCheck ? `game settings ${context.gameAudioCheck.status}` : 'game settings unanswered';
+  const spatial = spatialCompatibilityFromContext(context);
+  const spatialLabel = spatial ? `native spatial ${spatial.status}` : 'native spatial unanswered';
   const soundLabel = soundStatus.ready ? 'Sound Match clean' : soundStatus.status === 'blocked' ? 'Sound Match blocked' : 'Sound Match pending';
   const changedDetail = starterTuneApplied
     ? `${profileLabel(state)} is staged in CueForge from the current recommendation.`
@@ -273,10 +314,15 @@ function buildProofAnswers(state = {}, context = {}, {
       value: conflict.value,
       detail: [
         conflict.detail,
-        context.gameAudioCheck?.warnings?.[0]?.title
+        context.gameAudioCheck?.warnings?.[0]?.title,
+        spatial?.warnings?.[0]?.title
       ].filter(Boolean).join(' '),
       route: 'detect',
-      status: conflict.blockers ? 'blocked' : conflict.warnings || gameStatus.status === 'blocked' ? 'warn' : 'done'
+      status: conflict.blockers || spatialStatus.status === 'blocked'
+        ? 'blocked'
+        : conflict.warnings || gameStatus.status === 'blocked'
+          ? 'warn'
+          : 'done'
     },
     {
       id: 'changed',
@@ -289,16 +335,16 @@ function buildProofAnswers(state = {}, context = {}, {
     {
       id: 'why',
       label: 'Why',
-      value: `${scanLabel} + game settings + Sound Match`,
-      detail: `${scanLabel} evidence, ${gameLabel}, and ${soundLabel} decide whether the recommendation can be applied.`,
+      value: `${scanLabel} + game settings + native spatial + Sound Match`,
+      detail: `${scanLabel} evidence, ${gameLabel}, ${spatialLabel}, and ${soundLabel} decide whether the recommendation can be applied.`,
       route: 'detect',
-      status: soundStatus.ready && gameStatus.status === 'done' ? 'done' : 'next'
+      status: soundStatus.ready && gameStatus.status === 'done' && spatialStatus.status === 'done' ? 'done' : 'next'
     },
     {
       id: 'confidence',
       label: 'How sure it is',
       value: `${score}/100`,
-      detail: `Auto Detect ${state.autoDetectReport?.confidence?.score ?? 0}%, game check ${context.gameAudioCheck?.confidence ?? 0}%, Sound Match ${soundStatus.ready ? 'clean' : soundStatus.status}.`,
+      detail: `Auto Detect ${state.autoDetectReport?.confidence?.score ?? 0}%, game check ${context.gameAudioCheck?.confidence ?? 0}%, native spatial ${spatial?.confidence ?? 0}%, Sound Match ${soundStatus.ready ? 'clean' : soundStatus.status}.`,
       route: 'selftest',
       status: score >= 80 ? 'done' : score >= 55 ? 'warn' : 'todo'
     },
@@ -326,10 +372,15 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
   const hasStarterTune = profileReady(state) && recommendationEq.length > 0;
   const starterTuneApplied = context.starterTuneApplied === true || eqMatches(recommendationEq, context.currentEq);
   const gameStatus = gameSettingsStatus(context);
+  const spatialStatus = spatialCompatibilityStatus(context);
   const soundStatus = soundMatchStatus(state, context, starterTuneApplied);
   const backupStatus = applyBackupStatus(state, context);
   const matchStatus = playTestStatus(context);
-  const safeRecommendationStatus = hasStarterTune && highConflicts === 0 && gameStatus.status !== 'blocked' ? 'done' : hasStarterTune ? 'warn' : 'todo';
+  const safeRecommendationStatus = hasStarterTune && highConflicts === 0 && gameStatus.status === 'done' && spatialStatus.status === 'done'
+    ? 'done'
+    : hasStarterTune
+      ? 'warn'
+      : 'todo';
 
   const checks = [
     setupCheck(
@@ -361,6 +412,13 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
       gameStatus.status,
       gameStatus.detail,
       gameStatus.route
+    ),
+    setupCheck(
+      'native-spatial',
+      'Native spatial',
+      spatialStatus.status,
+      spatialStatus.detail,
+      spatialStatus.route
     ),
     setupCheck(
       'output-picked',
@@ -456,12 +514,19 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
       route: 'detect',
       detail: 'Clear high-risk routing conflicts before applying a tune.'
     };
-  } else if (gameStatus.status === 'blocked' || gameStatus.status === 'next') {
+  } else if (hasScanEvidence && gameStatus.status !== 'done') {
     nextAction = {
       id: 'game-settings',
       label: gameStatus.status === 'blocked' ? 'Fix Game Settings' : 'Check Game Settings',
       route: 'detect',
       detail: gameStatus.detail
+    };
+  } else if (hasScanEvidence && spatialStatus.status !== 'done') {
+    nextAction = {
+      id: 'spatial-compatibility',
+      label: spatialStatus.status === 'blocked' ? 'Fix Spatial Stack' : 'Check Spatial Stack',
+      route: 'detect',
+      detail: spatialStatus.detail
     };
   } else if (hasScanEvidence && hasStarterTune && !starterTuneApplied) {
     nextAction = {
@@ -501,11 +566,13 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
     starterTuneApplied,
     highConflicts,
     gameStatus,
+    spatialStatus,
     soundStatus,
     backupStatus
   });
   const proofAnswers = buildProofAnswers(state, context, {
     gameStatus,
+    spatialStatus,
     soundStatus,
     backupStatus,
     starterTuneApplied
