@@ -54,7 +54,7 @@ describe('cueforge state v2 contract', () => {
   it('starts from safe defaults when setup data is not ready yet', () => {
     const emptyState = buildCanonicalCueForgeState();
 
-    expect(emptyState.version).toBe('0.2.0-alpha.4');
+    expect(emptyState.version).toBe('0.2.0-alpha.5');
     expect(emptyState.devices.outputType).toBe('unknown');
     expect(emptyState.chain.apoDetected).toBe(false);
     expect(emptyState.readiness.tier).toBe('not_ready');

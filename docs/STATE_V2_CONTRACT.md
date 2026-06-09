@@ -1,6 +1,6 @@
 # CueForge State v2 Contract
 
-CueForge v0.2.0-alpha.4 uses one canonical state object as the shared source of truth:
+CueForge v0.2.0-alpha.5 uses one canonical state object as the shared source of truth:
 
 - `src/core/cueforgeState.js` exports `cueforgeStateV2`.
 - `buildCueForgeState()` creates the live state from the normalized Auto Detect report, detected devices, bridge data, EQ, hearing data, game focus, conflicts, readiness, and export data.

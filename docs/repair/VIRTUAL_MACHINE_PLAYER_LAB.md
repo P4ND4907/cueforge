@@ -1,6 +1,6 @@
 # Virtual Machine Player Lab
 
-Generated: 2026-05-24T10:33:33.486Z
+Generated: 2026-06-09T17:25:46.522Z
 Players: 1
 Seed: 907
 Feature depth: 6
@@ -14,7 +14,7 @@ Feature depth: 6
 - Improvement rate: 100.0%
 - Harm rate: 0.00%
 - Privacy failure rate: 0.00%
-- Desktop packaged smoke: pass - Packaged app rendered: Setup Command Center; bodyLength 7960.
+- Desktop packaged smoke: pass - Packaged app rendered: Setup Command Center; bodyLength 10250.
 
 ## Gear Coverage
 

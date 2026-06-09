@@ -14,8 +14,8 @@ describe('release pack v2', () => {
     const pack = buildCueForgeReleasePack({ state, apoConfig: 'Preamp: -4 dB' });
 
     expect(pack.schema).toBe('cueforge.release-pack.v2');
-    expect(pack.version).toBe('0.2.0-alpha.4');
-    expect(pack.stateV2.version).toBe('0.2.0-alpha.4');
+    expect(pack.version).toBe('0.2.0-alpha.5');
+    expect(pack.stateV2.version).toBe('0.2.0-alpha.5');
     expect(pack.files['cueforge-state-v2.json']).toContain('recommendedProfile');
     expect(pack.files['cueforge-brain.json']).toContain('cueforge.brain.v1');
     expect(pack.files['cueforge-profile-v2.json']).toContain('profile-engine.v2');

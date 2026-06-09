@@ -188,9 +188,9 @@ const socialBrand = {
 };
 
 const socialLinks = Object.fromEntries(socialBrand.links);
-const releaseTag = 'v0.2.0-alpha.4';
-const latestReleaseUrl = 'https://github.com/P4ND4907/cueforge/releases/tag/v0.2.0-alpha.4';
-const desktopAlphaUrl = 'https://github.com/P4ND4907/cueforge/releases/download/v0.2.0-alpha.4/CueForge-0.2.0-alpha.4-x64.exe';
+const releaseTag = 'v0.2.0-alpha.5';
+const latestReleaseUrl = 'https://github.com/P4ND4907/cueforge/releases/tag/v0.2.0-alpha.5';
+const desktopAlphaUrl = 'https://github.com/P4ND4907/cueforge/releases/download/v0.2.0-alpha.5/CueForge-0.2.0-alpha.5-x64.exe';
 
 const publicRelease = {
   app: 'https://p4nd4907.github.io/cueforge/',
@@ -787,9 +787,9 @@ function App() {
 
   const exportSeamlessReleasePack = () => {
     const pack = cueforgeState.releasePack;
-    downloadTextFile('cueforge-v0.2.0-alpha.4-release-pack.json', JSON.stringify(pack, null, 2));
-    downloadTextFile('cueforge-v0.2.0-alpha.4-summary.txt', summarizeReleasePack(pack));
-    setShareStatus('v0.2.0-alpha.4 release pack exported locally.');
+    downloadTextFile('cueforge-v0.2.0-alpha.5-release-pack.json', JSON.stringify(pack, null, 2));
+    downloadTextFile('cueforge-v0.2.0-alpha.5-summary.txt', summarizeReleasePack(pack));
+    setShareStatus('v0.2.0-alpha.5 release pack exported locally.');
   };
 
   const setBand = (index, value) => {

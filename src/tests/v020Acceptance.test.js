@@ -126,8 +126,8 @@ describe('v0.2.0 acceptance checklist', () => {
       'safest-next-step'
     ]);
     expect(commandCenter.operatingQuestions.find((item) => item.id === 'active-route').detail).toMatch(/Game ->/i);
-    expect(cueforgeStateV2.version).toBe('0.2.0-alpha.4');
-    expect(builtState.stateV2.version).toBe('0.2.0-alpha.4');
+    expect(cueforgeStateV2.version).toBe('0.2.0-alpha.5');
+    expect(builtState.stateV2.version).toBe('0.2.0-alpha.5');
     expect(builtState.stateV2.calibration.labInputs.schema).toBe('cueforge.personalization-lab-inputs.v1');
     expect(labInputs.claimBoundary.notMedical).toBe(true);
     expect(graph.outputPath.length).toBeGreaterThan(3);

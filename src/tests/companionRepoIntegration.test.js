@@ -18,7 +18,7 @@ describe('companion repo integration plan', () => {
 
     expect(plan).toMatchObject({
       schema: 'cueforge.companion-integration-plan.v1',
-      stage: 'v0.2.0-alpha.4'
+      stage: 'v0.2.0-alpha.5'
     });
     expect(plan.integrations.map((item) => item.id)).toEqual([
       companionIntegrationIds.autobot,

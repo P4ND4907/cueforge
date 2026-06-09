@@ -1,6 +1,6 @@
 # CueForge Open-Source Stack
 
-Status: v0.2.0-alpha.4 integration contract.
+Status: v0.2.0-alpha.5 integration contract.
 
 CueForge should not copy big audio apps. It should use proven open tools where they make the product safer, then wrap them in CueForge's own chain-verifier and personal sound-engine flow.
 
