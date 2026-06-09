@@ -158,6 +158,7 @@ describe('command center flow', () => {
     expect(guided.checks.map((check) => check.label)).toEqual([
       'Device scan',
       'Desktop link',
+      'Loopback proof',
       'Game settings',
       'Native spatial',
       'Output picked',
@@ -380,7 +381,7 @@ describe('command center flow', () => {
     });
 
     expect(guided.decision).toMatchObject({
-      status: 'do-not-apply',
+      status: 'do-not-apply-yet',
       title: 'Do not apply yet'
     });
     expect(guided.nextAction).toMatchObject({
@@ -390,6 +391,7 @@ describe('command center flow', () => {
     expect(guided.checks.map((check) => check.label)).toEqual([
       'Device scan',
       'Desktop link',
+      'Loopback proof',
       'Game settings',
       'Native spatial',
       'Output picked',
@@ -403,6 +405,7 @@ describe('command center flow', () => {
     ]);
     expect(guided.proofAnswers.map((answer) => answer.id)).toEqual([
       'found',
+      'proof',
       'wrong',
       'changed',
       'why',
@@ -470,7 +473,7 @@ describe('command center flow', () => {
     const checks = Object.fromEntries(guided.checks.map((check) => [check.id, check]));
 
     expect(guided.decision).toMatchObject({
-      status: 'do-not-apply',
+      status: 'do-not-apply-yet',
       title: 'Do not apply yet',
       detail: expect.stringMatching(/spatial renderer/i)
     });

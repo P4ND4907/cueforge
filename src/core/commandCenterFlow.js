@@ -1,3 +1,5 @@
+import { buildAutoSetupVerdict } from './autoSetupVerdict.js';
+
 export const commandCenterFlow = [
   { id: 'start', label: 'Start', route: 'dashboard', group: 'start' },
   { id: 'setup-command-center', label: 'Setup Command Center', route: 'dashboard', group: 'setup' },
@@ -132,6 +134,90 @@ function spatialCompatibilityStatus(context = {}) {
     status: 'next',
     detail: check.summary || 'Confirm the active spatial renderer before applying a tune.',
     route: 'detect'
+  };
+}
+
+function loopbackProofFromContext(state = {}, context = {}) {
+  return context.loopbackProof || state.loopbackProof || state.autoDetectReport?.loopbackProof || null;
+}
+
+function loopbackProofStatus(state = {}, context = {}, { hasScanEvidence = false, partialEvidence = false, desktopEvidenceLoaded = false } = {}) {
+  const proof = loopbackProofFromContext(state, context);
+
+  if (proof?.status === 'available') {
+    return {
+      status: 'done',
+      detail: `WASAPI loopback proof is available for ${proof.endpointLabel || 'the active endpoint'}. No recording is enabled.`,
+      route: 'desktop-scan'
+    };
+  }
+
+  if (['blocked', 'unavailable', 'unsupported'].includes(proof?.status)) {
+    return {
+      status: 'blocked',
+      detail: proof.reason || 'WASAPI loopback proof needs a desktop fix before endpoint proof is claimed.',
+      route: 'desktop-scan'
+    };
+  }
+
+  if (desktopEvidenceLoaded) {
+    return {
+      status: 'next',
+      detail: 'Desktop evidence is loaded. Run loopback proof to confirm endpoint capability without recording audio.',
+      route: 'desktop-scan'
+    };
+  }
+
+  if (partialEvidence || hasScanEvidence) {
+    return {
+      status: 'warn',
+      detail: 'Browser evidence cannot prove Windows endpoint loopback. Use the desktop scan for this proof.',
+      route: 'desktop-scan'
+    };
+  }
+
+  return {
+    status: 'todo',
+    detail: 'Loopback proof appears after a scan. It checks capability only; it does not record audio.',
+    route: 'desktop-scan'
+  };
+}
+
+function reportForVerdict(state = {}, {
+  counts = { inputs: 0, outputs: 0 },
+  hasScanEvidence = false,
+  partialEvidence = false,
+  desktopEvidenceLoaded = false
+} = {}) {
+  const report = state.autoDetectReport || {};
+  const devices = report.devices || {};
+  const hasOutputs = (devices.windowsRenderDevices?.length || 0) +
+    (devices.browserOutputs?.length || 0) +
+    (devices.browserRenderDevices?.length || 0) > 0;
+  const hasInputs = (devices.windowsCaptureDevices?.length || 0) +
+    (devices.browserInputs?.length || 0) +
+    (devices.browserCaptureDevices?.length || 0) > 0;
+
+  if (!hasScanEvidence || (hasOutputs && hasInputs)) return report;
+
+  const outputFill = Array.from(
+    { length: Math.max(0, Number(counts.outputs || 0)) },
+    (_, index) => ({ label: index === 0 ? 'Output confirmed from chain graph' : `Output ${index + 1}` })
+  );
+  const inputFill = Array.from(
+    { length: Math.max(0, Number(counts.inputs || 0)) },
+    (_, index) => ({ label: index === 0 ? 'Mic confirmed from chain graph' : `Input ${index + 1}` })
+  );
+
+  return {
+    ...report,
+    source: report.source || (desktopEvidenceLoaded ? 'browser+desktop_bridge' : partialEvidence ? 'browser' : 'chain_graph'),
+    confidence: report.confidence || { score: Number(state.readiness?.score || 0), tier: 'chain', requiresExplicitScan: partialEvidence },
+    devices: {
+      ...devices,
+      browserOutputs: hasOutputs ? devices.browserOutputs : outputFill,
+      browserInputs: hasInputs ? devices.browserInputs : inputFill
+    }
   };
 }
 
@@ -284,7 +370,9 @@ function buildProofAnswers(state = {}, context = {}, {
   spatialStatus,
   soundStatus,
   backupStatus,
-  starterTuneApplied
+  starterTuneApplied,
+  autoSetupVerdict,
+  loopbackStatus
 } = {}) {
   const conflict = conflictSummary(state);
   const companions = companionLabels(state);
@@ -307,6 +395,20 @@ function buildProofAnswers(state = {}, context = {}, {
       detail: `${evidenceMode(state)}. Layers: ${compactList(companions)}.`,
       route: 'detect',
       status: state.autoDetectReport?.source ? 'done' : 'todo'
+    },
+    {
+      id: 'proof',
+      label: 'Auto Setup Answer',
+      value: autoSetupVerdict?.headline || 'Setup answer pending',
+      detail: autoSetupVerdict?.proof?.join(' ') || loopbackStatus?.detail || 'Proof details appear after scan.',
+      route: autoSetupVerdict?.nextAction?.route || loopbackStatus?.route || 'detect',
+      status: autoSetupVerdict?.status === 'ready'
+        ? 'done'
+        : autoSetupVerdict?.status === 'do-not-apply-yet'
+          ? 'blocked'
+          : autoSetupVerdict?.status === 'needs-fixes'
+            ? 'warn'
+            : 'todo'
     },
     {
       id: 'wrong',
@@ -359,6 +461,19 @@ function buildProofAnswers(state = {}, context = {}, {
   ];
 }
 
+function buildDecisionFromVerdict(verdict = {}, fallbackNextAction = {}) {
+  return {
+    status: verdict.status || 'needs-fixes',
+    title: verdict.headline || 'Setup answer pending',
+    detail: verdict.problems?.[0] || verdict.nextAction?.detail || fallbackNextAction.detail || 'Run Auto Setup to get the next safe step.',
+    confidence: verdict.confidence || 0,
+    tone: verdict.status === 'ready' ? 'teal' : verdict.status === 'do-not-apply-yet' ? 'red' : 'amber',
+    safeToApply: verdict.safeToApply === true,
+    safeToTestInMatch: verdict.safeToTestInMatch === true,
+    nextAction: verdict.nextAction || fallbackNextAction
+  };
+}
+
 export function buildGuidedSetupRun(state = {}, context = {}) {
   const counts = deviceCounts(state);
   const hasOutput = counts.outputs > 0;
@@ -373,9 +488,21 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
   const starterTuneApplied = context.starterTuneApplied === true || eqMatches(recommendationEq, context.currentEq);
   const gameStatus = gameSettingsStatus(context);
   const spatialStatus = spatialCompatibilityStatus(context);
+  const soundMatchResult = context.soundMatchResult || state.stateV2?.calibration?.blindMatch || null;
   const soundStatus = soundMatchStatus(state, context, starterTuneApplied);
   const backupStatus = applyBackupStatus(state, context);
   const matchStatus = playTestStatus(context);
+  const loopbackStatus = loopbackProofStatus(state, context, {
+    hasScanEvidence,
+    partialEvidence,
+    desktopEvidenceLoaded
+  });
+  const verdictReport = reportForVerdict(state, {
+    counts,
+    hasScanEvidence,
+    partialEvidence,
+    desktopEvidenceLoaded
+  });
   const safeRecommendationStatus = hasStarterTune && highConflicts === 0 && gameStatus.status === 'done' && spatialStatus.status === 'done'
     ? 'done'
     : hasStarterTune
@@ -405,6 +532,13 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
             : 'Browser evidence is partial. Import or run a Windows bridge report when possible.'
           : 'Desktop link appears after the first scan.',
       'desktop-scan'
+    ),
+    setupCheck(
+      'loopback-proof',
+      'Loopback proof',
+      loopbackStatus.status,
+      loopbackStatus.detail,
+      loopbackStatus.route
     ),
     setupCheck(
       'game-settings',
@@ -558,24 +692,28 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
     };
   }
 
-  const decision = buildAutoSetupDecision({
-    state,
-    context,
-    hasScanEvidence,
-    hasStarterTune,
+  const autoSetupVerdict = buildAutoSetupVerdict({
+    autoDetectReport: verdictReport,
+    conflicts: state.conflicts,
+    gameAudioCheck: context.gameAudioCheck,
+    nativeSpatialCompatibility: spatialCompatibilityFromContext(context),
+    soundMatchResult,
+    loopbackProof: loopbackProofFromContext(state, context),
+    desktopReady: desktopEvidenceLoaded,
+    backupAvailable: backupStatus.ready,
+    profileReady: hasStarterTune,
     starterTuneApplied,
-    highConflicts,
-    gameStatus,
-    spatialStatus,
-    soundStatus,
-    backupStatus
+    matchFeedback: context.lastTrial?.feedback || context.lastReport || null
   });
+  const decision = buildDecisionFromVerdict(autoSetupVerdict, nextAction);
   const proofAnswers = buildProofAnswers(state, context, {
     gameStatus,
     spatialStatus,
     soundStatus,
     backupStatus,
-    starterTuneApplied
+    starterTuneApplied,
+    autoSetupVerdict,
+    loopbackStatus
   });
 
   return {
@@ -583,6 +721,7 @@ export function buildGuidedSetupRun(state = {}, context = {}) {
     summary: hasScanEvidence
       ? `${decision.title}: ${decision.detail}`
       : 'Run one scan first. Then CueForge turns the result into a setup checklist and one next button.',
+    autoSetupVerdict,
     decision,
     proofAnswers,
     nextAction,

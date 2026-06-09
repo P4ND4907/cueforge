@@ -19,6 +19,10 @@ describe('release pack v2', () => {
     expect(pack.files['cueforge-state-v2.json']).toContain('recommendedProfile');
     expect(pack.files['cueforge-brain.json']).toContain('cueforge.brain.v1');
     expect(pack.files['cueforge-profile-v2.json']).toContain('profile-engine.v2');
+    expect(pack.files['cueforge-loopback-proof.json']).toContain('cueforge.wasapi-loopback-proof.v1');
+    expect(pack.files['cueforge-loopback-proof.json']).toContain('ep_');
+    expect(pack.files['cueforge-loopback-proof.json']).not.toContain('fixture-secret-endpoint');
+    expect(pack.files['cueforge-loopback-proof.json']).not.toContain('C:\\Users');
     expect(summarizeReleasePack(pack)).toContain('Brain:');
     expect(summarizeReleasePack(pack)).toContain('State v2: included');
   });

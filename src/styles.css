@@ -911,7 +911,8 @@ p {
   text-align: center;
 }
 
-.guided-decision.decision-do-not-apply {
+.guided-decision.decision-do-not-apply,
+.guided-decision.decision-do-not-apply-yet {
   border-color: rgba(255,111,97,0.34);
   background:
     radial-gradient(circle at 10% 10%, rgba(255,111,97,0.15), transparent 34%),
@@ -919,23 +920,29 @@ p {
 }
 
 .guided-decision.decision-do-not-apply svg,
-.guided-decision.decision-do-not-apply em {
+.guided-decision.decision-do-not-apply-yet svg,
+.guided-decision.decision-do-not-apply em,
+.guided-decision.decision-do-not-apply-yet em {
   color: #ff8b7e;
 }
 
-.guided-decision.decision-do-not-apply em {
+.guided-decision.decision-do-not-apply em,
+.guided-decision.decision-do-not-apply-yet em {
   border-color: rgba(255,111,97,0.32);
   background: rgba(255,111,97,0.09);
 }
 
 .guided-decision.decision-needs-fix,
+.guided-decision.decision-needs-fixes,
 .guided-decision.decision-needs-scan {
   border-color: rgba(246,177,61,0.32);
 }
 
 .guided-decision.decision-needs-fix svg,
+.guided-decision.decision-needs-fixes svg,
 .guided-decision.decision-needs-scan svg,
 .guided-decision.decision-needs-fix em,
+.guided-decision.decision-needs-fixes em,
 .guided-decision.decision-needs-scan em {
   color: #f6b13d;
 }

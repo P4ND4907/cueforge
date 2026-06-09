@@ -23,6 +23,15 @@ describe('auto detect report v2', () => {
     expect(report.companions.peace.detected).toBe(true);
     expect(report.companions.sonar.detected).toBe(true);
     expect(report.companions.vbCable.detected).toBe(false);
+    expect(report.loopbackProof).toMatchObject({
+      status: 'available',
+      endpointLabel: 'USB DAC Headphones',
+      canRecord: false,
+      rawAudioStored: false
+    });
+    expect(report.loopbackProof.endpointHash).toMatch(/^ep_[a-f0-9]{12}$/);
+    expect(JSON.stringify(report.loopbackProof)).not.toContain('fixture-secret-endpoint');
+    expect(JSON.stringify(report.loopbackProof)).not.toContain('C:\\Users');
     expect(report.suspectedHardware.map((item) => item.id)).toEqual(expect.arrayContaining(['usbMic', 'genericIem']));
     expect(report.risks.map((item) => item.id)).toEqual(expect.arrayContaining(['sonar_virtual_output', 'sonar_apo_target_mismatch']));
     expect(report.recommendations).toContain('Confirm which endpoint game audio uses before applying APO.');

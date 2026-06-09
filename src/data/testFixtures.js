@@ -20,6 +20,15 @@ export const desktopBridgeFixture = {
     recording: 'HyperX QuadCast USB Microphone',
     communicationsRecording: 'HyperX QuadCast USB Microphone'
   },
+  loopbackProof: {
+    status: 'available',
+    endpoint: {
+      label: 'USB DAC Headphones',
+      id: 'SWD\\MMDEVAPI\\{0.0.0.00000000}.{fixture-secret-endpoint}',
+      devicePath: 'C:\\Users\\khepr\\Audio\\fixture-secret-path.wav'
+    },
+    defaultRender: 'USB DAC Headphones'
+  },
   sessions: [
     { app: 'Rainbow Six Siege', endpoint: 'USB DAC Headphones', active: true },
     { app: 'Discord', endpoint: 'HyperX QuadCast USB Microphone', active: true }

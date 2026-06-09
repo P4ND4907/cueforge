@@ -18,6 +18,7 @@ export function buildCueForgeReleasePack({
     brain: state?.brain || null,
     engine: state?.engine || null,
     applyPath: state?.applyPath || null,
+    loopbackProof: state?.loopbackProof || state?.autoDetectReport?.loopbackProof || null,
     files: {
       'cueforge-state-anchor.json': state?.stateV2 ? JSON.stringify(attachStateAnchor({}, state.stateV2, STATE_CONSUMERS.releasePack).stateAnchor, null, 2) : '',
       'cueforge-state-v2.json': state?.stateV2 ? JSON.stringify(state.stateV2, null, 2) : '',
@@ -26,6 +27,7 @@ export function buildCueForgeReleasePack({
       'cueforge-profile-v2.json': state?.profile ? JSON.stringify(state.profile, null, 2) : '',
       'cueforge-chain-graph.json': state?.chainGraph ? JSON.stringify(state.chainGraph, null, 2) : '',
       'cueforge-readiness.json': state?.readiness ? JSON.stringify(state.readiness, null, 2) : '',
+      'cueforge-loopback-proof.json': state?.loopbackProof || state?.autoDetectReport?.loopbackProof ? JSON.stringify(state.loopbackProof || state.autoDetectReport.loopbackProof, null, 2) : '',
       'equalizer-apo-config.txt': String(apoConfig || '')
     }
   }, state?.stateV2, STATE_CONSUMERS.releasePack);

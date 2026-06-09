@@ -1,5 +1,6 @@
 import { classifyHardware } from '../data/hardwareProfiles.js';
 import { cleanAudioDeviceName } from '../deviceProfiles.js';
+import { buildWasapiLoopbackProof } from './wasapiLoopbackProof.js';
 
 const companionMap = {
   equalizerApo: ['equalizerApo'],
@@ -565,6 +566,7 @@ export function buildAutoDetectReport({
       windowsCaptureDevices
     },
     companions,
+    loopbackProof: buildWasapiLoopbackProof(bridgeReport?.loopbackProof),
     confidence,
     suspectedHardware: uniqueHardware([...inputs, ...outputs]),
     risks,

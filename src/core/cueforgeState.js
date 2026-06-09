@@ -320,6 +320,7 @@ export function buildCueForgeState({
   engine.stateAnchor = buildStateAnchor(stateV2, STATE_CONSUMERS.nativeEngine);
   const stateBundle = {
     autoDetectReport: detectionReport,
+    loopbackProof: detectionReport.loopbackProof,
     stateV2,
     chainGraph,
     conflicts,

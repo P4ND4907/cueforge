@@ -47,6 +47,7 @@ const stepIcons = {
 const guidedCheckIcons = {
   'device-scan': Search,
   'desktop-link': Download,
+  'loopback-proof': Radio,
   'game-settings': Gamepad2,
   'native-spatial': Radio,
   'output-picked': Headphones,
@@ -61,6 +62,7 @@ const guidedCheckIcons = {
 
 const proofAnswerIcons = {
   found: Search,
+  proof: ShieldCheck,
   wrong: Bug,
   changed: Sparkles,
   why: BrainCircuit,
@@ -204,7 +206,11 @@ export function SetupCommandCenter({
 
 export function GuidedSetupRunPanel({ guided, onAction, onUndo, compact = false }) {
   if (!guided) return null;
-  const DecisionIcon = guided.decision?.status === 'ready' ? CheckCircle2 : guided.decision?.status === 'do-not-apply' ? ShieldCheck : Gauge;
+  const DecisionIcon = guided.decision?.status === 'ready'
+    ? CheckCircle2
+    : guided.decision?.status === 'do-not-apply-yet' || guided.decision?.status === 'do-not-apply'
+      ? ShieldCheck
+      : Gauge;
 
   return (
     <div className={`guided-setup-run ${compact ? 'compact' : ''}`} aria-label="Auto Setup guided result">
@@ -222,7 +228,7 @@ export function GuidedSetupRunPanel({ guided, onAction, onUndo, compact = false 
         <div className={`guided-decision decision-${guided.decision.status}`}>
           <DecisionIcon size={20} />
           <div>
-            <span>Final setup answer</span>
+            <span>Auto Setup Answer</span>
             <strong>{guided.decision.title}</strong>
             <small>{guided.decision.detail}</small>
           </div>
