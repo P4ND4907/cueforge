@@ -4,6 +4,7 @@ import {
   buildCueForgeMiddlewareCompatibilityManifest,
   buildMiddlewareSmokeChecklist,
   buildSdkPrototypeDefinitionOfDone,
+  buildThxSpatialAudioExperiment,
   evaluateProfilerBudget,
   resolveBinauralRoute,
   validateAudioBackendAdapter,
@@ -38,6 +39,30 @@ describe('CueForge middleware compatibility contract', () => {
     expect(manifest.backendEventMap.fmod['weapon.fire']).toBe('event:/CueForge/weapon/fire');
     expect(manifest.rtpcs[0]).toMatchObject({ id: 'engine_rpm', min: 0, max: 10000, unit: 'rpm' });
     expect(manifest.states[0]).toMatchObject({ group: 'Surface', values: ['Dirt', 'Asphalt', 'Metal'] });
+  });
+
+  it('tracks THX Spatial Audio+ as a Wwise/WYVRN research candidate, not a post-mix promise', () => {
+    const manifest = buildCueForgeMiddlewareCompatibilityManifest();
+
+    const thx = manifest.spatialPlugins.find((plugin) => plugin.id === 'thx-spatial-audio-plus');
+
+    expect(thx).toMatchObject({
+      status: 'research-candidate',
+      ecosystem: 'WYVRN',
+      middleware: ['wwise'],
+      renderTarget: 'game-engine-or-middleware-rendered-headphones',
+      no3dAudioLicensingFeesClaimedByVendor: true
+    });
+    expect(thx.controls).toEqual([
+      'room-direct',
+      'early-reflections',
+      'late-reverb',
+      'cinematic-depth',
+      'emitter-placement'
+    ]);
+    expect(thx.roadmapOutputs).toEqual(['7.1.4', 'Eclipsa IAMF']);
+    expect(thx.guardrails).toContain('Do not stack device THX Spatial Audio with the game plugin during A/B tests.');
+    expect(thx.guardrails).toContain('Do not claim true engine geometry from normal stereo post-mix evidence.');
   });
 
   it('rejects backend adapters that skip required parity methods or use ad-hoc event names', () => {
@@ -162,5 +187,40 @@ describe('CueForge middleware compatibility contract', () => {
     expect(dod.productName).toBe('CueForge');
     expect(dod.items).toContain('One codepath behind IAudioBackend, switchable Wwise/FMOD by runtime selection or build flag.');
     expect(dod.items).toContain('Voice caps and profiler overlay work on both middleware backends.');
+  });
+
+  it('builds a THX Spatial Audio+ A/B experiment for one high-impact scene', () => {
+    const experiment = buildThxSpatialAudioExperiment({
+      sceneId: 'warehouse-flank',
+      middleware: 'wwise',
+      baselineRenderer: 'wwise-native-spatial',
+      processedRenderer: 'thx-spatial-audio-plus',
+      eventIds: ['gameplay.footstep', 'gameplay.weapon_fire']
+    });
+
+    expect(experiment).toMatchObject({
+      schema: 'cueforge.spatial-ab-experiment.v1',
+      productName: 'CueForge',
+      pluginId: 'thx-spatial-audio-plus',
+      sceneId: 'warehouse-flank',
+      middleware: 'wwise',
+      baselineRenderer: 'wwise-native-spatial',
+      processedRenderer: 'thx-spatial-audio-plus'
+    });
+    expect(experiment.requiredCaptures.map((capture) => capture.id)).toEqual(['baseline', 'thx-processed']);
+    expect(experiment.metrics).toEqual([
+      'localization-error-deg',
+      'front-back-confusion-rate',
+      'cue-clarity-score',
+      'room-mask-risk',
+      'audio-thread-ms',
+      'end-to-end-latency-ms'
+    ]);
+    expect(experiment.passCriteria).toContain('Processed scene improves localization or cue clarity without raising room-mask risk.');
+    expect(experiment.safety).toMatchObject({
+      rawAudioLeavesMachine: false,
+      disablesDeviceSpatialDuringTest: true,
+      noArbitraryGamePostMixClaim: true
+    });
   });
 });

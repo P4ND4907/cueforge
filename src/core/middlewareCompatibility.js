@@ -41,6 +41,40 @@ export const defaultVoiceCaps = {
   }
 };
 
+export const spatialPluginCandidates = [
+  {
+    id: 'thx-spatial-audio-plus',
+    label: 'THX Spatial Audio+',
+    status: 'research-candidate',
+    ecosystem: 'WYVRN',
+    vendor: 'THX Ltd.',
+    middleware: ['wwise'],
+    enginePipelines: ['Unity', 'Unreal Engine', 'custom-engine-via-middleware'],
+    renderTarget: 'game-engine-or-middleware-rendered-headphones',
+    no3dAudioLicensingFeesClaimedByVendor: true,
+    controls: [
+      'room-direct',
+      'early-reflections',
+      'late-reverb',
+      'cinematic-depth',
+      'emitter-placement'
+    ],
+    roadmapOutputs: ['7.1.4', 'Eclipsa IAMF'],
+    experimentUse: 'Run one high-impact scene through baseline middleware rendering and THX Spatial Audio+ processing, then compare localization, clarity, room masking, CPU, and latency.',
+    guardrails: [
+      'Do not stack device THX Spatial Audio with the game plugin during A/B tests.',
+      'Do not claim true engine geometry from normal stereo post-mix evidence.',
+      'Keep raw capture local and export derived metrics only.',
+      'Treat future 7.1.4 and Eclipsa IAMF output as roadmap until verified in a CueForge run.'
+    ],
+    sources: [
+      'https://www.thx.com/blog/thx-ltd-announces-thx-spatial-audio-plugin-for-game-developers-available-now-from-wyvrn/',
+      'https://www.thx.com/thx-spatial-audio-plus-game-plugin/',
+      'https://developer.razer.com/audio/thx/'
+    ]
+  }
+];
+
 export function buildCueForgeMiddlewareCompatibilityManifest({
   version = '0.1',
   events = defaultMiddlewareEvents,
@@ -92,6 +126,7 @@ export function buildCueForgeMiddlewareCompatibilityManifest({
       preventDoubleHrtf: true,
       target: { sampleRate: 48000, blockSize: 512, maxLatencyMs: 20 }
     },
+    spatialPlugins: spatialPluginCandidates,
     voiceBudgets: defaultVoiceCaps,
     snapshots,
     buildPaths: {
@@ -103,6 +138,69 @@ export function buildCueForgeMiddlewareCompatibilityManifest({
       noHiddenNativeRouting: true,
       noSilentDriverChanges: true,
       noRuntimeMixerMutationWithoutUserAction: true
+    }
+  };
+}
+
+export function buildThxSpatialAudioExperiment({
+  sceneId = 'high-impact-scene',
+  middleware = 'wwise',
+  baselineRenderer = 'middleware-native-spatial',
+  processedRenderer = 'thx-spatial-audio-plus',
+  eventIds = ['gameplay.footstep', 'gameplay.weapon_fire']
+} = {}) {
+  const plugin = spatialPluginCandidates.find((candidate) => candidate.id === 'thx-spatial-audio-plus');
+
+  return {
+    schema: 'cueforge.spatial-ab-experiment.v1',
+    productName: 'CueForge',
+    pluginId: plugin.id,
+    sceneId,
+    middleware,
+    baselineRenderer,
+    processedRenderer,
+    eventIds,
+    prerequisites: [
+      'Scene has repeatable listener and emitter path.',
+      'Wwise event IDs come from the canonical CueForge middleware manifest.',
+      'Headphones are used for binaural evaluation.',
+      'Any device-level THX, Windows Sonic, Dolby, DTS, or other spatial layer is disabled during the plugin A/B.'
+    ],
+    requiredCaptures: [
+      {
+        id: 'baseline',
+        renderer: baselineRenderer,
+        output: 'derived-metrics-and-local-reference-capture',
+        rawAudioLeavesMachine: false
+      },
+      {
+        id: 'thx-processed',
+        renderer: processedRenderer,
+        output: 'derived-metrics-and-local-reference-capture',
+        rawAudioLeavesMachine: false
+      }
+    ],
+    metrics: [
+      'localization-error-deg',
+      'front-back-confusion-rate',
+      'cue-clarity-score',
+      'room-mask-risk',
+      'audio-thread-ms',
+      'end-to-end-latency-ms'
+    ],
+    passCriteria: [
+      'Processed scene improves localization or cue clarity without raising room-mask risk.',
+      'Audio thread and latency remain inside the middleware budget.',
+      'Profiler overlay agrees with backend profiler within tolerance.',
+      'No double-HRTF, comb filtering, or platform spatial stacking warning.'
+    ],
+    knobsUnderTest: plugin.controls,
+    roadmapOutputs: plugin.roadmapOutputs,
+    safety: {
+      rawAudioLeavesMachine: false,
+      disablesDeviceSpatialDuringTest: true,
+      noArbitraryGamePostMixClaim: true,
+      noHiddenRoutingChange: true
     }
   };
 }

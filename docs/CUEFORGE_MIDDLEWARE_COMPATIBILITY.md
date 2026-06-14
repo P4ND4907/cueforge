@@ -59,6 +59,31 @@ The route resolver keeps this safe:
 
 This avoids double HRTF and bad downmix assumptions.
 
+## THX Spatial Audio+ Research Lane
+
+THX Spatial Audio+ is tracked as a CueForge research candidate, not as a default dependency.
+
+Why it matters:
+
+- it is available through the WYVRN ecosystem for game developers
+- the current developer path is centered on Wwise
+- the useful controls map to real scene design questions: room direct sound, early reflections, late reverb, cinematic depth, and emitter placement
+- future output targets include `7.1.4` and `Eclipsa IAMF`, but CueForge should treat those as roadmap until verified in an actual run
+
+The correct CueForge experiment is a short A/B on one high-impact scene:
+
+1. render the baseline scene through the normal middleware path
+2. render the same scene through THX Spatial Audio+
+3. keep the listener and emitter path repeatable
+4. disable device-level spatial processing during the test
+5. compare localization error, front/back confusion, cue clarity, room mask risk, audio-thread cost, and end-to-end latency
+
+`buildThxSpatialAudioExperiment()` creates that plan as `cueforge.spatial-ab-experiment.v1`.
+
+The goal is not to market magic. The goal is to answer one practical question:
+
+Does the processed scene improve localization or cue clarity without adding masking, latency, CPU spikes, or double-HRTF artifacts?
+
 ## Voice And CPU Budgets
 
 Current PC prototype budget:
