@@ -8,8 +8,11 @@ export default defineConfig(({ command }) => ({
     chunkSizeWarningLimit: 850,
     rollupOptions: {
       output: {
-        manualChunks: {
-          three: ['three']
+        manualChunks(id) {
+          if (/[\\/]node_modules[\\/]three[\\/]/.test(id)) {
+            return 'three';
+          }
+          return undefined;
         }
       }
     }
