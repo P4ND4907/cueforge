@@ -18,6 +18,7 @@
     "qa:vm-lab": "node tools/Run-VirtualMachinePlayerLab.mjs",
     "qa:swarm": "node tools/Run-HumanSwarmCdp.mjs",
     "qa:audio-fixture-regression": "node tools/Run-AudioFixtureRegression.mjs",
+    "qa:audio-ingest": "node tools/Run-AudioIngestQa.mjs",
     "qa:feedback-contract": "node tools/Run-FeedbackContract.mjs",
     "qa:route-graph-lab": "node tools/Run-RouteGraphLab.mjs",
     "qa:release-readiness": "node tools/Run-ReleaseReadiness.mjs",
