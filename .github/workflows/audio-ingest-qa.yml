@@ -1,0 +1,154 @@
+name: Audio Ingest QA
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/audio-ingest-qa.yml'
+      - 'docs/AUDIO_INGEST_QA_GATE.md'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'src/core/audioIngestQaGate.js'
+      - 'src/tests/audioIngestQaGate.test.js'
+      - 'src/tests/audioIngestWorkflow.test.js'
+      - 'tools/Run-AudioIngestQa.mjs'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audio-ingest-qa.yml'
+      - 'docs/AUDIO_INGEST_QA_GATE.md'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'src/core/audioIngestQaGate.js'
+      - 'src/tests/audioIngestQaGate.test.js'
+      - 'src/tests/audioIngestWorkflow.test.js'
+      - 'tools/Run-AudioIngestQa.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audio-ingest-qa:
+    name: Audio ingest fixture gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Set up FFmpeg and ffprobe
+        uses: FedericoCarboni/setup-ffmpeg@v3
+        with:
+          ffmpeg-version: release
+          linking-type: static
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install Python audio metrics dependencies
+        run: pip install numpy soundfile pyloudnorm
+
+      - name: Verify toolchain
+        run: |
+          ffmpeg -version
+          ffprobe -version
+          python --version
+
+      - name: Build deterministic stereo fixture
+        run: |
+          mkdir -p qa/audio/ci
+          ffmpeg -hide_banner -y \
+            -f lavfi -i "sine=frequency=1000:duration=2:sample_rate=48000" \
+            -f lavfi -i "sine=frequency=1200:duration=2:sample_rate=48000" \
+            -filter_complex "[0:a][1:a]amerge=inputs=2[a]" \
+            -map "[a]" \
+            -ac 2 \
+            -c:a pcm_s24le \
+            qa/audio/ci/stereo-pass.wav
+
+      - name: Extract ffprobe metadata
+        run: |
+          ffprobe -v error \
+            -select_streams a:0 \
+            -show_entries stream=codec_type,codec_name,sample_rate,channels,channel_layout,bits_per_sample,bits_per_raw_sample \
+            -of json \
+            qa/audio/ci/stereo-pass.wav > qa/audio/ci/ffprobe.json
+
+      - name: Measure loudness and channel evidence
+        run: |
+          python - <<'PY'
+          import json
+          import math
+          from pathlib import Path
+
+          import numpy as np
+          import pyloudnorm as pyln
+          import soundfile as sf
+
+          fixture = Path("qa/audio/ci/stereo-pass.wav")
+          data, sample_rate = sf.read(fixture, always_2d=True)
+          meter = pyln.Meter(sample_rate)
+
+          def dbfs(value):
+              return 20 * math.log10(max(float(value), 1e-12))
+
+          labels = ["L", "R"]
+          channel_metrics = []
+          for index in range(data.shape[1]):
+              channel = data[:, index]
+              channel_metrics.append({
+                  "channel": labels[index] if index < len(labels) else f"ch{index + 1}",
+                  "integratedLufs": round(float(meter.integrated_loudness(channel)), 3),
+                  "rmsDbfs": round(dbfs(np.sqrt(np.mean(np.square(channel)))), 3),
+                  "truePeakDbfs": round(dbfs(np.max(np.abs(channel))), 3),
+                  "silencePercent": round(float(np.mean(np.abs(channel) < 1e-5) * 100), 3),
+              })
+
+          correlations = []
+          if data.shape[1] >= 2:
+              correlation = float(np.corrcoef(data[:, 0], data[:, 1])[0, 1])
+              correlations.append({"pair": "L/R", "value": round(correlation, 6)})
+
+          metrics = {
+              "channelMetrics": channel_metrics,
+              "correlations": correlations,
+              "patternChecks": [
+                  {
+                      "id": "generated-stereo-fixture",
+                      "expected": "L and R contain different sine tones",
+                      "actual": "generated 1000 Hz left / 1200 Hz right",
+                      "ok": True,
+                  }
+              ],
+          }
+
+          Path("qa/audio/ci/metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf8")
+          PY
+
+      - name: Run CueForge audio ingest gate
+        run: npm run qa:audio-ingest -- --ffprobe-json qa/audio/ci/ffprobe.json --metrics-json qa/audio/ci/metrics.json
+
+      - name: Verify workflow contract tests
+        run: npm test -- src/tests/audioIngestQaGate.test.js src/tests/audioIngestWorkflow.test.js
+
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cueforge-audio-ingest-qa
+          path: |
+            qa/audio/ci/ffprobe.json
+            qa/audio/ci/metrics.json
+          if-no-files-found: error

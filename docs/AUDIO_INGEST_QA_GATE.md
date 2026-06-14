@@ -73,6 +73,23 @@ The metrics JSON shape is:
 
 The CLI exits `0` when the gate passes and `1` when any metadata or metrics gate fails.
 
+## GitHub Actions Gate
+
+The merge gate lives at `.github/workflows/audio-ingest-qa.yml`.
+
+It runs on pull requests, pushes to `main`, and manual dispatch. The workflow:
+
+- installs Node dependencies with `npm ci`
+- installs FFmpeg and ffprobe with `FedericoCarboni/setup-ffmpeg@v3`
+- installs Python audio metrics dependencies: `numpy`, `soundfile`, and `pyloudnorm`
+- generates a deterministic stereo WAV fixture
+- extracts `ffprobe` metadata into `qa/audio/ci/ffprobe.json`
+- measures per-channel loudness, peak, silence, and correlation into `qa/audio/ci/metrics.json`
+- runs `npm run qa:audio-ingest`
+- uploads the JSON evidence as a GitHub Actions artifact
+
+The fixture is synthetic and local to the runner. The artifact contains derived JSON only, not raw audio.
+
 ## Tool Notes
 
 - `ffprobe` is the metadata front door because it prints stream information in machine-readable formats.
@@ -82,5 +99,6 @@ The CLI exits `0` when the gate passes and `1` when any metadata or metrics gate
 Sources:
 
 - https://ffmpeg.org/ffprobe.html
+- https://github.com/marketplace/actions/setup-ffmpeg
 - https://github.com/csteinmetz1/pyloudnorm
 - https://github.com/slhck/ffmpeg-normalize
