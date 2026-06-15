@@ -1,6 +1,6 @@
 {
   "name": "cueforge",
-  "version": "0.2.0-alpha.5",
+  "version": "0.2.0-alpha.6",
   "private": true,
   "description": "Local-first FPS audio testing and tuning suite.",
   "author": "P4ND4907",
@@ -19,6 +19,7 @@
     "qa:swarm": "node tools/Run-HumanSwarmCdp.mjs",
     "qa:audio-fixture-regression": "node tools/Run-AudioFixtureRegression.mjs",
     "qa:audio-ingest": "node tools/Run-AudioIngestQa.mjs",
+    "qa:audio-ingest:manifest": "node tools/Run-AudioIngestQa.mjs --manifest qa/audio/export-manifest.json --output-dir qa/audio/ci --summary-json qa/audio/ci/audio-ingest-summary.json",
     "qa:feedback-contract": "node tools/Run-FeedbackContract.mjs",
     "qa:route-graph-lab": "node tools/Run-RouteGraphLab.mjs",
     "qa:release-readiness": "node tools/Run-ReleaseReadiness.mjs",

@@ -10,6 +10,8 @@ cueforge-*.txt
 test-results/
 playwright-report/
 qa/playwright/report/
+qa/audio/ci/
+qa/audio/exports/
 .DS_Store
 Thumbs.db
 tools/audio-setup-report.json

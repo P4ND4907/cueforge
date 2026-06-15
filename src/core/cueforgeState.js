@@ -11,7 +11,7 @@ import { buildPersonalizationLabInputs } from './personalizationLabInputs.js';
 import { buildSetupAssessmentSnapshot } from './setupAssessmentSnapshot.js';
 
 export const cueforgeStateV2 = {
-  version: '0.2.0-alpha.5',
+  version: '0.2.0-alpha.6',
   player: {
     testerId: null,
     experienceLevel: 'unknown',
@@ -347,7 +347,7 @@ export function buildCueForgeState({
 
   return {
     schema: 'cueforge.state.v2',
-    version: '0.2.0-alpha.5',
+    version: '0.2.0-alpha.6',
     codename: 'Seamless Engine Foundation',
     autoDetectReport: detectionReport,
     stateV2,

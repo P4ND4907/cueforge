@@ -73,6 +73,38 @@ The metrics JSON shape is:
 
 The CLI exits `0` when the gate passes and `1` when any metadata or metrics gate fails.
 
+## Manifest Command
+
+Use the manifest mode when CueForge has multiple exports to gate:
+
+```powershell
+npm.cmd run qa:audio-ingest:manifest
+```
+
+Equivalent explicit command:
+
+```powershell
+npm.cmd run qa:audio-ingest -- --manifest qa/audio/export-manifest.json --output-dir qa/audio/ci --summary-json qa/audio/ci/audio-ingest-summary.json
+```
+
+The manifest lives at `qa/audio/export-manifest.json` and currently covers:
+
+- required CI stereo fixture
+- Sound Match preview exports
+- learned EQ preview exports
+- OBS or stream audio check exports
+- headset/IEM test tones
+- voice/comms test clips
+
+Missing required files fail the run. Missing optional files are reported as skipped until a real export exists. Every checked file writes derived JSON under the selected output directory:
+
+- `ffprobe.json`
+- `metrics.json`
+- `result.json`
+- `audio-ingest-summary.json`
+
+The reusable Python probe is `tools/Measure-AudioIngestMetrics.py`. It emits LUFS, RMS dBFS, true peak, silence percentage, channel correlation, and stereo distinctness checks without serializing raw audio.
+
 ## GitHub Actions Gate
 
 The merge gate lives at `.github/workflows/audio-ingest-qa.yml`.
@@ -83,9 +115,7 @@ It runs on pull requests, pushes to `main`, and manual dispatch. The workflow:
 - installs FFmpeg and ffprobe with `FedericoCarboni/setup-ffmpeg@v3`
 - installs Python audio metrics dependencies: `numpy`, `soundfile`, and `pyloudnorm`
 - generates a deterministic stereo WAV fixture
-- extracts `ffprobe` metadata into `qa/audio/ci/ffprobe.json`
-- measures per-channel loudness, peak, silence, and correlation into `qa/audio/ci/metrics.json`
-- runs `npm run qa:audio-ingest`
+- runs `npm run qa:audio-ingest -- --manifest qa/audio/export-manifest.json --output-dir qa/audio/ci --summary-json qa/audio/ci/audio-ingest-summary.json`
 - uploads the JSON evidence as a GitHub Actions artifact
 
 The fixture is synthetic and local to the runner. The artifact contains derived JSON only, not raw audio.

@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildAudioIngestQaPlan,
+  buildAudioIngestManifestPlan,
   buildFfmpegChannelSplitPlan,
   buildFfprobeAudioStreamCommand,
   buildPythonLoudnessProbePlan,
   evaluateAudioIngestQa,
+  normalizeAudioIngestManifest,
   parseFfprobeAudioStream
 } from '../core/audioIngestQaGate.js';
 
@@ -135,5 +137,47 @@ describe('audio ingest QA gate', () => {
     expect(plan.boundary).toContain('does not upload raw audio');
     expect(plan.normalization.command).toContain('ffmpeg-normalize');
     expect(plan.normalization.when).toBe('after QA passes or with an explicit repair task');
+  });
+
+  it('normalizes the export manifest into required and optional CueForge audio export slots', () => {
+    const manifest = normalizeAudioIngestManifest({
+      exports: [
+        { id: 'ci-fixture', label: 'CI fixture', path: 'qa/audio/ci/stereo-pass.wav', required: true },
+        { id: 'sound-match-preview', label: 'Sound Match preview', path: 'qa/audio/exports/sound-match-preview.wav' }
+      ]
+    });
+
+    expect(manifest.schema).toBe('cueforge.audio-export-manifest.v1');
+    expect(manifest.exports).toHaveLength(2);
+    expect(manifest.exports[0]).toMatchObject({
+      id: 'ci-fixture',
+      required: true,
+      outputDir: 'qa/audio/tmp/ci-fixture',
+      metricsPath: 'qa/audio/tmp/ci-fixture/metrics.json'
+    });
+    expect(manifest.exports[1]).toMatchObject({
+      id: 'sound-match-preview',
+      required: false,
+      category: 'cueforge-export'
+    });
+  });
+
+  it('builds a manifest-wide plan for one command that can gate every listed export', () => {
+    const plan = buildAudioIngestManifestPlan({
+      manifest: {
+        exports: [
+          { id: 'ci-fixture', label: 'CI fixture', path: 'qa/audio/ci/stereo-pass.wav', required: true },
+          { id: 'obs-stream-check', label: 'OBS stream check', path: 'qa/audio/exports/obs-stream-check.wav', required: false }
+        ]
+      },
+      outputRoot: 'qa/audio/ci'
+    });
+
+    expect(plan.schema).toBe('cueforge.audio-ingest-manifest-plan.v1');
+    expect(plan.command).toBe('npm run qa:audio-ingest -- --manifest qa/audio/export-manifest.json --output-dir qa/audio/ci');
+    expect(plan.exports.map((item) => item.id)).toEqual(['ci-fixture', 'obs-stream-check']);
+    expect(plan.exports[0].plan.steps.map((step) => step.id)).toContain('python-loudness-probe');
+    expect(plan.exports[0].metricsCommand).toContain('tools/Measure-AudioIngestMetrics.py');
+    expect(plan.boundary).toContain('derived JSON');
   });
 });

@@ -43,8 +43,8 @@ Use GitHub issues for feedback:
 
 - Web app: https://p4nd4907.github.io/cueforge/
 - Feedback thread: https://github.com/P4ND4907/cueforge/issues/1
-- Release notes: https://github.com/P4ND4907/cueforge/releases/tag/v0.2.0-alpha.5
-- Windows desktop alpha: https://github.com/P4ND4907/cueforge/releases/download/v0.2.0-alpha.5/CueForge-0.2.0-alpha.5-x64.exe
+- Release notes: https://github.com/P4ND4907/cueforge/releases/tag/v0.2.0-alpha.6
+- Windows desktop alpha: https://github.com/P4ND4907/cueforge/releases/download/v0.2.0-alpha.6/CueForge-0.2.0-alpha.6-x64.exe
 
 Send most testers to the web app first. Use the Windows desktop alpha when a tester needs local Windows scan proof, desktop Auto Setup, or the native bridge path. The desktop build is unsigned and should be described as a tester build, not a finished installer.
 
@@ -70,7 +70,7 @@ The roadmap breaks CueForge into five workstreams: player testing, audio engine,
 
 ## Developer Architecture
 
-CueForge v0.2.0-alpha.5 now has a formal foundation layer for the next desktop/native work:
+CueForge v0.2.0-alpha.6 now has a formal foundation layer for the next desktop/native work:
 
 - `src/app/routes` holds route-level app surfaces such as Command Center, Auto Detect, Self Test, Hearing, Blind Match, Masking Lab, Report Lab, and Player Trial.
 - `src/core/chain`, `src/core/scoring`, `src/core/manifests`, and `src/core/exports` expose stable adapters around the current chain graph, readiness, native manifest, and report/export policy.

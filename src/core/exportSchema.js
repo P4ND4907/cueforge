@@ -7,7 +7,7 @@ export function buildCueForgeReleasePack({
 } = {}) {
   const payload = attachStateAnchor({
     schema: 'cueforge.release-pack.v2',
-    version: '0.2.0-alpha.5',
+    version: '0.2.0-alpha.6',
     codename: 'Seamless Engine Foundation',
     createdAt,
     readiness: state?.readiness || null,

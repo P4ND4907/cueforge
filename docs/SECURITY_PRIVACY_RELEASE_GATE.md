@@ -1,6 +1,6 @@
 # Security, Privacy, and CI Release Gate
 
-Status: release blocker for CueForge v0.2.0-alpha.5 and later.
+Status: release blocker for CueForge v0.2.0-alpha.6 and later.
 
 CueForge's trust story is part of the product. The app can be weird, early, and experimental, but it cannot be casual with private setup data, mic evidence, or Windows audio changes.
 

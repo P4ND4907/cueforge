@@ -14,8 +14,8 @@ Use this with the Chrome tab group: Discord, Reddit Inbox, and X / Follow.
 Current links:
 
 - Web app: `https://p4nd4907.github.io/cueforge/`
-- Release notes: `https://github.com/P4ND4907/cueforge/releases/tag/v0.2.0-alpha.5`
-- Windows desktop alpha: `https://github.com/P4ND4907/cueforge/releases/download/v0.2.0-alpha.5/CueForge-0.2.0-alpha.5-x64.exe`
+- Release notes: `https://github.com/P4ND4907/cueforge/releases/tag/v0.2.0-alpha.6`
+- Windows desktop alpha: `https://github.com/P4ND4907/cueforge/releases/download/v0.2.0-alpha.6/CueForge-0.2.0-alpha.6-x64.exe`
 
 ## X / Follow Tab
 
@@ -94,7 +94,7 @@ Next GitHub polish:
 1. Merge the current CueForge PR after review.
 2. Make sure the README first screen uses the same positioning.
 3. Keep the GitHub Pages web app as the public CTA.
-4. Use the tagged `v0.2.0-alpha.5` desktop asset only for Windows testers who need local scan proof. Call it unsigned alpha, not a finished installer.
+4. Use the tagged `v0.2.0-alpha.6` desktop asset only for Windows testers who need local scan proof. Call it unsigned alpha, not a finished installer.
 
 ## Professional Pass
 

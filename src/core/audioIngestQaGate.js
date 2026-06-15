@@ -69,8 +69,10 @@ export function buildFfmpegChannelSplitPlan({
 
 export function buildPythonLoudnessProbePlan({
   inputPath = '<channel.wav>',
-  channelLabel = 'L'
+  channelLabel = 'L',
+  outputPath = null
 } = {}) {
+  const outputArg = outputPath ? ` --output ${quotePath(outputPath)}` : '';
   return {
     schema: 'cueforge.python-loudness-probe-plan.v1',
     inputPath,
@@ -79,7 +81,7 @@ export function buildPythonLoudnessProbePlan({
     algorithm: 'ITU-R BS.1770 integrated loudness via pyloudnorm',
     metrics: ['integratedLufs', 'rmsDbfs', 'truePeakDbfs', 'silencePercent'],
     outputsRawAudio: false,
-    command: `python tools/scripts/Measure-AudioLoudness.py --input ${quotePath(inputPath)} --channel ${quoteArg(channelLabel)} --json`
+    command: `python tools/Measure-AudioIngestMetrics.py --input ${quotePath(inputPath)} --channel-label ${quoteArg(channelLabel)}${outputArg} --json`
   };
 }
 
@@ -132,6 +134,43 @@ export function buildAudioIngestQaPlan({
       command: `ffmpeg-normalize ${quotePath(inputPath)} -o ${quotePath(`${outputDir}/normalized.wav`)} -f --target-level ${audioIngestQaPolicy.targetIntegratedLufs}`
     },
     boundary: 'This plan analyzes local or CI-provided files, reports derived metrics, and does not upload raw audio or mutate player settings.'
+  };
+}
+
+export function normalizeAudioIngestManifest(manifest = {}, { outputRoot = 'qa/audio/tmp' } = {}) {
+  const exports = Array.isArray(manifest.exports) ? manifest.exports : [];
+  return {
+    schema: 'cueforge.audio-export-manifest.v1',
+    productName: 'CueForge',
+    outputRoot,
+    exports: exports.map((entry, index) => normalizeManifestEntry(entry, index, outputRoot)),
+    boundary: 'Manifest entries point to local or CI audio files. CueForge reports derived JSON only and never embeds raw audio.'
+  };
+}
+
+export function buildAudioIngestManifestPlan({
+  manifest = {},
+  manifestPath = 'qa/audio/export-manifest.json',
+  outputRoot = 'qa/audio/tmp'
+} = {}) {
+  const normalized = normalizeAudioIngestManifest(manifest, { outputRoot });
+  return {
+    schema: 'cueforge.audio-ingest-manifest-plan.v1',
+    productName: 'CueForge',
+    manifestPath,
+    outputRoot,
+    command: `npm run qa:audio-ingest -- --manifest ${manifestPath} --output-dir ${outputRoot}`,
+    exports: normalized.exports.map((entry) => ({
+      ...entry,
+      plan: buildAudioIngestQaPlan({
+        inputPath: entry.path,
+        outputDir: entry.outputDir,
+        channels: entry.channels
+      }),
+      ffprobeCommand: buildFfprobeAudioStreamCommand(entry.path),
+      metricsCommand: `python tools/Measure-AudioIngestMetrics.py --input ${quotePath(entry.path)} --output ${quotePath(entry.metricsPath)} --json`
+    })),
+    boundary: 'One command can gate every listed export. Missing required files fail; missing optional files are reported as skipped. Artifacts are derived JSON only.'
   };
 }
 
@@ -273,6 +312,38 @@ function inferBitDepthFromCodec(codecName = '') {
 
 function channelLabelFor(index) {
   return ['L', 'R', 'C', 'LFE', 'Ls', 'Rs', 'Lrs', 'Rrs'][index] ?? `ch-${index + 1}`;
+}
+
+function normalizeManifestEntry(entry = {}, index, outputRoot) {
+  const id = safeId(entry.id || entry.name || entry.label || `audio-export-${index + 1}`);
+  const outputDir = normalizeSlashes(entry.outputDir || `${outputRoot}/${id}`);
+  const channels = firstFiniteNumber(entry.channels, audioIngestQaPolicy.requiredChannels);
+  return {
+    id,
+    label: String(entry.label || entry.name || id),
+    category: String(entry.category || 'cueforge-export'),
+    path: normalizeSlashes(entry.path || entry.file || entry.input || `<${id}.wav>`),
+    required: Boolean(entry.required),
+    channels,
+    outputDir,
+    ffprobePath: normalizeSlashes(entry.ffprobePath || `${outputDir}/ffprobe.json`),
+    metricsPath: normalizeSlashes(entry.metricsPath || `${outputDir}/metrics.json`),
+    resultPath: normalizeSlashes(entry.resultPath || `${outputDir}/result.json`),
+    notes: entry.notes ? String(entry.notes) : ''
+  };
+}
+
+function safeId(value) {
+  return String(value || 'audio-export')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'audio-export';
+}
+
+function normalizeSlashes(value) {
+  return String(value).replaceAll('\\', '/');
 }
 
 function quotePath(value) {

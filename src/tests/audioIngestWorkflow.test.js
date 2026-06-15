@@ -17,10 +17,12 @@ describe('audio ingest GitHub Actions workflow', () => {
     expect(workflow).toContain('ffmpeg-version: release');
     expect(workflow).toContain('actions/setup-python@v5');
     expect(workflow).toMatch(/pip install\s+numpy\s+soundfile\s+pyloudnorm/);
-    expect(workflow).toContain('ffprobe -v error');
-    expect(workflow).toContain('codec_type,codec_name,sample_rate,channels,channel_layout,bits_per_sample,bits_per_raw_sample');
-    expect(workflow).toContain('npm run qa:audio-ingest');
+    expect(workflow).toContain('tools/Measure-AudioIngestMetrics.py');
+    expect(workflow).toContain('--manifest qa/audio/export-manifest.json');
+    expect(workflow).toContain('qa/audio/ci/audio-ingest-summary.json');
+    expect(workflow).toContain('npm run qa:audio-ingest -- --manifest qa/audio/export-manifest.json --output-dir qa/audio/ci --summary-json qa/audio/ci/audio-ingest-summary.json');
     expect(workflow).toContain('actions/upload-artifact@v4');
     expect(workflow).toContain('qa/audio/ci');
+    expect(workflow).not.toContain("python - <<'PY'");
   });
 });

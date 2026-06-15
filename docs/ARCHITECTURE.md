@@ -16,7 +16,7 @@ The web build should not write Windows audio settings, install drivers, or chang
 
 ## State Contract
 
-CueForge v0.2.0-alpha.5 uses `cueforgeStateV2` as the shared app brain. Native engine manifests, APO exports, profile recommendations, Discord/community feedback packs, Report Lab exports, Audio DNA, and release/setup packs should all reference this same state through `src/core/cueforgeState.js` and `src/core/stateAdapters.js`.
+CueForge v0.2.0-alpha.6 uses `cueforgeStateV2` as the shared app brain. Native engine manifests, APO exports, profile recommendations, Discord/community feedback packs, Report Lab exports, Audio DNA, and release/setup packs should all reference this same state through `src/core/cueforgeState.js` and `src/core/stateAdapters.js`.
 
 See `docs/STATE_V2_CONTRACT.md` before adding any feature that reads setup, device, profile, readiness, or export data.
 
