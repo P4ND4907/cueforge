@@ -132,8 +132,24 @@ function runJsonCommand(command, commandArgs) {
     encoding: 'utf8',
     windowsHide: true
   });
+  if (result.error) {
+    const errorCode = result.error.code ? ` (${result.error.code})` : '';
+    const guidance = result.error.code === 'ENOENT'
+      ? ' Ensure the binary is installed and available on PATH.'
+      : '';
+    throw new Error(`${command} failed to start${errorCode}: ${result.error.message}${guidance}`);
+  }
+  if (typeof result.status !== 'number') {
+    const signal = result.signal ? ` signal ${result.signal}` : '';
+    const detail = result.stderr || result.stdout;
+    const hint = detail
+      ? ` ${detail}`
+      : ` ${command} may be missing from PATH or blocked from launching in this environment.`;
+    throw new Error(`${command} did not complete successfully.${signal}${hint}`);
+  }
   if (result.status !== 0) {
-    throw new Error(`${command} failed with code ${result.status}: ${result.stderr || result.stdout}`);
+    const detail = result.stderr || result.stdout || 'no stdout/stderr captured';
+    throw new Error(`${command} failed with code ${result.status}: ${detail}`);
   }
   try {
     return JSON.parse(result.stdout || '{}');
