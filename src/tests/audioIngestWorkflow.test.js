@@ -15,6 +15,7 @@ describe('audio ingest GitHub Actions workflow', () => {
     expect(workflow).toContain('branches: [main]');
     expect(workflow).toContain('FedericoCarboni/setup-ffmpeg@v3');
     expect(workflow).toContain('ffmpeg-version: release');
+    expect(workflow).not.toContain('linking-type:');
     expect(workflow).toContain('actions/setup-python@v5');
     expect(workflow).toMatch(/pip install\s+numpy\s+soundfile\s+pyloudnorm/);
     expect(workflow).toContain('tools/Measure-AudioIngestMetrics.py');
