@@ -905,7 +905,7 @@ function App() {
   };
 
   const handleUiContextMenu = (event) => {
-    if (!expertMode || !userSettings.uiNotesEnabled) return;
+    if (!userSettings.uiNotesEnabled) return;
     const target = event.target;
     if (!(target instanceof Element) || target.closest('.ui-note-popover')) return;
     event.preventDefault();
@@ -957,15 +957,15 @@ function App() {
 
   const feedbackLayer = (
     <>
-      {expertMode && userSettings.uiNotesEnabled && uiNoteNotice && (
+      {userSettings.uiNotesEnabled && uiNoteNotice && (
         <div className="tester-note-banner">
           <Bug size={18} />
           <span>Personal UI debugger is on: right-click any CueForge area to tag a note. Notes stay local and only ride with the redacted report or export pack you choose to send.</span>
           <button className="ghost" onClick={dismissUiNoteNotice}>Got it</button>
         </div>
       )}
-      {expertMode && userSettings.uiNotesEnabled && uiNoteStatus && <p className="ui-note-status">{uiNoteStatus}</p>}
-      {expertMode && userSettings.uiNotesEnabled && uiNoteDraft && (
+      {userSettings.uiNotesEnabled && uiNoteStatus && <p className="ui-note-status">{uiNoteStatus}</p>}
+      {userSettings.uiNotesEnabled && uiNoteDraft && (
         <UiNotePopover
           draft={uiNoteDraft}
           onChange={setUiNoteDraft}
