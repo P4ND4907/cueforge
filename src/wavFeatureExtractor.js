@@ -172,6 +172,28 @@ export function extractWavFeatures(input, {
   };
 }
 
+export class WavFeatureExtractor {
+  async analyzeWav(input, options = {}) {
+    try {
+      const source = input?.arrayBuffer ? await input.arrayBuffer() : input;
+      const analysis = extractWavFeatures(source, options);
+      return {
+        ...analysis,
+        coachReport: [
+          'Post-mix analysis (not true game scene):',
+          analysis.coach.summary,
+          ...analysis.coach.actions.map((action) => `- ${action}`),
+          'Recommendation: Use with EQ Studio. Results are post-mix only.'
+        ].join('\n')
+      };
+    } catch {
+      return { error: 'Could not analyze clip. Try WAV format.' };
+    }
+  }
+}
+
+export const extractor = new WavFeatureExtractor();
+
 function buildSoundSceneGraph({ bandEnergy, stereo, signalAnalysis, echoScene, temporalEvidence }) {
   const nodes = [
     { id: 'low-pressure', label: 'Low pressure', score: average([bandEnergy.rumble, bandEnergy.bass, bandEnergy.lowMid]) },

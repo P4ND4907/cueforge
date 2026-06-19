@@ -11,6 +11,7 @@ import {
   isTrustedCueForgeUrl,
   validateIpcSender
 } from '../src/security/electronPolicy.js';
+import { detectRunningGame } from '../src/native/runningGameDetector.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -126,6 +127,11 @@ ipcMain.handle('cueforge:desktop-info', trustedIpc(() => ({
 })));
 
 ipcMain.handle('cueforge:read-bridge-report', trustedIpc(async () => readReport()));
+
+ipcMain.handle('cueforge:detect-game', trustedIpc(async () => {
+  const game = await detectRunningGame();
+  return game ? { id: game.id, exe: game.exe } : null;
+}));
 
 ipcMain.handle('cueforge:scan-audio-setup', trustedIpc(async () => {
   const script = scriptPath();

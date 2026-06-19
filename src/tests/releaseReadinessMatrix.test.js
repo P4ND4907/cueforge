@@ -415,6 +415,7 @@ describe('release readiness matrix', () => {
       'isDesktop',
       'info',
       'getDesktopInfo',
+      'detectGame',
       'scanAudioSetup',
       'readBridgeReport',
       'openBridgeFolder',

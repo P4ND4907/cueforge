@@ -155,6 +155,9 @@ import { buildGameAudioSettingsCheck } from './core/gameAudioSettingsCheck.js';
 import { buildMicPlan } from './engines/micPlan.js';
 import { honestSpatialModes, spatialTruthWarning } from './engines/spatialPlan.js';
 import { GuidedSetupRunPanel, SetupCommandCenter } from './ui/SetupCommandCenter.jsx';
+import GameModeToggle from './ui/GameModeToggle.jsx';
+import MoonDashboard from './ui/MoonDashboard.jsx';
+import { createLowLatencyAudioContext } from './shared/audio/LowLatencyAudioContext.js';
 import './styles.css';
 
 const headsetProfiles = [
@@ -588,6 +591,7 @@ function buildEqFromSourceProfile(profile, fallbackEq = baseEq) {
 
 const SIMPLE_NAV_ITEMS = [
   ['dashboard', Gauge, 'Command Center'],
+  ['moon', Sparkles, 'Smart'],
   ['detect', Search, 'Auto Setup'],
   ['mic', Mic, 'Mic Check'],
   ['eq', SlidersHorizontal, 'Tune'],
@@ -599,6 +603,7 @@ const SIMPLE_NAV_ITEMS = [
 
 const EXPERT_NAV_ITEMS = [
   ['hub', Radio, 'Community Hub'],
+  ['moon', Sparkles, 'Moon'],
   ['dashboard', Gauge, 'Control'],
   ['selftest', TestTube2, 'Self Test'],
   ['dna', BrainCircuit, 'Audio DNA'],
@@ -1131,6 +1136,8 @@ function App() {
           />
         ))}
 
+        {active === 'moon' && <MoonDashboard />}
+
         {active === 'selftest' && <SelfTestRunner />}
 
         {active === 'dna' && <AudioDnaPage eq={eq} cueforgeState={cueforgeState.stateV2} />}
@@ -1482,9 +1489,7 @@ function UiNotePopover({ draft, onChange, onCancel, onSave }) {
 }
 
 function createBrowserAudioContext() {
-  const BrowserAudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!BrowserAudioContext) throw new Error('Web Audio is unavailable');
-  return new BrowserAudioContext();
+  return createLowLatencyAudioContext({ target: window });
 }
 
 function pickEvidenceMimeType() {
@@ -3846,6 +3851,9 @@ function SettingsPage({ settings, onUpdate, onReset, onRerunSetup, onOpen, uiNot
 
       <Panel title="Player Mode" icon={Gauge}>
         <p>Simple Mode is the default player path. Expert Mode brings back the full lab, raw proof, system info, and developer repair tools.</p>
+        <div className="settings-stack compact-settings">
+          <GameModeToggle />
+        </div>
         <div className="mode-choice">
           <button
             className={normalized.interfaceMode === 'simple' ? 'selected' : ''}

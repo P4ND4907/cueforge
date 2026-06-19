@@ -30,6 +30,7 @@ test('CueForge desktop bridge smoke', async () => {
     expect(String(desktopInfo?.reportPath || '').toLowerCase()).toContain('cueforge');
     expect(String(desktopInfo?.scriptPath || '')).toContain('Scan-AudioSetup.ps1');
     expect(bridgeKeys).toEqual([
+      'detectGame',
       'getDesktopInfo',
       'info',
       'isDesktop',
