@@ -65,7 +65,8 @@ async function runPackagedDesktopSmoke() {
     };
   }
 
-  const port = 47000 + Math.floor(Math.random() * 9000);
+  // Keep the smoke port below Windows' dynamic/excluded range (49152+).
+  const port = 43000 + Math.floor(Math.random() * 4000);
   const profileDir = await mkdtemp(path.join(os.tmpdir(), 'cueforge-desktop-smoke-'));
   let child;
   try {

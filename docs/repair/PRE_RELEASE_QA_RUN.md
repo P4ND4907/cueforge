@@ -1,20 +1,20 @@
 # Pre-Release QA Run
 
-Status: BLOCKED_ENVIRONMENT
-Started: 2026-05-25T08:05:03.158Z
-Completed: 2026-05-25T08:05:03.165Z
+Status: PASS
+Started: 2026-07-12T04:45:52.183Z
+Completed: 2026-07-12T04:46:01.269Z
 
 ## Command Gates
 
 | Gate | Status | Duration | Command |
 | --- | --- | ---: | --- |
-| Security and privacy release gate | BLOCKED | 2ms | `npm.cmd test -- src/securityPrivacyGate.test.js src/exportFingerprints.test.js src/privacyAudit.test.js src/electronHardening.test.js` |
-| Release readiness matrix | BLOCKED | 1ms | `npm.cmd test -- src/tests/releaseReadinessMatrix.test.js` |
-| Swarm manifest contract | BLOCKED | 0ms | `npm.cmd run validate:swarm` |
-| Unit and regression tests | BLOCKED | 1ms | `npm.cmd test` |
-| Production web build | BLOCKED | 0ms | `npm.cmd run build` |
-| Panda Notes repair queue | BLOCKED | 1ms | `npm.cmd run notes:repair` |
-| Dependency audit | BLOCKED | 0ms | `npm.cmd audit --audit-level=moderate` |
+| Security and privacy release gate | PASS | 898ms | `npm.cmd test -- src/securityPrivacyGate.test.js src/exportFingerprints.test.js src/privacyAudit.test.js src/electronHardening.test.js` |
+| Release readiness matrix | PASS | 1192ms | `npm.cmd test -- src/tests/releaseReadinessMatrix.test.js` |
+| Swarm manifest contract | PASS | 800ms | `npm.cmd run validate:swarm` |
+| Unit and regression tests | PASS | 3575ms | `npm.cmd test` |
+| Production web build | PASS | 931ms | `npm.cmd run build` |
+| Panda Notes repair queue | PASS | 351ms | `npm.cmd run notes:repair` |
+| Dependency audit | PASS | 1338ms | `npm.cmd audit --audit-level=moderate` |
 
 ## Panda Notes Gate
 
@@ -58,49 +58,101 @@ A tester-found issue is not considered fixed until it has:
 ### Security and privacy release gate
 
 ```text
-EPERM: spawnSync cmd.exe EPERM
+> cueforge@0.2.0-alpha.6 test
+> vitest run src/securityPrivacyGate.test.js src/exportFingerprints.test.js src/privacyAudit.test.js src/electronHardening.test.js
+
+
+ RUN  v4.1.7 C:/Users/khepr/Documents/Playground/_repos/active/cueforge
+
+
+ Test Files  4 passed (4)
+      Tests  11 passed (11)
+   Start at  20:45:52
+   Duration  253ms (transform 165ms, setup 0ms, import 247ms, tests 25ms, environment 0ms)
 ```
-_No output._
 
 ### Release readiness matrix
 
 ```text
-EPERM: spawnSync cmd.exe EPERM
+> cueforge@0.2.0-alpha.6 test
+> vitest run src/tests/releaseReadinessMatrix.test.js
+
+
+ RUN  v4.1.7 C:/Users/khepr/Documents/Playground/_repos/active/cueforge
+
+
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+   Start at  20:45:53
+   Duration  590ms (transform 192ms, setup 0ms, import 304ms, tests 139ms, environment 0ms)
 ```
-_No output._
 
 ### Swarm manifest contract
 
 ```text
-EPERM: spawnSync cmd.exe EPERM
+> cueforge@0.2.0-alpha.6 validate:swarm
+> vitest run src/tests/swarmManifests.test.js
+
+
+ RUN  v4.1.7 C:/Users/khepr/Documents/Playground/_repos/active/cueforge
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  20:45:54
+   Duration  177ms (transform 24ms, setup 0ms, import 36ms, tests 6ms, environment 0ms)
 ```
-_No output._
 
 ### Unit and regression tests
 
 ```text
-EPERM: spawnSync cmd.exe EPERM
+> cueforge@0.2.0-alpha.6 test
+> vitest run
+
+
+ RUN  v4.1.7 C:/Users/khepr/Documents/Playground/_repos/active/cueforge
+
+
+ Test Files  98 passed (98)
+      Tests  392 passed (392)
+   Start at  20:45:55
+   Duration  2.85s (transform 5.60s, setup 0ms, import 8.84s, tests 3.66s, environment 9ms)
 ```
-_No output._
 
 ### Production web build
 
 ```text
-EPERM: spawnSync cmd.exe EPERM
+> cueforge@0.2.0-alpha.6 build
+> vite build
+
+vite v8.0.16 building client environment for production...
+transforming...ok 1649 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                             3.53 kB | gzip:   1.15 kB
+dist/assets/index-CgWRqwDl.css             69.07 kB | gzip:  13.40 kB
+dist/assets/rolldown-runtime-QTnfLwEv.js    0.69 kB | gzip:   0.42 kB
+dist/assets/index-DP0FIasU.js             717.50 kB | gzip: 222.83 kB
+dist/assets/three-CAFJ9an3.js             722.67 kB | gzip: 184.17 kB
+
+ok built in 414ms
 ```
-_No output._
 
 ### Panda Notes repair queue
 
 ```text
-EPERM: spawnSync cmd.exe EPERM
+> cueforge@0.2.0-alpha.6 notes:repair
+> node tools/Run-PandaNotesRepair.mjs
+
+Panda Notes repair run: no-notes-yet
+Notes scanned: 0
+Repair actions: 0
+Output: docs/repair
 ```
-_No output._
 
 ### Dependency audit
 
 ```text
-EPERM: spawnSync cmd.exe EPERM
+found 0 vulnerabilities
 ```
-_No output._
 

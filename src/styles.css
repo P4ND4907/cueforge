@@ -653,6 +653,7 @@ main { padding: 28px; overflow: hidden; }
   border-radius: 8px;
   background: rgba(18,201,154,0.08);
   color: #d8f7f0;
+  pointer-events: none;
 }
 
 .tester-note-banner svg {
@@ -662,6 +663,10 @@ main { padding: 28px; overflow: hidden; }
 .tester-note-banner span {
   overflow-wrap: anywhere;
   line-height: 1.45;
+}
+
+.tester-note-banner > button {
+  pointer-events: auto;
 }
 
 .setup-journey-shell > .tester-note-banner {

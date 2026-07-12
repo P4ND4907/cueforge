@@ -1,16 +1,16 @@
 # Release Readiness
 
 Status: PASS
-Version: 0.2.0-alpha.3
+Version: 0.2.0-alpha.6
 Ref: local
-Generated: 2026-05-24T11:13:18.001Z
+Generated: 2026-07-12T04:27:02.441Z
 
 | Check | Status | Detail |
 | --- | --- | --- |
-| package-version-present | PASS | package.json version 0.2.0-alpha.3. |
-| state-version-match | PASS | Core state files reference 0.2.0-alpha.3. |
-| release-pack-version-match | PASS | Release pack/app copy references 0.2.0-alpha.3. |
-| acceptance-doc-version-match | PASS | Acceptance checklist references 0.2.0-alpha.3. |
+| package-version-present | PASS | package.json version 0.2.0-alpha.6. |
+| state-version-match | PASS | Core state files reference 0.2.0-alpha.6. |
+| release-pack-version-match | PASS | Release pack/app copy references 0.2.0-alpha.6. |
+| acceptance-doc-version-match | PASS | Acceptance checklist references 0.2.0-alpha.6. |
 | docs-bundle-present | PASS | GitHub Pages entrypoint exists. |
 | workflow-needs-green | PASS | No GitHub Actions dependency context was provided; local metadata checks only. |
 | release-candidate-acceptance | PASS | Not enforcing for local metadata run. Candidate status: BLOCKED; blockers: 1. |

@@ -48,6 +48,7 @@
       "dist/**/*",
       "electron/**/*",
       "src/security/electronPolicy.js",
+      "src/native/runningGameDetector.js",
       "tools/Scan-AudioSetup.ps1",
       "package.json"
     ],
@@ -85,6 +86,9 @@
     "form-data": "4.0.6",
     "@electron/get": {
       "undici": "7.28.0"
+    },
+    "node-gyp": {
+      "undici": "6.27.0"
     },
     "js-yaml": "4.2.0",
     "tar": "7.5.16",

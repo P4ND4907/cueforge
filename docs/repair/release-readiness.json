@@ -1,29 +1,29 @@
 {
   "schema": "cueforge.release-readiness.v1",
-  "generatedAt": "2026-05-24T11:13:18.001Z",
-  "version": "0.2.0-alpha.3",
+  "generatedAt": "2026-07-12T04:27:02.441Z",
+  "version": "0.2.0-alpha.6",
   "ref": "local",
   "status": "PASS",
   "checks": [
     {
       "id": "package-version-present",
       "status": "PASS",
-      "detail": "package.json version 0.2.0-alpha.3."
+      "detail": "package.json version 0.2.0-alpha.6."
     },
     {
       "id": "state-version-match",
       "status": "PASS",
-      "detail": "Core state files reference 0.2.0-alpha.3."
+      "detail": "Core state files reference 0.2.0-alpha.6."
     },
     {
       "id": "release-pack-version-match",
       "status": "PASS",
-      "detail": "Release pack/app copy references 0.2.0-alpha.3."
+      "detail": "Release pack/app copy references 0.2.0-alpha.6."
     },
     {
       "id": "acceptance-doc-version-match",
       "status": "PASS",
-      "detail": "Acceptance checklist references 0.2.0-alpha.3."
+      "detail": "Acceptance checklist references 0.2.0-alpha.6."
     },
     {
       "id": "docs-bundle-present",
@@ -50,7 +50,7 @@
     "schema": "cueforge.release-candidate-acceptance.v1",
     "ready": false,
     "status": "BLOCKED",
-    "generatedAt": "2026-05-24T11:13:17.998Z",
+    "generatedAt": "2026-07-12T04:27:02.435Z",
     "checks": [
       {
         "id": "setup-command-center-default",

@@ -17,6 +17,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.enableSandbox();
 
+// Keep the packaged smoke harness attachable without changing normal launches.
+const remoteDebuggingPort = process.argv
+  .find((argument) => argument.startsWith('--remote-debugging-port='))
+  ?.split('=')[1];
+if (remoteDebuggingPort) {
+  app.commandLine.appendSwitch('remote-debugging-port', remoteDebuggingPort);
+}
+
 function appRoot() {
   return app.isPackaged ? app.getAppPath() : path.join(__dirname, '..');
 }
