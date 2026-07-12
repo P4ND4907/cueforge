@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('cueforgeDesktop', {
   getDesktopInfo: () => ipcRenderer.invoke('cueforge:desktop-info'),
   detectGame: () => ipcRenderer.invoke('cueforge:detect-game'),
   scanAudioSetup: () => ipcRenderer.invoke('cueforge:scan-audio-setup'),
+  runLoopbackProof: () => ipcRenderer.invoke('cueforge:run-loopback-proof'),
   readBridgeReport: () => ipcRenderer.invoke('cueforge:read-bridge-report'),
   openBridgeFolder: () => ipcRenderer.invoke('cueforge:open-bridge-folder'),
   saveApoDraft: (configText) => ipcRenderer.invoke('cueforge:save-apo-draft', { configText }),

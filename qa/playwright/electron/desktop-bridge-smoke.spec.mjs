@@ -37,6 +37,7 @@ test('CueForge desktop bridge smoke', async () => {
       'openApoDraftFolder',
       'openBridgeFolder',
       'readBridgeReport',
+      'runLoopbackProof',
       'saveApoDraft',
       'scanAudioSetup'
     ]);

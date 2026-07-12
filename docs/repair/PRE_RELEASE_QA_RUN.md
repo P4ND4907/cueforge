@@ -1,20 +1,20 @@
 # Pre-Release QA Run
 
 Status: PASS
-Started: 2026-07-12T04:45:52.183Z
-Completed: 2026-07-12T04:46:01.269Z
+Started: 2026-07-12T05:05:44.215Z
+Completed: 2026-07-12T05:05:55.044Z
 
 ## Command Gates
 
 | Gate | Status | Duration | Command |
 | --- | --- | ---: | --- |
-| Security and privacy release gate | PASS | 898ms | `npm.cmd test -- src/securityPrivacyGate.test.js src/exportFingerprints.test.js src/privacyAudit.test.js src/electronHardening.test.js` |
-| Release readiness matrix | PASS | 1192ms | `npm.cmd test -- src/tests/releaseReadinessMatrix.test.js` |
-| Swarm manifest contract | PASS | 800ms | `npm.cmd run validate:swarm` |
-| Unit and regression tests | PASS | 3575ms | `npm.cmd test` |
-| Production web build | PASS | 931ms | `npm.cmd run build` |
-| Panda Notes repair queue | PASS | 351ms | `npm.cmd run notes:repair` |
-| Dependency audit | PASS | 1338ms | `npm.cmd audit --audit-level=moderate` |
+| Security and privacy release gate | PASS | 1539ms | `npm.cmd test -- src/securityPrivacyGate.test.js src/exportFingerprints.test.js src/privacyAudit.test.js src/electronHardening.test.js` |
+| Release readiness matrix | PASS | 2570ms | `npm.cmd test -- src/tests/releaseReadinessMatrix.test.js` |
+| Swarm manifest contract | PASS | 793ms | `npm.cmd run validate:swarm` |
+| Unit and regression tests | PASS | 3562ms | `npm.cmd test` |
+| Production web build | PASS | 950ms | `npm.cmd run build` |
+| Panda Notes repair queue | PASS | 361ms | `npm.cmd run notes:repair` |
+| Dependency audit | PASS | 1052ms | `npm.cmd audit --audit-level=moderate` |
 
 ## Panda Notes Gate
 
@@ -67,8 +67,8 @@ A tester-found issue is not considered fixed until it has:
 
  Test Files  4 passed (4)
       Tests  11 passed (11)
-   Start at  20:45:52
-   Duration  253ms (transform 165ms, setup 0ms, import 247ms, tests 25ms, environment 0ms)
+   Start at  21:05:45
+   Duration  543ms (transform 292ms, setup 0ms, import 433ms, tests 37ms, environment 0ms)
 ```
 
 ### Release readiness matrix
@@ -83,8 +83,8 @@ A tester-found issue is not considered fixed until it has:
 
  Test Files  1 passed (1)
       Tests  17 passed (17)
-   Start at  20:45:53
-   Duration  590ms (transform 192ms, setup 0ms, import 304ms, tests 139ms, environment 0ms)
+   Start at  21:05:47
+   Duration  911ms (transform 229ms, setup 0ms, import 352ms, tests 145ms, environment 0ms)
 ```
 
 ### Swarm manifest contract
@@ -99,8 +99,8 @@ A tester-found issue is not considered fixed until it has:
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  20:45:54
-   Duration  177ms (transform 24ms, setup 0ms, import 36ms, tests 6ms, environment 0ms)
+   Start at  21:05:48
+   Duration  185ms (transform 30ms, setup 0ms, import 42ms, tests 9ms, environment 0ms)
 ```
 
 ### Unit and regression tests
@@ -115,8 +115,8 @@ A tester-found issue is not considered fixed until it has:
 
  Test Files  98 passed (98)
       Tests  392 passed (392)
-   Start at  20:45:55
-   Duration  2.85s (transform 5.60s, setup 0ms, import 8.84s, tests 3.66s, environment 9ms)
+   Start at  21:05:49
+   Duration  2.89s (transform 5.52s, setup 0ms, import 8.59s, tests 3.59s, environment 10ms)
 ```
 
 ### Production web build
@@ -132,10 +132,10 @@ computing gzip size...
 dist/index.html                             3.53 kB | gzip:   1.15 kB
 dist/assets/index-CgWRqwDl.css             69.07 kB | gzip:  13.40 kB
 dist/assets/rolldown-runtime-QTnfLwEv.js    0.69 kB | gzip:   0.42 kB
-dist/assets/index-DP0FIasU.js             717.50 kB | gzip: 222.83 kB
+dist/assets/index-C2DNY5qT.js             718.65 kB | gzip: 223.12 kB
 dist/assets/three-CAFJ9an3.js             722.67 kB | gzip: 184.17 kB
 
-ok built in 414ms
+ok built in 424ms
 ```
 
 ### Panda Notes repair queue

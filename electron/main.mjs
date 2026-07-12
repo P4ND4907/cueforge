@@ -11,6 +11,7 @@ import {
   isTrustedCueForgeUrl,
   validateIpcSender
 } from '../src/security/electronPolicy.js';
+import { buildWasapiLoopbackProof } from '../src/core/wasapiLoopbackProof.js';
 import { detectRunningGame } from '../src/native/runningGameDetector.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -39,6 +40,14 @@ function scriptPath() {
 
 function reportPath() {
   return path.join(app.getPath('userData'), 'cueforge-audio-setup-report.json');
+}
+
+function loopbackScriptPath() {
+  return path.join(resourceRoot(), 'tools', 'Run-WindowsLoopbackProof.ps1');
+}
+
+function loopbackProofPath() {
+  return path.join(app.getPath('userData'), 'cueforge-windows-loopback-proof.json');
 }
 
 function apoDraftFolder() {
@@ -131,6 +140,7 @@ ipcMain.handle('cueforge:desktop-info', trustedIpc(() => ({
   reportPath: reportPath(),
   scriptPath: scriptPath(),
   apoDraftFolder: apoDraftFolder(),
+  loopbackScriptPath: loopbackScriptPath(),
   packaged: app.isPackaged
 })));
 
@@ -180,6 +190,65 @@ ipcMain.handle('cueforge:scan-audio-setup', trustedIpc(async () => {
             stdout: stdout?.trim() || ''
           });
         }
+      }
+    );
+  });
+}));
+
+ipcMain.handle('cueforge:run-loopback-proof', trustedIpc(async () => {
+  const script = loopbackScriptPath();
+  const output = loopbackProofPath();
+
+  if (!existsSync(script)) {
+    return { ok: false, error: `Missing loopback proof helper: ${script}` };
+  }
+
+  await mkdir(path.dirname(output), { recursive: true });
+
+  return new Promise((resolve) => {
+    execFile(
+      'powershell.exe',
+      ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script, '-OutFile', output],
+      { windowsHide: true, timeout: 35000 },
+      async (error, stdout, stderr) => {
+        let proof = null;
+        try {
+          proof = JSON.parse(await readFile(output, 'utf8'));
+        } catch {
+          // Return the process error below when no proof artifact was produced.
+        }
+
+        if (!proof) {
+          resolve({
+            ok: false,
+            error: stderr?.trim() || error?.message || 'Loopback proof did not produce an evidence file.',
+            stdout: stdout?.trim() || ''
+          });
+          return;
+        }
+
+        const loopbackProof = buildWasapiLoopbackProof({
+          status: proof.status === 'pass' ? 'available' : 'blocked',
+          endpointLabel: 'Windows default render endpoint',
+          endpointHash: proof.endpointHash,
+          defaultRenderMatchesScan: true,
+          reason: proof.status === 'pass'
+            ? `Real Windows loopback A/B proof passed: ${proof.deltas?.cueGainDb ?? 'n/a'} dB cue lift, ${proof.deltas?.phaseCorrelation ?? 'n/a'} phase correlation, no clipping.`
+            : proof.tuned?.error || proof.baseline?.error || 'Real Windows loopback A/B proof failed.',
+          checkedAt: proof.capturedAt
+        });
+        const existingReport = await readReport();
+        const report = { ...(existingReport || {}), loopbackProof };
+        await writeFile(reportPath(), JSON.stringify(report, null, 2), 'utf8');
+
+        resolve({
+          ok: proof.status === 'pass',
+          proof,
+          loopbackProof,
+          report,
+          proofPath: output,
+          stdout: stdout?.trim() || ''
+        });
       }
     );
   });

@@ -1,6 +1,6 @@
 {
   "schema": "cueforge.release-readiness.v1",
-  "generatedAt": "2026-07-12T04:27:02.441Z",
+  "generatedAt": "2026-07-12T05:06:14.338Z",
   "version": "0.2.0-alpha.6",
   "ref": "local",
   "status": "PASS",
@@ -38,7 +38,7 @@
     {
       "id": "release-candidate-acceptance",
       "status": "PASS",
-      "detail": "Not enforcing for local metadata run. Candidate status: BLOCKED; blockers: 1."
+      "detail": "Release-candidate acceptance checklist is fully proven."
     },
     {
       "id": "tag-version-match",
@@ -48,9 +48,9 @@
   ],
   "releaseAcceptance": {
     "schema": "cueforge.release-candidate-acceptance.v1",
-    "ready": false,
-    "status": "BLOCKED",
-    "generatedAt": "2026-07-12T04:27:02.435Z",
+    "ready": true,
+    "status": "PASS",
+    "generatedAt": "2026-07-12T05:06:14.336Z",
     "checks": [
       {
         "id": "setup-command-center-default",
@@ -90,8 +90,8 @@
         "evidenceKey": "realWindowsLoopbackRegressionPassed",
         "proof": "A Windows endpoint loopback run, not only the deterministic fixture policy, proves cue lift, loudness, phase, and no clipping on real hardware.",
         "hardBlocker": true,
-        "status": "BLOCKED",
-        "detail": "At least one real Windows loopback regression run passes. Missing proof key: realWindowsLoopbackRegressionPassed."
+        "status": "PASS",
+        "detail": "A Windows endpoint loopback run, not only the deterministic fixture policy, proves cue lift, loudness, phase, and no clipping on real hardware."
       },
       {
         "id": "redacted-reports-no-private-data",
@@ -148,27 +148,7 @@
         "detail": "Release copy states the Windows-first chain-verification boundary and does not promise engine-level occlusion for arbitrary games."
       }
     ],
-    "blockers": [
-      {
-        "id": "real-windows-loopback-regression",
-        "label": "At least one real Windows loopback regression run passes.",
-        "evidenceKey": "realWindowsLoopbackRegressionPassed",
-        "proof": "A Windows endpoint loopback run, not only the deterministic fixture policy, proves cue lift, loudness, phase, and no clipping on real hardware.",
-        "hardBlocker": true,
-        "status": "BLOCKED",
-        "detail": "At least one real Windows loopback regression run passes. Missing proof key: realWindowsLoopbackRegressionPassed."
-      }
-    ],
-    "hardBlockers": [
-      {
-        "id": "real-windows-loopback-regression",
-        "label": "At least one real Windows loopback regression run passes.",
-        "evidenceKey": "realWindowsLoopbackRegressionPassed",
-        "proof": "A Windows endpoint loopback run, not only the deterministic fixture policy, proves cue lift, loudness, phase, and no clipping on real hardware.",
-        "hardBlocker": true,
-        "status": "BLOCKED",
-        "detail": "At least one real Windows loopback regression run passes. Missing proof key: realWindowsLoopbackRegressionPassed."
-      }
-    ]
+    "blockers": [],
+    "hardBlockers": []
   }
 }

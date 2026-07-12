@@ -20,9 +20,10 @@
     "qa:audio-fixture-regression": "node tools/Run-AudioFixtureRegression.mjs",
     "qa:audio-ingest": "node tools/Run-AudioIngestQa.mjs",
     "qa:audio-ingest:manifest": "node tools/Run-AudioIngestQa.mjs --manifest qa/audio/export-manifest.json --output-dir qa/audio/ci --summary-json qa/audio/ci/audio-ingest-summary.json",
+    "qa:windows-loopback": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\tools\\Run-WindowsLoopbackProof.ps1",
+    "qa:release-readiness": "node tools/Run-ReleaseReadiness.mjs",
     "qa:feedback-contract": "node tools/Run-FeedbackContract.mjs",
     "qa:route-graph-lab": "node tools/Run-RouteGraphLab.mjs",
-    "qa:release-readiness": "node tools/Run-ReleaseReadiness.mjs",
     "repo:worktree-audit": "node tools/Run-WorktreeAudit.mjs",
     "validate:swarm": "vitest run src/tests/swarmManifests.test.js",
     "validate:manifest": "vitest run src/tests/nativeEngineManifest.test.js src/tests/nativeCaptureHarness.test.js src/tests/architectureScaffold.test.js src/tests/releaseToolBacklog.test.js src/tests/implementationBacklog.test.js src/tests/releaseShipBars.test.js src/tests/releaseAcceptanceChecklist.test.js src/tests/setupAssessmentSnapshot.test.js src/tests/companionRepoIntegration.test.js",
@@ -48,8 +49,10 @@
       "dist/**/*",
       "electron/**/*",
       "src/security/electronPolicy.js",
+      "src/core/wasapiLoopbackProof.js",
       "src/native/runningGameDetector.js",
       "tools/Scan-AudioSetup.ps1",
+      "tools/Run-WindowsLoopbackProof.ps1",
       "package.json"
     ],
     "extraResources": [

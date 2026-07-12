@@ -1517,6 +1517,7 @@ function SetupJourney({ settings, onComplete, onSkip }) {
   const [bridgeReport, setBridgeReport] = useState(null);
   const [desktopInfo, setDesktopInfo] = useState(null);
   const [desktopBusy, setDesktopBusy] = useState(false);
+  const [loopbackBusy, setLoopbackBusy] = useState(false);
   const [toneStatus, setToneStatus] = useState('ready');
   const [soundActive, setSoundActive] = useState(false);
   const soundRef = useRef(null);
@@ -5579,6 +5580,38 @@ function AutoDetect({ currentEq, onApplyProfile, onRestoreEq, onAutoSwitchProfil
     }
   };
 
+  const runDesktopLoopbackProof = async () => {
+    if (!window.cueforgeDesktop?.runLoopbackProof) {
+      setStatus('Real Windows loopback proof is only available in the CueForge desktop shell.');
+      return;
+    }
+
+    setLoopbackBusy(true);
+    setStatus('Playing a quiet local A/B tone and checking the Windows render endpoint.');
+    try {
+      const result = await window.cueforgeDesktop.runLoopbackProof();
+      if (!result?.proof || !result?.report) {
+        setStatus(result?.error || 'Loopback proof failed before an evidence report was created.');
+        return;
+      }
+      const nextReport = buildAutoDetectReport({
+        browserDevices: devices,
+        bridgeReport: result.report,
+        permissionState,
+        desktopReady: true
+      });
+      setBridgeReport(result.report);
+      onUpdateChain?.({ devices, bridgeReport: result.report, autoDetectReport: nextReport, desktopReady: true });
+      setStatus(result.ok
+        ? `Loopback proof passed: ${result.proof.deltas?.cueGainDb ?? 'n/a'} dB cue lift, phase ${result.proof.deltas?.phaseCorrelation ?? 'n/a'}, no clipping.`
+        : 'Loopback proof did not meet the safety thresholds. Keep direct apply locked and review the evidence.');
+    } catch {
+      setStatus('Loopback proof failed before a report could be linked.');
+    } finally {
+      setLoopbackBusy(false);
+    }
+  };
+
   const openBridgeFolder = async () => {
     if (!window.cueforgeDesktop?.openBridgeFolder) return;
     await window.cueforgeDesktop.openBridgeFolder();
@@ -5675,8 +5708,11 @@ function AutoDetect({ currentEq, onApplyProfile, onRestoreEq, onAutoSwitchProfil
             <span>Native Windows scan available. Mic permission is granted inside CueForge, and device/tool detection runs locally.</span>
             <small>{desktopInfo.reportPath}</small>
             <div className="live-actions">
-              <button className="primary" onClick={runDesktopBridgeScan} disabled={desktopBusy}>
+              <button className="primary" onClick={runDesktopBridgeScan} disabled={desktopBusy || loopbackBusy}>
                 <Search size={18} /> {desktopBusy ? 'Scanning...' : 'Run Windows scan'}
+              </button>
+              <button className="ghost" onClick={runDesktopLoopbackProof} disabled={desktopBusy || loopbackBusy}>
+                <Activity size={18} /> {loopbackBusy ? 'Checking loopback...' : 'Run loopback proof'}
               </button>
               <button className="ghost" onClick={openBridgeFolder}>Open report folder</button>
             </div>

@@ -10,6 +10,10 @@ const outputPath = path.join(outputDir, 'RELEASE_READINESS.md');
 const jsonPath = path.join(outputDir, 'release-readiness.json');
 const packageJson = JSON.parse(readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
 const version = packageJson.version;
+const loopbackProofPath = process.env.CUEFORGE_LOOPBACK_PROOF_FILE
+  ? path.resolve(process.env.CUEFORGE_LOOPBACK_PROOF_FILE)
+  : path.join(rootDir, 'docs', 'repair', 'windows-loopback-proof.json');
+const loopbackProof = readJsonIfPresent(loopbackProofPath);
 const needs = parseNeeds(process.env.NEEDS_JSON);
 const githubRef = process.env.GITHUB_REF || '';
 const githubRefName = process.env.GITHUB_REF_NAME || '';
@@ -18,7 +22,8 @@ const isReleaseCandidate = isTag || process.env.CUEFORGE_RELEASE_CANDIDATE === '
 const releaseAcceptance = evaluateReleaseCandidateAcceptance({
   realWindowsLoopbackRegressionPassed:
     process.env.CUEFORGE_REAL_LOOPBACK_PROOF === 'true' ||
-    process.env.CUEFORGE_REAL_WINDOWS_LOOPBACK_PASSED === 'true'
+    process.env.CUEFORGE_REAL_WINDOWS_LOOPBACK_PASSED === 'true' ||
+    hasValidLoopbackProof(loopbackProof)
 });
 
 const checks = [
@@ -66,6 +71,26 @@ function check(id, ok, detail) {
 function fileContains(relativePath, needle) {
   const fullPath = path.join(rootDir, relativePath);
   return existsSync(fullPath) && readFileSync(fullPath, 'utf8').includes(needle);
+}
+
+function readJsonIfPresent(filePath) {
+  if (!existsSync(filePath)) return null;
+  try {
+    return JSON.parse(readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function hasValidLoopbackProof(proof) {
+  return proof?.schema === 'cueforge.windows-loopback-regression.v1' &&
+    proof.status === 'pass' &&
+    /^ep_[a-f0-9]{12}$/i.test(String(proof.endpointHash || '')) &&
+    Number.isFinite(Number(proof.deltas?.cueGainDb)) &&
+    Number.isFinite(Number(proof.deltas?.loudnessDeltaDb)) &&
+    Number(proof.deltas?.phaseCorrelation) >= 0.95 &&
+    proof.baseline?.clipped === false &&
+    proof.tuned?.clipped === false;
 }
 
 function parseNeeds(raw) {

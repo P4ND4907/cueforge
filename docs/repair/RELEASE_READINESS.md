@@ -3,7 +3,7 @@
 Status: PASS
 Version: 0.2.0-alpha.6
 Ref: local
-Generated: 2026-07-12T04:27:02.441Z
+Generated: 2026-07-12T05:06:14.338Z
 
 | Check | Status | Detail |
 | --- | --- | --- |
@@ -13,13 +13,13 @@ Generated: 2026-07-12T04:27:02.441Z
 | acceptance-doc-version-match | PASS | Acceptance checklist references 0.2.0-alpha.6. |
 | docs-bundle-present | PASS | GitHub Pages entrypoint exists. |
 | workflow-needs-green | PASS | No GitHub Actions dependency context was provided; local metadata checks only. |
-| release-candidate-acceptance | PASS | Not enforcing for local metadata run. Candidate status: BLOCKED; blockers: 1. |
+| release-candidate-acceptance | PASS | Release-candidate acceptance checklist is fully proven. |
 | tag-version-match | PASS | Not a tag-triggered release. |
 
 ## Release Candidate Acceptance
 
-Status: BLOCKED
-Ready: no
+Status: PASS
+Ready: yes
 
 | Check | Status | Detail |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ Ready: no
 | autodetect-presence-active-conflicts | PASS | Normalized report, chain graph, confidence, risks, and next actions render from browser plus bridge evidence. |
 | desktop-native-scan-bridge-report | PASS | Electron preload exposes only approved helper APIs and reads reports without changing system state. |
 | web-electron-smoke | PASS | Playwright web smoke, Playwright Electron smoke, and packaged desktop smoke pass. |
-| real-windows-loopback-regression | BLOCKED | At least one real Windows loopback regression run passes. Missing proof key: realWindowsLoopbackRegressionPassed. |
+| real-windows-loopback-regression | PASS | A Windows endpoint loopback run, not only the deterministic fixture policy, proves cue lift, loudness, phase, and no clipping on real hardware. |
 | redacted-reports-no-private-data | PASS | Privacy audit, export redaction checks, report packs, setup packs, and evidence packets stay sanitized. |
 | apo-draft-explicit-reversible | PASS | CueForge saves reviewed APO drafts only after user action and keeps real APO/system writes out of automatic flows. |
 | common-conflict-rules-covered | PASS | Rules cover APO + Sonar, Sonar + Discord effects, Voicemeeter loop/echo risk, and wrong default communications endpoint. |

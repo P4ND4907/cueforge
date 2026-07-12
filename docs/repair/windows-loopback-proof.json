@@ -1,0 +1,67 @@
+{
+    "schema":  "cueforge.windows-loopback-regression.v1",
+    "status":  "pass",
+    "capturedAt":  "2026-07-11T21:04:02.5961094-08:00",
+    "endpointHash":  "ep_9be7c3e6985e",
+    "sampleRate":  48000,
+    "channels":  2,
+    "baseline":  {
+                     "schema":  "cueforge.wasapi-loopback-capture.v1",
+                     "status":  "pass",
+                     "endpointHash":  "ep_9be7c3e6985e",
+                     "sampleRate":  48000,
+                     "channels":  2,
+                     "bitsPerSample":  32,
+                     "frames":  105600,
+                     "durationMs":  2400.3782,
+                     "rms":  0.098043328104266886,
+                     "rmsDbfs":  -20.171639098789605,
+                     "peak":  0.246795654296875,
+                     "peakDbfs":  -12.153249836982035,
+                     "leftRightCorrelation":  1,
+                     "bodyAmplitude":  0.097723787639559814,
+                     "cueAmplitude":  0.043156726473075453,
+                     "commsAmplitude":  0.0651427226670201,
+                     "nonSilent":  true,
+                     "clipped":  false,
+                     "error":  null
+                 },
+    "tuned":  {
+                  "schema":  "cueforge.wasapi-loopback-capture.v1",
+                  "status":  "pass",
+                  "endpointHash":  "ep_9be7c3e6985e",
+                  "sampleRate":  48000,
+                  "channels":  2,
+                  "bitsPerSample":  32,
+                  "frames":  105120,
+                  "durationMs":  2413.1622,
+                  "rms":  0.10365454883612134,
+                  "rmsDbfs":  -19.688232686437971,
+                  "peak":  0.268798828125,
+                  "peakDbfs":  -11.411452579920452,
+                  "leftRightCorrelation":  1,
+                  "bodyAmplitude":  0.097573238903825438,
+                  "cueAmplitude":  0.061002947420443175,
+                  "commsAmplitude":  0.06506464743547663,
+                  "nonSilent":  true,
+                  "clipped":  false,
+                  "error":  null
+              },
+    "deltas":  {
+                   "cueGainDb":  3.006,
+                   "loudnessDeltaDb":  0.483,
+                   "phaseCorrelation":  1
+               },
+    "policy":  {
+                   "cueGainDb":  "1.0..4.5",
+                   "loudnessDeltaDb":  "-1.0..3.0",
+                   "phaseCorrelation":  "\u003e=0.95",
+                   "clipping":  "false"
+               },
+    "safety":  [
+                   "Explicit command and bounded capture window.",
+                   "Local test tones and derived metrics only.",
+                   "No raw audio is stored in the proof artifact.",
+                   "No routing, driver, APO, or default-device changes."
+               ]
+}
